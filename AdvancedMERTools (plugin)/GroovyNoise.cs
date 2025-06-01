@@ -15,57 +15,56 @@ using Exiled.CustomItems.API.Features;
 //using MapEditorReborn.API.Features.Objects;
 //using MapEditorReborn.API.Features;
 
-namespace AdvancedMERTools
+namespace AdvancedMERTools;
+
+public class GroovyNoise : AMERTInteractable
 {
-    public class GroovyNoise : AMERTInteractable
+    protected virtual void Start()
     {
-        protected virtual void Start()
-        {
-            Base = base.Base as GNDTO;
-            AdvancedMERTools.Singleton.groovyNoises.Add(this);
-            //MEC.Timing.CallDelayed(0.1f, () => 
-            //{
-            //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
-            //        Active = true;
-            //});
-        }
-
-        protected virtual void Update()
-        {
-            if (Active)
-            {
-                //ServerConsole.AddLog("!!!");
-                GMDTO.Execute(Base.Settings, new ModuleGeneralArguments { schematic = OSchematic, transform = transform });
-            }
-            Active = false;
-        }
-
-        public new GNDTO Base;
+        Base = base.Base as GNDTO;
+        AdvancedMERTools.Singleton.groovyNoises.Add(this);
+        //MEC.Timing.CallDelayed(0.1f, () => 
+        //{
+        //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
+        //        Active = true;
+        //});
     }
 
-    public class FGroovyNoise : GroovyNoise
+    protected virtual void Update()
     {
-        protected override void Start()
+        if (Active)
         {
-            Base = ((AMERTInteractable)this).Base as FGNDTO;
-            AdvancedMERTools.Singleton.groovyNoises.Add(this);
-            //MEC.Timing.CallDelayed(0.1f, () => 
-            //{
-            //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
-            //        Active = true;
-            //});
+            //ServerConsole.AddLog("!!!");
+            GMDTO.Execute(Base.Settings, new ModuleGeneralArguments { schematic = OSchematic, transform = transform });
         }
-
-        protected override void Update()
-        {
-            if (Active)
-            {
-                //ServerConsole.AddLog("!!!");
-                FGMDTO.Execute(Base.Settings, new FunctionArgument(this));
-            }
-            Active = false;
-        }
-
-        public new FGNDTO Base;
+        Active = false;
     }
+
+    public new GNDTO Base;
+}
+
+public class FGroovyNoise : GroovyNoise
+{
+    protected override void Start()
+    {
+        Base = ((AMERTInteractable)this).Base as FGNDTO;
+        AdvancedMERTools.Singleton.groovyNoises.Add(this);
+        //MEC.Timing.CallDelayed(0.1f, () => 
+        //{
+        //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
+        //        Active = true;
+        //});
+    }
+
+    protected override void Update()
+    {
+        if (Active)
+        {
+            //ServerConsole.AddLog("!!!");
+            FGMDTO.Execute(Base.Settings, new FunctionArgument(this));
+        }
+        Active = false;
+    }
+
+    public new FGNDTO Base;
 }
