@@ -260,7 +260,7 @@ public class VFunction : Value
     public override object GetValue(FunctionArgument args)
     {
         if (AdvancedMERTools.Singleton.FunctionExecutors[args.Function.OSchematic].TryGetValue(FunctionName.GetValue(args, ""), out FunctionExecutor function))
-            return function.data.Execute(new FunctionArgument { Arguments = this.Arguments.Select(x => x.GetValue(args)).ToList(), player = args.player }).value;
+            return function.Data.Execute(new FunctionArgument { Arguments = this.Arguments.Select(x => x.GetValue(args)).ToList(), Player = args.Player }).Value;
         return null;
     }
 }
@@ -1332,11 +1332,11 @@ public class SingleTarget : Value
         switch (TargetType)
         {
             case SingleTargetType.EventPlayer:
-                return args.player;
+                return args.Player;
             case SingleTargetType.SchematicEntity:
-                return args.schematic.gameObject;
+                return args.Schematic.gameObject;
             case SingleTargetType.ScriptEntity:
-                return args.transform.gameObject;
+                return args.Transform.gameObject;
         }
         return null;
     }

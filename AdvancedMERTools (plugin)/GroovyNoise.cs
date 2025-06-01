@@ -1,28 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Items;
-using Exiled.CustomItems;
-using CommandSystem;
-using Utf8Json.Formatters;
-using RemoteAdmin;
-using Exiled.CustomItems.API.Features;
-//using MapEditorReborn.API.Features.Objects;
-//using MapEditorReborn.API.Features;
-
-namespace AdvancedMERTools;
+﻿namespace AdvancedMERTools;
 
 public class GroovyNoise : AMERTInteractable
 {
+    public new GNDTO Base { get; set; }
+
     protected virtual void Start()
     {
         Base = base.Base as GNDTO;
-        AdvancedMERTools.Singleton.groovyNoises.Add(this);
+        AdvancedMERTools.Singleton.GroovyNoises.Add(this);
         //MEC.Timing.CallDelayed(0.1f, () => 
         //{
         //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
@@ -35,20 +20,20 @@ public class GroovyNoise : AMERTInteractable
         if (Active)
         {
             //ServerConsole.AddLog("!!!");
-            GMDTO.Execute(Base.Settings, new ModuleGeneralArguments { schematic = OSchematic, transform = transform });
+            GMDTO.Execute(Base.Settings, new ModuleGeneralArguments { Schematic = OSchematic, Transform = transform });
         }
         Active = false;
     }
-
-    public new GNDTO Base;
 }
 
 public class FGroovyNoise : GroovyNoise
 {
+    public new FGNDTO Base { get; set; }
+
     protected override void Start()
     {
         Base = ((AMERTInteractable)this).Base as FGNDTO;
-        AdvancedMERTools.Singleton.groovyNoises.Add(this);
+        AdvancedMERTools.Singleton.GroovyNoises.Add(this);
         //MEC.Timing.CallDelayed(0.1f, () => 
         //{
         //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
@@ -65,6 +50,4 @@ public class FGroovyNoise : GroovyNoise
         }
         Active = false;
     }
-
-    public new FGNDTO Base;
 }

@@ -1,36 +1,37 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using Exiled.API.Features;
-using Exiled.API.Features.Doors;
-using Exiled.Events.EventArgs.Player;
-using System.IO;
-using Utf8Json;
-using System.Reflection.Emit;
-using System.Reflection;
-using PlayerRoles.FirstPersonControl;
-using PlayerRoles.FirstPersonControl.NetworkMessages;
-using Mirror;
-using PlayerRoles;
-using RelativePositioning;
-using Exiled.API.Enums;
+﻿//using Exiled.API.Features;
+//using Exiled.API.Features.Doors;
+//using Exiled.API.Enums;
+//using Exiled.Events.EventArgs.Player;
+using LabApi;
 using ProjectMER.Features;
 using ProjectMER.Features.Serializable;
-using LabApi;
+using UnityEngine;
+
+//using System.IO;
+//using Utf8Json;
+//using System.Reflection.Emit;
+//using System.Reflection;
+//using PlayerRoles.FirstPersonControl;
+//using PlayerRoles.FirstPersonControl.NetworkMessages;
+//using Mirror;
+//using PlayerRoles;
+//using RelativePositioning;
 
 namespace AdvancedMERTools;
 
 public class CustomDoor : AMERTInteractable
 {
-    void Start()
+    public new CDDTO Base { get; private set; }
+
+    public Animator Animator { get; private set; }
+
+    public Door Door { get; private set; }
+
+    protected void Start()
     {
         Base = base.Base as CDDTO;
-        AdvancedMERTools.Singleton.customDoors.Add(this);
-        animator = EventManager.FindObjectWithPath(transform, Base.animator).GetComponent<Animator>();
+        AdvancedMERTools.Singleton.CustomDoors.Add(this);
+        Animator = EventManager.FindObjectWithPath(transform, Base.Animator).GetComponent<Animator>();
 
         SerializableDoor serializableDoor = new()
         {
@@ -53,43 +54,47 @@ public class CustomDoor : AMERTInteractable
         // TODO: I have no idea if this in on the right track lol
         LabApi.Features.Wrappers.Room doorRoom = LabApi.Features.Wrappers.Room.GetRoomAtPosition(serializableDoor.Position);
         GameObject doorGameObject = serializableDoor.SpawnOrUpdateObject(doorRoom);
-        door = Door.Get(doorGameObject);    // this should create a new Exiled Door using the gameObject
-        door.Transform.parent = this.transform;
+        Door = Door.Get(doorGameObject);    // this should create a new Exiled Door using the gameObject
+        Door.Transform.parent = this.transform;
         Exiled.Events.Handlers.Player.InteractingDoor += OnInteract;
         Exiled.Events.Handlers.Player.DamagingDoor += OnDestroy;
     }
 
-    void OnDestroy()
+    public void OnDestroy()
     {
-        AdvancedMERTools.Singleton.customDoors.Remove(this);
+        AdvancedMERTools.Singleton.CustomDoors.Remove(this);
     }
 
-    void OnInteract(Exiled.Events.EventArgs.Player.InteractingDoorEventArgs ev)
+    public void OnInteract(Exiled.Events.EventArgs.Player.InteractingDoorEventArgs ev)
     {
-        if (ev.Door != door || !ev.IsAllowed)
+        if (ev.Door != Door || !ev.IsAllowed)
+        {
             return;
-        animator.Play(door.IsOpen ? Base.CloseAnimation : Base.OpenAnimation);
+        }
+        Animator.Play(Door.IsOpen ? Base.CloseAnimation : Base.OpenAnimation);
     }
 
-    void OnDestroy(Exiled.Events.EventArgs.Player.DamagingDoorEventArgs ev)
+    public void OnDestroy(Exiled.Events.EventArgs.Player.DamagingDoorEventArgs ev)
     {
-        if (ev.Door != door || !ev.IsAllowed)
+        if (ev.Door != Door || !ev.IsAllowed)
+        {
             return;
-        if (ev.Damage >= (door.Base as Interactables.Interobjects.BreakableDoor).RemainingHealth)
-            animator.Play(Base.BrokenAnimation);
+        }
+        if (ev.Damage >= (Door.Base as Interactables.Interobjects.BreakableDoor).RemainingHealth)
+        {
+            Animator.Play(Base.BrokenAnimation);
+        }
     }
 
     public void OnLockChange(ushort value)
     {
         if (value == 0)
-            animator.Play(Base.UnlockAnimation);
+        {
+            Animator.Play(Base.UnlockAnimation);
+        }
         else
-            animator.Play(Base.LockAnimation);
+        {
+            Animator.Play(Base.LockAnimation);
+        }
     }
-
-    public Animator animator;
-
-    public Door door;
-
-    public new CDDTO Base;
 }

@@ -1,25 +1,45 @@
-﻿using System;
+﻿using Exiled.API.Features;
+using Exiled.API.Features.Pickups;
+using ProjectMER.Features.Objects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Items;
-using Exiled.CustomItems;
-using CommandSystem;
-using Utf8Json.Formatters;
-using RemoteAdmin;
-using Exiled.CustomItems.API.Features;
-//using MapEditorReborn.API.Features.Objects;
-//using MapEditorReborn.API.Features;
-using ProjectMER.Features.Objects;
 
 namespace AdvancedMERTools;
 
 public class InteractablePickup : AMERTInteractable
 {
+    public new IPDTO Base { get; private set; }
+
+    public Pickup Pickup { get; set; }
+
+    public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
+    {
+        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
+        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
+        {
+            "{p_pos}", vs =>
+            {
+                Vector3 pos = (vs[0] as Player).Transform.position;
+                return $"{pos.x} {pos.y} {pos.z}";
+            }
+        },
+        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
+        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
+        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
+        {
+            "{o_pos}", vs =>
+            {
+                Vector3 pos = (vs[1] as Pickup).Transform.position;
+                return $"{pos.x} {pos.y} {pos.z}";
+            }
+        },
+        { "{o_room}", vs => (vs[1] as Pickup).Room.RoomName.ToString() },
+        { "{o_zone}", vs => (vs[1] as Pickup).Room.Zone.ToString() },
+    };
+
     protected virtual void Start()
     {
         Log.Info($"AMERT: InteractablePickup.Start() has been called: this gameobject: {this.gameObject.name}");
@@ -35,17 +55,31 @@ public class InteractablePickup : AMERTInteractable
         }
     }
 
-    public virtual void RunProcess(Player player, Pickup pickup, out bool Remove)
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        AdvancedMERTools.Singleton.InteractablePickups.Remove(this);
+    }
+
+    public virtual void RunProcess(Player player, Pickup pickup, out bool remove)
     {
         Log.Info($"AMERT: InteractablePickup.RunProcess() has been called: player: {player.Nickname}  - pickup: {pickup.GameObject.name}");
 
         bool r = false;
-        Remove = false;
+        remove = false;
         if (pickup != this.Pickup || !Active)
         {
             return;
         }
-        ModuleGeneralArguments args = new ModuleGeneralArguments { interpolations = Formatter, interpolationsList = new object[] { player }, player = player, schematic = OSchematic, transform = this.transform, TargetCalculated = false };
+        ModuleGeneralArguments args = new()
+        {
+            Interpolations = Formatter,
+            InterpolationsList = new object[] { player },
+            Player = player,
+            Schematic = OSchematic,
+            Transform = this.transform,
+            TargetCalculated = false,
+        };
         var ipActionExecutors = new Dictionary<IPActionType, Action>
         {
             { IPActionType.Disappear, () => r = true },
@@ -55,7 +89,8 @@ public class InteractablePickup : AMERTInteractable
             { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
             { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
             { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-            { IPActionType.UpgradeItem, () =>
+            {
+                IPActionType.UpgradeItem, () =>
                 {
                     if (player.GameObject.TryGetComponent<Collider>(out Collider col))
                     {
@@ -70,10 +105,10 @@ public class InteractablePickup : AMERTInteractable
                     }
                 }
             },
-                        { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
-                        { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
-                        { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-                        { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) }
+            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
+            { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
+            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {
@@ -82,35 +117,14 @@ public class InteractablePickup : AMERTInteractable
                 execute();
             }
         }
-        Remove = r;
+        remove = r;
     }
-
-    void OnDestroy()
-    {
-        AdvancedMERTools.Singleton.InteractablePickups.Remove(this);
-    }
-
-    static readonly Dictionary<string, Func<object[], string>> Formatter = new Dictionary<string, Func<object[], string>>
-    {
-        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
-        { "{p_pos}", vs => { Vector3 pos = (vs[0] as Player).Transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
-        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
-        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
-        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
-        { "{o_pos}", vs => { Vector3 pos = (vs[1] as Pickup).Transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
-        { "{o_room}", vs => (vs[1] as Pickup).Room.RoomName.ToString() },
-        { "{o_zone}", vs => (vs[1] as Pickup).Room.Zone.ToString() }
-    };
-
-    public Pickup Pickup;
-
-    public new IPDTO Base;
 }
 
 public class FInteractablePickup : InteractablePickup
 {
+    public new FIPDTO Base { get; private set; }
+
     protected override void Start()
     {
         this.Base = ((AMERTInteractable)this).Base as FIPDTO;
@@ -125,10 +139,10 @@ public class FInteractablePickup : InteractablePickup
         }
     }
 
-    public override void RunProcess(Player player, Pickup pickup, out bool Remove)
+    public override void RunProcess(Player player, Pickup pickup, out bool remove)
     {
         bool r = false;
-        Remove = false;
+        remove = false;
         if (pickup != this.Pickup || !Active)
         {
             return;
@@ -162,7 +176,7 @@ public class FInteractablePickup : InteractablePickup
             { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
             { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) }
+            { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {
@@ -171,13 +185,6 @@ public class FInteractablePickup : InteractablePickup
                 execute();
             }
         }
-        Remove = r;
+        remove = r;
     }
-
-    void OnDestroy()
-    {
-        AdvancedMERTools.Singleton.InteractablePickups.Remove(this);
-    }
-
-    public new FIPDTO Base;
 }

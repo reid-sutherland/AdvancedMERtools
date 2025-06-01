@@ -1,22 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Exiled.API.Enums;
-using UnityEngine;
-using Utils;
-using Footprinting;
-using Exiled.CustomItems.API.Features;
-using Exiled.API.Features;
-using Exiled.API.Features.Items;
-using Mirror;
-using InventorySystem;
-using InventorySystem.Items;
-using InventorySystem.Items.Pickups;
-using System.IO;
-//using MapEditorReborn.API.Features.Objects;
-using ProjectMER.Features.Objects;
+﻿using ProjectMER.Features.Objects;
+using System;
 
 namespace AdvancedMERTools;
 
@@ -42,7 +25,7 @@ public enum CollisionType
 {
     OnEnter = 1,
     OnStay = 2,
-    OnExit = 4
+    OnExit = 4,
 }
 
 [Flags]
@@ -51,16 +34,15 @@ public enum DetectType
 {
     Pickup = 1,
     Player = 2,
-    Projectile = 4
+    Projectile = 4,
 }
-
 
 [Serializable]
 public enum DoorType : int
 {
     LCZ = 0,
     HCZ = 1,
-    EZ = 2
+    EZ = 2,
 }
 
 [Flags]
@@ -72,7 +54,7 @@ public enum EffectFlagE
     ModifyDuration = 4,
     ForceDuration = 8,
     ModifyIntensity = 16,
-    ForceIntensity = 32
+    ForceIntensity = 32,
 }
 
 [Flags]
@@ -83,7 +65,7 @@ public enum Scp914Mode
     Coarse = 1,
     OneToOne = 2,
     Fine = 3,
-    VeryFine = 4
+    VeryFine = 4,
 }
 
 //[Flags]
@@ -92,7 +74,7 @@ public enum Scp914Mode
 //{
 //    Enter = 1,
 //    Exit = 2,
-//    Collide = 4
+//    Collide = 4,
 //}
 
 [Flags]
@@ -112,7 +94,7 @@ public enum DeadType
     GiveEffect = 1024,
     PlayAudio = 2048,
     CallGroovieNoise = 4096,
-    CallFunction = 8192
+    CallFunction = 8192,
 }
 
 [Flags]
@@ -138,7 +120,7 @@ public enum IPActionType
 public enum InvokeType
 {
     Searching = 1,
-    Picked = 2
+    Picked = 2,
 }
 
 [Serializable]
@@ -146,7 +128,7 @@ public enum AnimationTypeE
 {
     Start,
     Stop,
-    ModifyParameter
+    ModifyParameter,
 }
 
 [Serializable]
@@ -155,7 +137,7 @@ public enum ParameterTypeE
     Integer,
     Float,
     Bool,
-    Trigger
+    Trigger,
 }
 
 [Flags]
@@ -167,7 +149,7 @@ public enum WarheadActionType
     Lock = 4,
     UnLock = 8,
     Disable = 16,
-    Enable = 32
+    Enable = 32,
 }
 
 [Serializable]
@@ -175,7 +157,7 @@ public enum MessageTypeE
 {
     Cassie,
     BroadCast,
-    Hint
+    Hint,
 }
 
 [Flags]
@@ -185,21 +167,21 @@ public enum SendType
     Interactor = 1,
     AllExceptAboveOne = 2,
     Alive = 4,
-    Spectators = 8
+    Spectators = 8,
 }
 
 //[Serializable]
 //public enum CommandType
 //{
 //    RemoteAdmin,
-//    ClientConsole
+//    ClientConsole,
 //}
 
 //[Serializable]
 //public enum ExecutorType
 //{
 //    Attacker,
-//    LocalAdmin
+//    LocalAdmin,
 //}
 
 //[Serializable]

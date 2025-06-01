@@ -30,24 +30,25 @@ namespace AdvancedMERTools;
 
 public class DummyDoor : MonoBehaviour
 {
-    public SerializableDoor door;
-    public Door RealDoor = null;
+    public Animator Animator { get; private set; }
 
-    public Animator animator;
+    public SerializableDoor SerializableDoor { get; private set; }
 
-    static readonly Config config = AdvancedMERTools.Singleton.Config;
+    public Door RealDoor { get; private set; } = null;
 
-    void Start()
+    public static readonly Config Config = AdvancedMERTools.Singleton.Config;
+
+    public void Start()
     {
         MEC.Timing.CallDelayed(1f, () =>
         {
-            animator = this.transform.GetChild(0).GetComponent<Animator>();
+            Animator = this.transform.GetChild(0).GetComponent<Animator>();
             if (RealDoor == null)
             {
                 // DoorObject doesn't exist anymore so try to find MapEditorObjects that are doors
                 foreach (MapEditorObject mapEditorObject in FindObjectsByType(typeof(MapEditorObject), FindObjectsSortMode.None))
                 {
-                    if (door == mapEditorObject.Base)
+                    if (SerializableDoor == mapEditorObject.Base)
                     {
                         // TODO: ????
                         RealDoor = mapEditorObject.GetComponent<Door>();
@@ -77,27 +78,32 @@ public class DummyDoor : MonoBehaviour
             this.transform.localPosition = Vector3.zero;
             if (RealDoor.Base.Rooms.Length != 0)
             {
-                AdvancedMERTools.Singleton.dummyDoors.Remove(this);
+                AdvancedMERTools.Singleton.DummyDoors.Remove(this);
                 Destroy(this.gameObject);
                 return;
             }
-            animator.Play("DoorClose");
+            Animator.Play("DoorClose");
         });
     }
 
     public void OnInteractDoor(bool trigger)
     {
-        if (this.RealDoor == null || animator == null)
+        if (this.RealDoor == null || Animator == null)
+        {
             return;
-        animator.Play(trigger ? "DoorOpen" : "DoorClose");
+        }
+        Animator.Play(trigger ? "DoorOpen" : "DoorClose");
     }
 
-    void Update()
+    public void Update()
     {
-        if (RealDoor == null) return;
+        if (RealDoor == null)
+        {
+            return;
+        }
         if ((RealDoor as BreakableDoor).IsDestroyed)
         {
-            AdvancedMERTools.Singleton.dummyDoors.Remove(this);
+            AdvancedMERTools.Singleton.DummyDoors.Remove(this);
             Destroy(this.gameObject, 0.5f);
         }
     }
@@ -105,9 +111,19 @@ public class DummyDoor : MonoBehaviour
 
 public class DummyGate : MonoBehaviour
 {
-    void Start()
+    public Animator Animator { get; private set; }
+
+    public GateSerializable GateSerializable { get; private set; }
+
+    public Exiled.API.Features.Pickups.Pickup[] Pickups { get; set; }
+
+    public float Cooldown { get; set; } = 0f;
+
+    private bool isOpened = false;
+
+    public void Start()
     {
-        pickups = (from item in this.gameObject.GetComponentsInChildren<InventorySystem.Items.Pickups.ItemPickupBase>()
+        Pickups = (from item in this.gameObject.GetComponentsInChildren<InventorySystem.Items.Pickups.ItemPickupBase>()
                    select Exiled.API.Features.Pickups.Pickup.Get(item)).ToArray();
 
         if (MapUtils.LoadedMaps.Count > 0)
@@ -121,9 +137,9 @@ public class DummyGate : MonoBehaviour
                 }
             }
             // wtf is this code...
-            if (gates.Count > AdvancedMERTools.Singleton.dummyGates.Count)
+            if (gates.Count > AdvancedMERTools.Singleton.DummyGates.Count)
             {
-                GateSerializable = gates[AdvancedMERTools.Singleton.dummyGates.Count];
+                GateSerializable = gates[AdvancedMERTools.Singleton.DummyGates.Count];
                 if (GateSerializable.IsOpened)
                 {
                     MEC.Timing.CallDelayed(3f, () => { IsOpened = true; });
@@ -131,61 +147,17 @@ public class DummyGate : MonoBehaviour
             }
         }
 
-        animator = this.transform.GetChild(1).GetComponent<Animator>();
-        AdvancedMERTools.Singleton.dummyGates.Add(this);
-        MEC.Timing.RunCoroutine(enumerator());
+        Animator = this.transform.GetChild(1).GetComponent<Animator>();
+        AdvancedMERTools.Singleton.DummyGates.Add(this);
+        MEC.Timing.RunCoroutine(Enumerator());
     }
 
-    IEnumerator<float> enumerator()
+    private IEnumerator<float> Enumerator()
     {
         yield return MEC.Timing.WaitUntilTrue(() => Round.IsStarted);
         MEC.Timing.CallDelayed(0.3f, Apply);
         yield break;
     }
-
-    // NOTE: This was already commented out by AMERT
-    /*public void Apply()
-    //{
-        //AudioSource = AdvancedMERTools.MakeAudio("Dummy Gate #" + AdvancedMERTools.Singleton.dummyGates.Count.ToString());
-        //audioPlayer = AudioPlayerBase.Get(AudioSource);
-        //audioPlayer.BroadcastChannel = VoiceChat.VoiceChatChannel.Proximity;
-        //MEC.Timing.CallDelayed(0.3f, () =>
-        //{
-        //    AudioSource.roleManager.ServerSetRole(PlayerRoles.RoleTypeId.Tutorial, PlayerRoles.RoleChangeReason.None, PlayerRoles.RoleSpawnFlags.None);
-        //    audioPlayer.BroadcastChannel = VoiceChat.VoiceChatChannel.Proximity;
-        //});
-        //MEC.Timing.CallDelayed(0.4f, () =>
-        //{
-        //    FpcStandardRoleBase fpc = AudioSource.roleManager.CurrentRole as FpcStandardRoleBase;
-        //    if (fpc != null)
-        //    {
-        //        fpc.FpcModule.Noclip.IsActive = true;
-        //        AudioSource.transform.position = this.transform.position;
-        //        AudioSource.transform.localScale = Vector3.one * 0.1f;
-        //    }
-        //});
-
-        //ServerConsole.AddLog(this.transform.position.ToString());
-        //npc = Npc.Spawn("Gate", PlayerRoles.RoleTypeId.Tutorial, position: this.transform.position);
-        //PropertyInfo info = typeof(CentralAuth.PlayerAuthenticationManager).GetProperty("InstanceMode");
-        //info.SetValue(npc.ReferenceHub.authManager, CentralAuth.ClientInstanceMode.DedicatedServer);
-        //audioPlayer = AudioPlayerBase.Get(npc.ReferenceHub);
-        //MEC.Timing.CallDelayed(0.35f, () =>
-        //{
-        //    info.SetValue(npc.ReferenceHub.authManager, CentralAuth.ClientInstanceMode.ReadyClient);
-        //});
-        //MEC.Timing.CallDelayed(0.55f, () =>
-        //{
-        //    npc.Scale = Vector3.one * -0.1f;
-        //    npc.Position = this.transform.position;
-        //    (npc.RoleManager.CurrentRole as FpcStandardRoleBase).FpcModule.Noclip.IsActive = true;
-
-        //});
-        //MEC.Timing.CallDelayed(0.45f, () =>
-        //{
-        //    info.SetValue(npc.ReferenceHub.authManager, CentralAuth.ClientInstanceMode.DedicatedServer);
-        //});
-    //}*/
 
     public void Apply()
     {
@@ -222,20 +194,22 @@ public class DummyGate : MonoBehaviour
         //audioPlayer = AudioPlayerBase.Get(hub);
     }
 
-    void Update()
+    public void Update()
     {
         if (Cooldown >= 0)
+        {
             Cooldown -= Time.deltaTime;
+        }
     }
 
     public void OnPickingUp(SearchingPickupEventArgs ev)
     {
-        if (pickups.Contains(ev.Pickup))
+        if (Pickups.Contains(ev.Pickup))
         {
             ev.IsAllowed = false;
             if (GateSerializable != null)
             {
-                if (!GateSerializable.IsLocked && CheckPermission(ev.Player, GateSerializable.doorPermissions))
+                if (!GateSerializable.IsLocked && CheckPermission(ev.Player, GateSerializable.DoorPermissions))
                 {
                     goto IL_01;
                 }
@@ -246,6 +220,7 @@ public class DummyGate : MonoBehaviour
             }
         }
         return;
+        // TODO: wtf is this syntax
     IL_01:;
         if (Cooldown <= 0)
         {
@@ -291,26 +266,19 @@ public class DummyGate : MonoBehaviour
     {
         get
         {
-            return _IsOpened;
+            return isOpened;
         }
         set
         {
-            if (animator != null)
+            if (Animator != null)
             {
                 //audioPlayer.CurrentPlay = Path.Combine(Path.Combine(Paths.Configs, "Music"), value ? "GateOpen.ogg" : "GateClose.ogg");
                 //audioPlayer.Loop = false;
                 //audioPlayer.Play(-1);
-                animator.Play(value ? "GateOpen" : "GateClose");
+                Animator.Play(value ? "GateOpen" : "GateClose");
             }
             Cooldown = 3f;
-            _IsOpened = value;
+            isOpened = value;
         }
     }
-
-    GateSerializable GateSerializable;
-    public float Cooldown = 0f;
-    bool _IsOpened = false;
-    public Animator animator;
-    public Exiled.API.Features.Pickups.Pickup[] pickups;
-    //AudioPlayerBase audioPlayer;
 }

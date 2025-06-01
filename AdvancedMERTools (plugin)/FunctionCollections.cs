@@ -16,11 +16,10 @@ using PlayerRoles;
 
 namespace AdvancedMERTools;
 
-
 [Serializable]
 public class If : ActionsFunctioner
 {
-    public ScriptValue Statement;
+    public ScriptValue Statement { get; set; }
 
     public override void OnValidate()
     {
@@ -31,7 +30,9 @@ public class If : ActionsFunctioner
     public override FunctionReturn Execute(FunctionArgument args)
     {
         if (!ConditionCheck(args, Statement))
-            return new FunctionReturn { result = FunctionResult.FunctionCheck, value = false };
+        {
+            return new FunctionReturn { Result = FunctionResult.FunctionCheck, Value = false };
+        }
         return ExecuteActions(args, FunctionResult.FunctionCheck);
     }
 }
@@ -39,7 +40,7 @@ public class If : ActionsFunctioner
 [Serializable]
 public class ElseIf : ActionsFunctioner
 {
-    public ScriptValue Statement;
+    public ScriptValue Statement { get; set; }
 
     public override void OnValidate()
     {
@@ -50,7 +51,9 @@ public class ElseIf : ActionsFunctioner
     public override FunctionReturn Execute(FunctionArgument args)
     {
         if (!ConditionCheck(args, Statement))
-            return new FunctionReturn { result = FunctionResult.FunctionCheck, value = false };
+        {
+            return new FunctionReturn { Result = FunctionResult.FunctionCheck, Value = false };
+        }
         return ExecuteActions(args, FunctionResult.FunctionCheck);
     }
 }
@@ -72,7 +75,7 @@ public class Else : ActionsFunctioner
 [Serializable]
 public class While : ActionsFunctioner
 {
-    public ScriptValue Condition;
+    public ScriptValue Condition { get; set; }
 
     public override void OnValidate()
     {
@@ -85,9 +88,11 @@ public class While : ActionsFunctioner
         while (true)
         {
             if (!ConditionCheck(args, Condition))
+            {
                 return new FunctionReturn();
+            }
             FunctionReturn result = ExecuteActions(args);
-            switch (result.result)
+            switch (result.Result)
             {
                 case FunctionResult.Break:
                     return new FunctionReturn();
@@ -101,7 +106,7 @@ public class While : ActionsFunctioner
 [Serializable]
 public class For : ActionsFunctioner
 {
-    public ScriptValue RepeatCount;
+    public ScriptValue RepeatCount { get; set; }
 
     public override void OnValidate()
     {
@@ -115,7 +120,7 @@ public class For : ActionsFunctioner
         for (int i = 0; i < n; i++)
         {
             FunctionReturn result = ExecuteActions(args);
-            switch (result.result)
+            switch (result.Result)
             {
                 case FunctionResult.Break:
                     return new FunctionReturn();
@@ -130,8 +135,8 @@ public class For : ActionsFunctioner
 [Serializable]
 public class ForEach : ActionsFunctioner
 {
-    public ScriptValue Array;
-    public string ControlVariable;
+    public ScriptValue Array { get; set; }
+    public string ControlVariable { get; set; }
 
     public override void OnValidate()
     {
@@ -143,13 +148,16 @@ public class ForEach : ActionsFunctioner
     {
         object obj = Array.GetValue(args);
         if (obj == null || !(obj is object[]))
+        {
             return new FunctionReturn();
+        }
+
         object[] arr = (object[])obj;
         for (int i = 0; i < arr.Length; i++)
         {
             args.FunctionVariables[ControlVariable] = arr[i];
             FunctionReturn result = ExecuteActions(args);
-            switch (result.result)
+            switch (result.Result)
             {
                 case FunctionResult.Break:
                     return new FunctionReturn();
@@ -164,10 +172,10 @@ public class ForEach : ActionsFunctioner
 [Serializable]
 public class SetVariable : Function
 {
-    public ScriptValue VariableName;
-    public ScriptValue ValueToAssign;
+    public ScriptValue VariableName { get; set; }
+    public ScriptValue ValueToAssign { get; set; }
     [Header("0: Function, 1: Script, 2: Schematic, 3: Game")]
-    public ScriptValue AccessLevel;
+    public ScriptValue AccessLevel { get; set; }
 
     public override void OnValidate()
     {
@@ -208,7 +216,7 @@ public class SetVariable : Function
 [Serializable]
 public class Return : Function
 {
-    public ScriptValue ReturnValue;
+    public ScriptValue ReturnValue { get; set; }
 
     public override void OnValidate()
     {
@@ -217,14 +225,14 @@ public class Return : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        return new FunctionReturn { value = ReturnValue.GetValue(args), result = FunctionResult.Return };
+        return new FunctionReturn { Value = ReturnValue.GetValue(args), Result = FunctionResult.Return };
     }
 }
 
 [Serializable]
 public class Wait : Function
 {
-    public ScriptValue WaitSecond;
+    public ScriptValue WaitSecond { get; set; }
 
     public override void OnValidate()
     {
@@ -233,14 +241,14 @@ public class Wait : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        return new FunctionReturn { result = FunctionResult.Wait, value = WaitSecond.GetValue(args, 0f) };
+        return new FunctionReturn { Result = FunctionResult.Wait, Value = WaitSecond.GetValue(args, 0f) };
     }
 }
 
 [Serializable]
 public class CallFunction : Function
 {
-    public List<FCFEModule> FunctionModules;
+    public List<FCFEModule> FunctionModules { get; set; }
 
     public override void OnValidate()
     {
@@ -258,7 +266,7 @@ public class CallFunction : Function
 public class CallGroovyNoise : Function
 {
     [Header("Caution: IDs won't be updated automatically!!")]
-    public List<FCGNModule> Modules;
+    public List<FCGNModule> Modules { get; set; }
 
     public override void OnValidate()
     {
@@ -274,7 +282,7 @@ public class CallGroovyNoise : Function
 [Serializable]
 public class PlayAnimation : Function
 {
-    public List<FAnimationDTO> AnimationModules;
+    public List<FAnimationDTO> AnimationModules { get; set; }
 
     public override void OnValidate()
     {
@@ -290,7 +298,7 @@ public class PlayAnimation : Function
 [Serializable]
 public class SendMessage : Function
 {
-    public List<FMessageModule> MessageModules;
+    public List<FMessageModule> MessageModules { get; set; }
 
     public override void OnValidate()
     {
@@ -306,7 +314,7 @@ public class SendMessage : Function
 [Serializable]
 public class SendCommand : Function
 {
-    public List<FCommanding> CommandModules;
+    public List<FCommanding> CommandModules { get; set; }
 
     public override void OnValidate()
     {
@@ -322,7 +330,7 @@ public class SendCommand : Function
 [Serializable]
 public class DropItems : Function
 {
-    public List<FDropItem> DropItemsModules;
+    public List<FDropItem> DropItemsModules { get; set; }
 
     public override void OnValidate()
     {
@@ -338,7 +346,7 @@ public class DropItems : Function
 [Serializable]
 public class Explode : Function
 {
-    public List<FExplodeModule> ExplodeModules;
+    public List<FExplodeModule> ExplodeModules { get; set; }
 
     public override void OnValidate()
     {
@@ -354,7 +362,7 @@ public class Explode : Function
 [Serializable]
 public class GiveEffect : Function
 {
-    public List<FEffectGivingModule> EffectModules;
+    public List<FEffectGivingModule> EffectModules { get; set; }
 
     public override void OnValidate()
     {
@@ -370,7 +378,7 @@ public class GiveEffect : Function
 [Serializable]
 public class PlayAudio : Function
 {
-    public List<FAudioModule> AudioModules;
+    public List<FAudioModule> AudioModules { get; set; }
 
     public override void OnValidate()
     {
@@ -386,7 +394,7 @@ public class PlayAudio : Function
 [Serializable]
 public class FWarhead : Function
 {
-    public ScriptValue ActionType;
+    public ScriptValue ActionType { get; set; }
 
     public override void OnValidate()
     {
@@ -403,25 +411,28 @@ public class FWarhead : Function
 [Serializable]
 public class ChangePlayerValue : Function
 {
-    public ScriptValue player;
-    public PlayerUnaryOp.PlayerUnaryOpType ValueType;
-    public ScriptValue Value;
+    public ScriptValue Player { get; set; }
+    public PlayerUnaryOp.PlayerUnaryOpType ValueType { get; set; }
+    public ScriptValue Value { get; set; }
 
     public override void OnValidate()
     {
-        player.OnValidate();
+        Player.OnValidate();
         Value.OnValidate();
     }
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        Player p = this.player.GetValue<Player>(args, null);
+        Player p = this.Player.GetValue<Player>(args, null);
         if (p == null)
+        {
             return new FunctionReturn();
+        }
+
         object obj = Value.GetValue(args);
-        int Number = obj is int || obj is float ? (int)obj : 0;
-        float Real = obj is float || obj is int ? (float)obj : 0;
-        bool Bool = obj is bool ? (bool)obj : false;
+        int number = obj is int || obj is float ? (int)obj : 0;
+        float real = obj is float || obj is int ? (float)obj : 0;
+        bool @bool = obj is bool ? (bool)obj : false;
         string str = obj is string ? (string)obj : "";
         Player player = obj is Player ? (Player)obj : null;
         Pickup pickup = obj is Pickup ? (Pickup)obj : null;
@@ -432,7 +443,7 @@ public class ChangePlayerValue : Function
         switch (ValueType)
         {
             case PlayerUnaryOp.PlayerUnaryOpType.AHP:
-                p.ArtificialHealth = Real;
+                p.ArtificialHealth = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Cuffer:
                 p.Cuffer = player;
@@ -453,19 +464,19 @@ public class ChangePlayerValue : Function
                 p.GroupName = str;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.HP:
-                p.Health = Real;
+                p.Health = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.HumeShield:
-                p.HumeShield = Real;
+                p.HumeShield = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.MaxAHP:
-                p.MaxArtificialHealth = Real;
+                p.MaxArtificialHealth = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.MaxHP:
-                p.MaxHealth = Real;
+                p.MaxHealth = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.MaxHumeShield:
-                p.MaxHumeShield = Real;
+                p.MaxHumeShield = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Position:
                 p.Position = vector;
@@ -477,7 +488,7 @@ public class ChangePlayerValue : Function
                 p.Scale = vector;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Stamina:
-                p.Stamina = Real;
+                p.Stamina = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.UniqueRole:
                 p.UniqueRole = str;
@@ -495,12 +506,12 @@ public class PlayerAction : Function
     {
         GiveItem,
         DropItem,
-        RemoveItem
+        RemoveItem,
     }
 
-    public ScriptValue Player;
-    public PlayerActionType ActionType;
-    public ScriptValue Argument;
+    public ScriptValue Player { get; set; }
+    public PlayerActionType ActionType { get; set; }
+    public ScriptValue Argument { get; set; }
 
     public override void OnValidate()
     {
@@ -512,11 +523,14 @@ public class PlayerAction : Function
     {
         Player p = this.Player.GetValue<Player>(args, null);
         if (p == null)
+        {
             return new FunctionReturn();
+        }
+
         object obj = Argument.GetValue(args);
-        int Number = obj is int || obj is float ? (int)obj : 0;
-        float Real = obj is float || obj is int ? (float)obj : 0;
-        bool Bool = obj is bool ? (bool)obj : false;
+        int number = obj is int || obj is float ? (int)obj : 0;
+        float real = obj is float || obj is int ? (float)obj : 0;
+        bool @bool = obj is bool ? (bool)obj : false;
         string str = obj is string ? (string)obj : "";
         Player player = obj is Player ? (Player)obj : null;
         Pickup pickup = obj is Pickup ? (Pickup)obj : null;
@@ -531,11 +545,17 @@ public class PlayerAction : Function
                 break;
             case PlayerActionType.GiveItem:
                 if (item != null)
+                {
                     item.Give(p);
+                }
                 else if (pickup != null)
+                {
                     p.AddItem(pickup);
+                }
                 else if (it != ItemType.None)
+                {
                     p.AddItem(it);
+                }
                 break;
             case PlayerActionType.RemoveItem:
                 p.RemoveItem(item, true);
@@ -548,9 +568,9 @@ public class PlayerAction : Function
 [Serializable]
 public class ChangeEntityValue : Function
 {
-    public ScriptValue Entity;
-    public EntityUnaryOp.EntityUnaryOpType ValueType;
-    public ScriptValue Value;
+    public ScriptValue Entity { get; set; }
+    public EntityUnaryOp.EntityUnaryOpType ValueType { get; set; }
+    public ScriptValue Value { get; set; }
 
     public override void OnValidate()
     {
@@ -562,11 +582,14 @@ public class ChangeEntityValue : Function
     {
         GameObject game = Entity.GetValue<GameObject>(args, null);
         if (game == null)
+        {
             return new FunctionReturn();
+        }
+
         object obj = Value.GetValue(args);
-        int Number = obj is int || obj is float ? (int)obj : 0;
-        float Real = obj is float || obj is int ? (float)obj : 0;
-        bool Bool = obj is bool ? (bool)obj : false;
+        int number = obj is int || obj is float ? (int)obj : 0;
+        float real = obj is float || obj is int ? (float)obj : 0;
+        bool @bool = obj is bool ? (bool)obj : false;
         string str = obj is string ? (string)obj : "";
         Player player = obj is Player ? (Player)obj : null;
         Pickup pickup = obj is Pickup ? (Pickup)obj : null;
@@ -578,14 +601,16 @@ public class ChangeEntityValue : Function
         switch (ValueType)
         {
             case EntityUnaryOp.EntityUnaryOpType.IsActive:
-                game.SetActive(Bool);
+                game.SetActive(@bool);
                 break;
             case EntityUnaryOp.EntityUnaryOpType.Name:
                 game.name = str;
                 break;
             case EntityUnaryOp.EntityUnaryOpType.Parent:
                 if (go == null)
+                {
                     break;
+                }
                 game.transform.parent = go.transform;
                 break;
             case EntityUnaryOp.EntityUnaryOpType.Position:

@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using LabApi.Loader.Features.Paths;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Exiled.API.Features;
-using Exiled.Loader;
-using Exiled.API.Interfaces;
 using System.IO;
 
 namespace AdvancedMERTools;
@@ -41,7 +35,7 @@ public class Config
 
     public Dictionary<string, List<GateSerializable>> Gates { get; set; } = new Dictionary<string, List<GateSerializable>>
     {
-        { "ExampleMapName", new List<GateSerializable> { new GateSerializable(), new GateSerializable() } }
+        { "ExampleMapName", new List<GateSerializable> { new GateSerializable(), new GateSerializable() } },
     };
 
     [Description("If turned on, it will autowork with every MER's door spawning event.")]
@@ -68,6 +62,6 @@ public class Config
         Generated,
         Round,
         Decont,
-        Warhead
+        Warhead,
     }
 }

@@ -1,214 +1,210 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Exiled.API.Enums;
-using UnityEngine;
-using Utils;
-using Footprinting;
-using Exiled.CustomItems.API.Features;
+﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
-using Mirror;
+using Exiled.CustomItems.API.Features;
+using Footprinting;
 using InventorySystem;
 using InventorySystem.Items;
 using InventorySystem.Items.Pickups;
-using System.IO;
-//using MapEditorReborn.API.Features.Objects;
+using Mirror;
 using ProjectMER.Features.Objects;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+using UnityEngine;
+using Utils;
 
 namespace AdvancedMERTools;
 
 [Serializable]
 public class HODTO : AMERTDTO
 {
-    public float Health;
+    public float Health { get; set; }
     [Range(0, 100)]
-    public int ArmorEfficient;
-    public DeadType DeadType;
-    public float DeadActionDelay;
-    public float ResetHPTo;
-    public bool DoNotDestroyAfterDeath;
-    public List<WhitelistWeapon> whitelistWeapons;
-    public List<AnimationDTO> AnimationModules;
-    public WarheadActionType warheadAction;
-    public List<MessageModule> MessageModules;
-    public List<DropItem> DropItems;
-    public List<Commanding> Commandings;
-    public List<ExplodeModule> ExplodeModules;
-    public List<EffectGivingModule> effectGivingModules;
-    public List<AudioModule> AudioModules;
-    public List<CGNModule> GroovieNoiseToCall;
-    public List<CFEModule> FunctionToCall;
+    public int ArmorEfficient { get; set; }
+    public DeadType DeadType { get; set; }
+    public float DeadActionDelay { get; set; }
+    public float ResetHPTo { get; set; }
+    public bool DoNotDestroyAfterDeath { get; set; }
+    public List<WhitelistWeapon> WhitelistWeapons { get; set; }
+    public List<AnimationDTO> AnimationModules { get; set; }
+    public WarheadActionType WarheadActionType { get; set; }
+    public List<MessageModule> MessageModules { get; set; }
+    public List<DropItem> DropItems { get; set; }
+    public List<Commanding> Commandings { get; set; }
+    public List<ExplodeModule> ExplodeModules { get; set; }
+    public List<EffectGivingModule> EffectGivingModules { get; set; }
+    public List<AudioModule> AudioModules { get; set; }
+    public List<CGNModule> GroovieNoiseToCall { get; set; }
+    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class FHODTO : AMERTDTO
 {
-    public ScriptValue Health;
+    public ScriptValue Health { get; set; }
     [Range(0, 100)]
-    public ScriptValue ArmorEfficient;
-    public DeadType DeadType;
-    public ScriptValue DeadActionDelay;
-    public ScriptValue ResetHPTo;
-    public ScriptValue DoNotDestroyAfterDeath;
-    public List<FWhitelistWeapon> whitelistWeapons;
-    public List<FAnimationDTO> AnimationModules;
-    public ScriptValue warheadActionType;
-    public List<FMessageModule> MessageModules;
-    public List<FDropItem> dropItems;
-    public List<FCommanding> commandings;
-    public List<FExplodeModule> ExplodeModules;
-    public List<FEffectGivingModule> effectGivingModules;
-    public List<FAudioModule> AudioModules;
-    public List<FCGNModule> GroovieNoiseToCall;
-    public List<FCFEModule> FunctionToCall;
+    public ScriptValue ArmorEfficient { get; set; }
+    public DeadType DeadType { get; set; }
+    public ScriptValue DeadActionDelay { get; set; }
+    public ScriptValue ResetHPTo { get; set; }
+    public ScriptValue DoNotDestroyAfterDeath { get; set; }
+    public List<FWhitelistWeapon> WhitelistWeapons { get; set; }
+    public List<FAnimationDTO> AnimationModules { get; set; }
+    public ScriptValue WarheadActionType { get; set; }
+    public List<FMessageModule> MessageModules { get; set; }
+    public List<FDropItem> DropItems { get; set; }
+    public List<FCommanding> Commandings { get; set; }
+    public List<FExplodeModule> ExplodeModules { get; set; }
+    public List<FEffectGivingModule> EffectGivingModules { get; set; }
+    public List<FAudioModule> AudioModules { get; set; }
+    public List<FCGNModule> GroovieNoiseToCall { get; set; }
+    public List<FCFEModule> FunctionToCall { get; set; }
 }
 
 //[Serializable]
 //public class ITDTO : AMERTDTO
 //{
-//    public TeleportInvokeType InvokeType;
-//    public IPActionType ActionType;
-//    public List<AnimationDTO> animationDTOs;
-//    public WarheadActionType warheadActionType;
-//    public List<MessageModule> MessageModules;
-//    public List<Commanding> commandings;
-//    public List<ExplodeModule> ExplodeModules;
-//    public List<EffectGivingModule> effectGivingModules;
-//    public List<AudioModule> AudioModules;
-//    public List<CGNModule> GroovieNoiseToCall;
+//    public TeleportInvokeType InvokeType { get; set; }
+//    public IPActionType ActionType { get; set; }
+//    public List<AnimationDTO> animationDTOs { get; set; }
+//    public WarheadActionType WarheadActionType { get; set; }
+//    public List<MessageModule> MessageModules { get; set; }
+//    public List<Commanding> Commandings { get; set; }
+//    public List<ExplodeModule> ExplodeModules { get; set; }
+//    public List<EffectGivingModule> EffectGivingModules { get; set; }
+//    public List<AudioModule> AudioModules { get; set; }
+//    public List<CGNModule> GroovieNoiseToCall { get; set; }
 //}
 
 [Serializable]
 public class IPDTO : AMERTDTO
 {
-    public InvokeType InvokeType;
-    public IPActionType ActionType;
-    public bool CancelActionWhenActive;
-    public List<AnimationDTO> AnimationModules;
-    public WarheadActionType warheadActionType;
-    public List<MessageModule> MessageModules;
-    public List<DropItem> dropItems;
-    public List<Commanding> commandings;
-    public Scp914Mode Scp914Mode;
-    public List<ExplodeModule> ExplodeModules;
-    public List<EffectGivingModule> effectGivingModules;
-    public List<AudioModule> AudioModules;
-    public List<CGNModule> GroovieNoiseToCall;
-    public List<CFEModule> FunctionToCall;
+    public InvokeType InvokeType { get; set; }
+    public IPActionType ActionType { get; set; }
+    public bool CancelActionWhenActive { get; set; }
+    public List<AnimationDTO> AnimationModules { get; set; }
+    public WarheadActionType WarheadActionType { get; set; }
+    public List<MessageModule> MessageModules { get; set; }
+    public List<DropItem> DropItems { get; set; }
+    public List<Commanding> Commandings { get; set; }
+    public Scp914Mode Scp914Mode { get; set; }
+    public List<ExplodeModule> ExplodeModules { get; set; }
+    public List<EffectGivingModule> EffectGivingModules { get; set; }
+    public List<AudioModule> AudioModules { get; set; }
+    public List<CGNModule> GroovieNoiseToCall { get; set; }
+    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class FIPDTO : AMERTDTO
 {
-    public InvokeType InvokeType;
-    public IPActionType ActionType;
-    public ScriptValue CancelActionWhenActive;
-    public ScriptValue Scp914Mode;
-    public List<FAnimationDTO> AnimationModules;
-    public ScriptValue warheadActionType;
-    public List<FMessageModule> MessageModules;
-    public List<FDropItem> dropItems;
-    public List<FCommanding> commandings;
-    public List<FExplodeModule> ExplodeModules;
-    public List<FEffectGivingModule> effectGivingModules;
-    public List<FAudioModule> AudioModules;
-    public List<FCGNModule> GroovieNoiseToCall;
-    public List<FCFEModule> FunctionToCall;
+    public InvokeType InvokeType { get; set; }
+    public IPActionType ActionType { get; set; }
+    public ScriptValue CancelActionWhenActive { get; set; }
+    public ScriptValue Scp914Mode { get; set; }
+    public List<FAnimationDTO> AnimationModules { get; set; }
+    public ScriptValue WarheadActionType { get; set; }
+    public List<FMessageModule> MessageModules { get; set; }
+    public List<FDropItem> DropItems { get; set; }
+    public List<FCommanding> Commandings { get; set; }
+    public List<FExplodeModule> ExplodeModules { get; set; }
+    public List<FEffectGivingModule> EffectGivingModules { get; set; }
+    public List<FAudioModule> AudioModules { get; set; }
+    public List<FCGNModule> GroovieNoiseToCall { get; set; }
+    public List<FCFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class CCDTO : AMERTDTO
 {
-    public ColliderActionType ColliderActionType;
-    public CollisionType CollisionType;
-    public DetectType DetectType;
-    public float ModifyHealthAmount;
-    public List<AnimationDTO> AnimationModules;
-    public WarheadActionType warheadActionType;
-    public List<MessageModule> MessageModules;
-    public List<DropItem> dropItems;
-    public List<Commanding> commandings;
-    public List<ExplodeModule> ExplodeModules;
-    public List<EffectGivingModule> effectGivingModules;
-    public List<AudioModule> AudioModules;
-    public List<CGNModule> GroovieNoiseToCall;
-    public List<CFEModule> FunctionToCall;
+    public ColliderActionType ColliderActionType { get; set; }
+    public CollisionType CollisionType { get; set; }
+    public DetectType DetectType { get; set; }
+    public float ModifyHealthAmount { get; set; }
+    public List<AnimationDTO> AnimationModules { get; set; }
+    public WarheadActionType WarheadActionType { get; set; }
+    public List<MessageModule> MessageModules { get; set; }
+    public List<DropItem> DropItems { get; set; }
+    public List<Commanding> Commandings { get; set; }
+    public List<ExplodeModule> ExplodeModules { get; set; }
+    public List<EffectGivingModule> EffectGivingModules { get; set; }
+    public List<AudioModule> AudioModules { get; set; }
+    public List<CGNModule> GroovieNoiseToCall { get; set; }
+    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class FCCDTO : AMERTDTO
 {
-    public ColliderActionType ColliderActionType;
-    public ScriptValue CollisionType;
-    public ScriptValue DetectType;
-    public ScriptValue ModifyHealthAmount;
-    public List<FAnimationDTO> AnimationModules;
-    public ScriptValue warheadActionType;
-    public List<FMessageModule> MessageModules;
-    public List<FDropItem> dropItems;
-    public List<FCommanding> commandings;
-    public List<FExplodeModule> ExplodeModules;
-    public List<FEffectGivingModule> effectGivingModules;
-    public List<FAudioModule> AudioModules;
-    public List<FCGNModule> GroovieNoiseToCall;
-    public List<FCFEModule> FunctionToCall;
+    public ColliderActionType ColliderActionType { get; set; }
+    public ScriptValue CollisionType { get; set; }
+    public ScriptValue DetectType { get; set; }
+    public ScriptValue ModifyHealthAmount { get; set; }
+    public List<FAnimationDTO> AnimationModules { get; set; }
+    public ScriptValue WarheadActionType { get; set; }
+    public List<FMessageModule> MessageModules { get; set; }
+    public List<FDropItem> DropItems { get; set; }
+    public List<FCommanding> Commandings { get; set; }
+    public List<FExplodeModule> ExplodeModules { get; set; }
+    public List<FEffectGivingModule> EffectGivingModules { get; set; }
+    public List<FAudioModule> AudioModules { get; set; }
+    public List<FCGNModule> GroovieNoiseToCall { get; set; }
+    public List<FCFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class IODTO : AMERTDTO
 {
-    public int InputKeyCode;
-    public float InteractionMaxRange;
-    public IPActionType ActionType;
-    public List<AnimationDTO> AnimationModules;
-    public WarheadActionType warheadActionType;
-    public List<MessageModule> MessageModules;
-    public List<DropItem> dropItems;
-    public List<Commanding> commandings;
-    public Scp914Mode Scp914Mode;
-    public List<ExplodeModule> ExplodeModules;
-    public List<EffectGivingModule> effectGivingModules;
-    public List<AudioModule> AudioModules;
-    public List<CGNModule> GroovieNoiseToCall;
-    public List<CFEModule> FunctionToCall;
+    public int InputKeyCode { get; set; }
+    public float InteractionMaxRange { get; set; }
+    public IPActionType ActionType { get; set; }
+    public List<AnimationDTO> AnimationModules { get; set; }
+    public WarheadActionType WarheadActionType { get; set; }
+    public List<MessageModule> MessageModules { get; set; }
+    public List<DropItem> DropItems { get; set; }
+    public List<Commanding> Commandings { get; set; }
+    public Scp914Mode Scp914Mode { get; set; }
+    public List<ExplodeModule> ExplodeModules { get; set; }
+    public List<EffectGivingModule> EffectGivingModules { get; set; }
+    public List<AudioModule> AudioModules { get; set; }
+    public List<CGNModule> GroovieNoiseToCall { get; set; }
+    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class FIODTO : AMERTDTO
 {
-    public int InputKeyCode;
-    public ScriptValue InteractionMaxRange;
-    public IPActionType ActionType;
-    public ScriptValue Scp914Mode;
-    public List<FAnimationDTO> AnimationModules;
-    public ScriptValue warheadActionType;
-    public List<FMessageModule> MessageModules;
-    public List<FDropItem> dropItems;
-    public List<FCommanding> commandings;
-    public List<FExplodeModule> ExplodeModules;
-    public List<FEffectGivingModule> effectGivingModules;
-    public List<FAudioModule> AudioModules;
-    public List<FCGNModule> GroovieNoiseToCall;
-    public List<FCFEModule> FunctionToCall;
+    public int InputKeyCode { get; set; }
+    public ScriptValue InteractionMaxRange { get; set; }
+    public IPActionType ActionType { get; set; }
+    public ScriptValue Scp914Mode { get; set; }
+    public List<FAnimationDTO> AnimationModules { get; set; }
+    public ScriptValue WarheadActionType { get; set; }
+    public List<FMessageModule> MessageModules { get; set; }
+    public List<FDropItem> DropItems { get; set; }
+    public List<FCommanding> Commandings { get; set; }
+    public List<FExplodeModule> ExplodeModules { get; set; }
+    public List<FEffectGivingModule> EffectGivingModules { get; set; }
+    public List<FAudioModule> AudioModules { get; set; }
+    public List<FCGNModule> GroovieNoiseToCall { get; set; }
+    public List<FCFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
 public class CGNModule : RandomExecutionModule
 {
-    public int GroovieNoiseId;
-    public string GroovieNoiseGroup;
+    public int GroovieNoiseId { get; set; }
+    public string GroovieNoiseGroup { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
-            //ServerConsole.AddLog("!!");
-            if (AdvancedMERTools.Singleton.codeClassPair[args.schematic].TryGetValue(GroovieNoiseId, out AMERTInteractable v))
+            if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId, out AMERTInteractable v))
                 v.Active = true;
-            if (AdvancedMERTools.Singleton.AMERTGroup[args.schematic].TryGetValue(GroovieNoiseGroup, out List<AMERTInteractable> vs))
+            if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup, out List<AMERTInteractable> vs))
                 vs.ForEach(x => x.Active = true);
         });
     }
@@ -217,16 +213,16 @@ public class CGNModule : RandomExecutionModule
 [Serializable]
 public class FCGNModule : FRandomExecutionModule
 {
-    public ScriptValue GroovieNoiseId;
-    public ScriptValue GroovieNoiseGroup;
+    public ScriptValue GroovieNoiseId { get; set; }
+    public ScriptValue GroovieNoiseGroup { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () => 
         {
-            if (AdvancedMERTools.Singleton.codeClassPair[args.schematic].TryGetValue(GroovieNoiseId.GetValue(args, 0), out AMERTInteractable v))
+            if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId.GetValue(args, 0), out AMERTInteractable v))
                 v.Active = true;
-            if (AdvancedMERTools.Singleton.AMERTGroup[args.schematic].TryGetValue(GroovieNoiseGroup.GetValue(args, ""), out List<AMERTInteractable> vs))
+            if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup.GetValue(args, ""), out List<AMERTInteractable> vs))
                 vs.ForEach(x => x.Active = true);
         });
     }
@@ -235,48 +231,48 @@ public class FCGNModule : FRandomExecutionModule
 [Serializable]
 public class GNDTO : AMERTDTO
 {
-    public List<GMDTO> Settings;
+    public List<GMDTO> Settings { get; set; }
 }
 
 [Serializable]
 public class FGNDTO : AMERTDTO
 {
-    public List<FGMDTO> Settings;
+    public List<FGMDTO> Settings { get; set; }
 }
 
 [Serializable]
 public class CDDTO : AMERTDTO
 {
-    public DoorType DoorType;
-    public string animator;
-    public string OpenAnimation;
-    public string CloseAnimation;
-    public string LockAnimation;
-    public string UnlockAnimation;
-    public string BrokenAnimation;
-    public Vector3 DoorInstallPos;
-    public Vector3 DoorInstallRot;
-    public Vector3 DoorInstallScl;
-    public KeycardPermissions DoorPermissions;
-    public float DoorHealth;
-    public Interactables.Interobjects.DoorUtils.DoorDamageType DoorDamageType;
+    public string Animator { get; set; }
+    public DoorType DoorType { get; set; }
+    public string OpenAnimation { get; set; }
+    public string CloseAnimation { get; set; }
+    public string LockAnimation { get; set; }
+    public string UnlockAnimation { get; set; }
+    public string BrokenAnimation { get; set; }
+    public Vector3 DoorInstallPos { get; set; }
+    public Vector3 DoorInstallRot { get; set; }
+    public Vector3 DoorInstallScl { get; set; }
+    public KeycardPermissions DoorPermissions { get; set; }
+    public float DoorHealth { get; set; }
+    public Interactables.Interobjects.DoorUtils.DoorDamageType DoorDamageType { get; set; }
 }
 
 [Serializable]
 public class DGDTO
 {
-    public float Health;
-    public Interactables.Interobjects.DoorUtils.DoorDamageType DamagableDamageType;
-    public KeycardPermissions KeycardPermissions;
-    public string ObjectId;
+    public float Health { get; set; }
+    public Interactables.Interobjects.DoorUtils.DoorDamageType DamagableDamageType { get; set; }
+    public KeycardPermissions KeycardPermissions { get; set; }
+    public string ObjectId { get; set; }
 }
 
 [Serializable]
 public class GMDTO : RandomExecutionModule
 {
-    public List<int> Targets;
-    public List<string> TargetGroups;
-    public bool Enable;
+    public List<int> Targets { get; set; }
+    public List<string> TargetGroups { get; set; }
+    public bool Enable { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
@@ -284,12 +280,12 @@ public class GMDTO : RandomExecutionModule
         {
             Targets.ForEach(x =>
             {
-                if (AdvancedMERTools.Singleton.codeClassPair[args.schematic].TryGetValue(x, out AMERTInteractable v))
+                if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(x, out AMERTInteractable v))
                     v.Active = Enable;
             });
             TargetGroups.ForEach(x => 
             {
-                if (AdvancedMERTools.Singleton.AMERTGroup[args.schematic].TryGetValue(x, out List<AMERTInteractable> vs))
+                if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(x, out List<AMERTInteractable> vs))
                     vs.ForEach(y => y.Active = Enable);
             });
         });
@@ -299,9 +295,9 @@ public class GMDTO : RandomExecutionModule
 [Serializable]
 public class FGMDTO : FRandomExecutionModule
 {
-    public ScriptValue Targets;
-    public ScriptValue TargetGroups;
-    public ScriptValue Enable;
+    public ScriptValue Targets { get; set; }
+    public ScriptValue TargetGroups { get; set; }
+    public ScriptValue Enable { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
@@ -309,12 +305,12 @@ public class FGMDTO : FRandomExecutionModule
         {
             Targets.GetValue(args, new int[] { }).ForEach(x =>
             {
-                if (AdvancedMERTools.Singleton.codeClassPair[args.schematic].TryGetValue(x, out AMERTInteractable v))
+                if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(x, out AMERTInteractable v))
                     v.Active = Enable.GetValue(args, v.Active);
             });
             TargetGroups.GetValue(args, new string[] { }).ForEach(x =>
             {
-                if (AdvancedMERTools.Singleton.AMERTGroup[args.schematic].TryGetValue(x, out List<AMERTInteractable> vs))
+                if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(x, out List<AMERTInteractable> vs))
                     vs.ForEach(y => y.Active = Enable.GetValue(args, y.Active));
             });
         });
@@ -324,19 +320,23 @@ public class FGMDTO : FRandomExecutionModule
 [Serializable]
 public class AMERTDTO
 {
-    public bool Active;
-    public string ObjectId;
-    public int Code;
-    public string ScriptGroup;
-    public bool UseScriptValue;
+    public bool Active { get; set; }
+    public string ObjectId { get; set; }
+    public int Code { get; set; }
+    public string ScriptGroup { get; set; }
+    public bool UseScriptValue { get; set; }
 }
 
 [Serializable]
 public class AMERTInteractable : NetworkBehaviour
 {
-    void OnDestroy()
+    public AMERTDTO Base { get; private set; }
+    public SchematicObject OSchematic { get; set; }
+    public bool Active { get; set; }
+
+    protected virtual void OnDestroy()
     {
-        AdvancedMERTools.Singleton.codeClassPair[OSchematic].Remove(Base.Code);
+        AdvancedMERTools.Singleton.CodeClassPair[OSchematic].Remove(Base.Code);
         AdvancedMERTools.Singleton.AMERTGroup[OSchematic][Base.ScriptGroup].Remove(this);
     }
 
@@ -370,35 +370,31 @@ public class AMERTInteractable : NetworkBehaviour
             }
         }
     }
-
-    public SchematicObject OSchematic;
-    public AMERTDTO Base;
-    public bool Active;
 }
 
 [Serializable]
 public class EffectGivingModule : RandomExecutionModule
 {
-    public EffectFlagE EffectFlag;
-    public EffectType effectType;
-    public SendType GivingTo;
-    public byte Inensity;
-    public float Duration;
+    public EffectFlagE EffectFlag { get; set; }
+    public EffectType EffectType { get; set; }
+    public SendType GivingTo { get; set; }
+    public byte Inensity { get; set; }
+    public float Duration { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
             if (!args.TargetCalculated)
-                args.targets = GetTargets(GivingTo, args);
-            foreach (Player player in args.targets)
+                args.Targets = GetTargets(GivingTo, args);
+            foreach (Player player in args.Targets)
             {
                 if (EffectFlag.HasFlag(EffectFlagE.Disable))
-                    player.DisableEffect(effectType);
+                    player.DisableEffect(EffectType);
                 else if (EffectFlag.HasFlag(EffectFlagE.Enable))
                 {
-                    byte intensity = (byte)((EffectFlag.HasFlag(EffectFlagE.ModifyIntensity) ? player.GetEffect(effectType).Intensity : 0) + Inensity);
-                    player.EnableEffect(effectType, intensity, Duration, EffectFlag.HasFlag(EffectFlagE.ModifyDuration));
+                    byte intensity = (byte)((EffectFlag.HasFlag(EffectFlagE.ModifyIntensity) ? player.GetEffect(EffectType).Intensity : 0) + Inensity);
+                    player.EnableEffect(EffectType, intensity, Duration, EffectFlag.HasFlag(EffectFlagE.ModifyDuration));
                 }
             }
         });
@@ -408,18 +404,18 @@ public class EffectGivingModule : RandomExecutionModule
 [Serializable]
 public class FEffectGivingModule : FRandomExecutionModule
 {
-    public ScriptValue EffectFlag;
-    public ScriptValue effectType;
-    public ScriptValue GivingTo;
-    public ScriptValue Inensity;
-    public ScriptValue Duration;
+    public ScriptValue EffectFlag { get; set; }
+    public ScriptValue EffectType { get; set; }
+    public ScriptValue GivingTo { get; set; }
+    public ScriptValue Inensity { get; set; }
+    public ScriptValue Duration { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
             EffectFlagE flag = EffectFlag.GetValue<EffectFlagE>(args, 0);
-            EffectType type = effectType.GetValue(args, EffectType.None);
+            EffectType type = EffectType.GetValue(args, Exiled.API.Enums.EffectType.None);
             foreach (Player player in GivingTo.GetValue(args, new Player[] { }))
             {
                 if (flag.HasFlag(EffectFlagE.Disable))
@@ -437,9 +433,9 @@ public class FEffectGivingModule : FRandomExecutionModule
 [Serializable]
 public class ExplodeModule : RandomExecutionModule
 {
-    public bool FFon;
-    public bool EffectOnly;
-    public SVector3 LocalPosition;
+    public bool FFon { get; set; }
+    public bool EffectOnly { get; set; }
+    public SVector3 LocalPosition { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
@@ -447,9 +443,9 @@ public class ExplodeModule : RandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
             if (EffectOnly)
-                ExplosionUtils.ServerSpawnEffect(args.transform.TransformPoint(LocalPosition), ItemType.GrenadeHE);
+                ExplosionUtils.ServerSpawnEffect(args.Transform.TransformPoint(LocalPosition), ItemType.GrenadeHE);
             else
-                ExplosionUtils.ServerExplode(args.transform.TransformPoint(LocalPosition), FFon ? new Footprint(local) : new Footprint(args.player.ReferenceHub), ExplosionType.Grenade);
+                ExplosionUtils.ServerExplode(args.Transform.TransformPoint(LocalPosition), FFon ? new Footprint(local) : new Footprint(args.Player.ReferenceHub), ExplosionType.Grenade);
         });
     }
 }
@@ -457,9 +453,9 @@ public class ExplodeModule : RandomExecutionModule
 [Serializable]
 public class FExplodeModule : FRandomExecutionModule
 {
-    public ScriptValue FFon;
-    public ScriptValue EffectOnly;
-    public ScriptValue LocalPosition;
+    public ScriptValue FFon { get; set; }
+    public ScriptValue EffectOnly { get; set; }
+    public ScriptValue LocalPosition { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
@@ -467,9 +463,9 @@ public class FExplodeModule : FRandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
             if (EffectOnly.GetValue(args, true))
-                ExplosionUtils.ServerSpawnEffect(args.transform.TransformPoint(LocalPosition.GetValue(args, Vector3.zero)), ItemType.GrenadeHE);
+                ExplosionUtils.ServerSpawnEffect(args.Transform.TransformPoint(LocalPosition.GetValue(args, Vector3.zero)), ItemType.GrenadeHE);
             else
-                ExplosionUtils.ServerExplode(args.transform.TransformPoint(LocalPosition.GetValue(args, Vector3.zero)), FFon.GetValue(args, false) ? new Footprint(local) : new Footprint(args.player.ReferenceHub), ExplosionType.Grenade);
+                ExplosionUtils.ServerExplode(args.Transform.TransformPoint(LocalPosition.GetValue(args, Vector3.zero)), FFon.GetValue(args, false) ? new Footprint(local) : new Footprint(args.Player.ReferenceHub), ExplosionType.Grenade);
         });
     }
 }
@@ -477,16 +473,16 @@ public class FExplodeModule : FRandomExecutionModule
 [Serializable]
 public class AudioModule : RandomExecutionModule
 {
-    public string AudioName;
+    public string AudioName { get; set; }
     [Header("0: Loop")]
-    public int PlayCount;
-    public bool IsSpatial;
-    public float MaxDistance;
-    public float MinDistance;
-    public float Volume;
-    public SVector3 LocalPlayPosition;
-    public AudioPlayer AP;
-    bool loaded;
+    public int PlayCount { get; set; }
+    public bool IsSpatial { get; set; }
+    public float MaxDistance { get; set; }
+    public float MinDistance { get; set; }
+    public float Volume { get; set; }
+    public SVector3 LocalPlayPosition { get; set; }
+    public AudioPlayer AP { get; set; }
+    private bool loaded;
 
     public override void Execute(ModuleGeneralArguments args)
     {
@@ -505,11 +501,10 @@ public class AudioModule : RandomExecutionModule
             }
             if (AP == null)
             {
-                AP = AudioPlayer.Create($"AudioHandler-{args.transform.GetHashCode()}-{GetHashCode()}");
-                Speaker speaker = AP.AddSpeaker("Primary", args.transform.TransformPoint(LocalPlayPosition), Volume, IsSpatial, MinDistance, MaxDistance);
-                AP.transform.parent = speaker.transform.parent = args.transform;
+                AP = AudioPlayer.Create($"AudioHandler-{args.Transform.GetHashCode()}-{GetHashCode()}");
+                Speaker speaker = AP.AddSpeaker("Primary", args.Transform.TransformPoint(LocalPlayPosition), Volume, IsSpatial, MinDistance, MaxDistance);
+                AP.transform.parent = speaker.transform.parent = args.Transform;
                 AP.transform.localPosition = speaker.transform.localPosition = LocalPlayPosition;
-                //ServerConsole.AddLog(speaker.transform.position.ToPreciseString());
             }
             if (PlayCount == 0)
                 AP.AddClip(AudioName, Volume, true, false);
@@ -522,15 +517,15 @@ public class AudioModule : RandomExecutionModule
 [Serializable]
 public class FAudioModule : FRandomExecutionModule
 {
-    public ScriptValue AudioName;
+    public ScriptValue AudioName { get; set; }
     [Header("0: Loop")]
-    public ScriptValue PlayCount;
-    public ScriptValue IsSpatial;
-    public ScriptValue MaxDistance;
-    public ScriptValue MinDistance;
-    public ScriptValue Volume;
-    public ScriptValue LocalPlayPosition;
-    public AudioPlayer AP;
+    public ScriptValue PlayCount { get; set; }
+    public ScriptValue IsSpatial { get; set; }
+    public ScriptValue MaxDistance { get; set; }
+    public ScriptValue MinDistance { get; set; }
+    public ScriptValue Volume { get; set; }
+    public ScriptValue LocalPlayPosition { get; set; }
+    public AudioPlayer AP { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
@@ -550,11 +545,10 @@ public class FAudioModule : FRandomExecutionModule
             float vol = Volume.GetValue(args, 1f);
             if (AP == null)
             {
-                AP = AudioPlayer.Create($"AudioHandler-{args.transform.GetHashCode()}-{GetHashCode()}");
-                Speaker speaker = AP.AddSpeaker($"Primary-{audioName}", args.transform.TransformPoint(vector), vol, IsSpatial.GetValue(args, true), MinDistance.GetValue(args, 5f), MaxDistance.GetValue(args, 5f));
-                //ServerConsole.AddLog(speaker.transform.position.ToPreciseString());
+                AP = AudioPlayer.Create($"AudioHandler-{args.Transform.GetHashCode()}-{GetHashCode()}");
+                Speaker speaker = AP.AddSpeaker($"Primary-{audioName}", args.Transform.TransformPoint(vector), vol, IsSpatial.GetValue(args, true), MinDistance.GetValue(args, 5f), MaxDistance.GetValue(args, 5f));
             }
-            AP.SpeakersByName[$"Primary-{audioName}"].transform.parent = args.transform;
+            AP.SpeakersByName[$"Primary-{audioName}"].transform.parent = args.Transform;
             AP.SpeakersByName[$"Primary-{audioName}"].transform.localPosition = vector;
             int PC = PlayCount.GetValue(args, 1);
             if (PC == 0)
@@ -568,46 +562,46 @@ public class FAudioModule : FRandomExecutionModule
 [Serializable]
 public class MessageModule : RandomExecutionModule
 {
-    public SendType SendType;
-    public string MessageContent;
-    public MessageTypeE MessageType;
-    public float Duration;
+    public SendType SendType { get; set; }
+    public string MessageContent { get; set; }
+    public MessageTypeE MessageType { get; set; }
+    public float Duration { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
-            string Content = MessageContent;
-            foreach (string v in args.interpolations.Keys)
+            string content = MessageContent;
+            foreach (string v in args.Interpolations.Keys)
             {
                 try
                 {
-                    Content = Content.Replace(v, args.interpolations[v](args.interpolationsList));
+                    content = content.Replace(v, args.Interpolations[v](args.InterpolationsList));
                 }
                 catch (Exception _) { }
             }
             try
             {
-                Content = ServerConsole.Singleton.NameFormatter.ProcessExpression(Content);
+                content = ServerConsole.Singleton.NameFormatter.ProcessExpression(content);
             }
             catch (Exception e) { }
             if (!args.TargetCalculated)
-                args.targets = GetTargets(SendType, args);
+                args.Targets = GetTargets(SendType, args);
             if (MessageType == MessageTypeE.Cassie)
             {
-                Cassie.Message(Content);
+                Cassie.Message(content);
             }
             else
             {
-                foreach (Player p in args.targets)
+                foreach (Player p in args.Targets)
                 {
                     if (MessageType == MessageTypeE.BroadCast)
                     {
-                        p.Broadcast((ushort)Math.Round(Duration), Content);
+                        p.Broadcast((ushort)Math.Round(Duration), content);
                     }
                     else
                     {
-                        p.ShowHint(Content, Duration);
+                        p.ShowHint(content, Duration);
                     }
                 }
             }
@@ -618,20 +612,20 @@ public class MessageModule : RandomExecutionModule
 [Serializable]
 public class FMessageModule : FRandomExecutionModule
 {
-    public ScriptValue SendType;
-    public ScriptValue MessageContent;
-    public ScriptValue MessageType;
-    public ScriptValue Duration;
+    public ScriptValue SendType { get; set; }
+    public ScriptValue MessageContent { get; set; }
+    public ScriptValue MessageType { get; set; }
+    public ScriptValue Duration { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
-            string Content = MessageContent.GetValue(args, "");
+            string content = MessageContent.GetValue(args, "");
             MessageTypeE type = MessageType.GetValue(args, MessageTypeE.BroadCast);
             if (type == MessageTypeE.Cassie)
             {
-                Cassie.Message(Content);
+                Cassie.Message(content);
             }
             else
             {
@@ -639,11 +633,11 @@ public class FMessageModule : FRandomExecutionModule
                 {
                     if (type == MessageTypeE.BroadCast)
                     {
-                        p.Broadcast((ushort)Math.Round(Duration.GetValue(args, 0f)), Content);
+                        p.Broadcast((ushort)Math.Round(Duration.GetValue(args, 0f)), content);
                     }
                     else
                     {
-                        p.ShowHint(Content, Duration.GetValue(args, 0f));
+                        p.ShowHint(content, Duration.GetValue(args, 0f));
                     }
                 }
             }
@@ -654,15 +648,15 @@ public class FMessageModule : FRandomExecutionModule
 [Serializable]
 public class AnimationDTO : RandomExecutionModule
 {
-    public Animator Animator;
+    public Animator Animator { get; set; }
     [HideInInspector]
-    public string AnimatorAdress;
-    public string AnimationName;
-    public AnimationTypeE AnimationType;
-    public ParameterTypeE ParameterType;
-    public string ParameterName;
+    public string AnimatorAdress { get; set; }
+    public string AnimationName { get; set; }
+    public AnimationTypeE AnimationType { get; set; }
+    public ParameterTypeE ParameterType { get; set; }
+    public string ParameterName { get; set; }
     [Header("If parameter type is bool or trigger, input 0 for false, and input 1 for true.")]
-    public string ParameterValue;
+    public string ParameterValue { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
@@ -670,7 +664,7 @@ public class AnimationDTO : RandomExecutionModule
         {
             if (Animator == null)
             {
-                if (!EventManager.FindObjectWithPath(args.schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
+                if (!EventManager.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
                 {
                     ServerConsole.AddLog("Cannot find appopriate animator!");
                     return;
@@ -709,15 +703,15 @@ public class AnimationDTO : RandomExecutionModule
 [Serializable]
 public class FAnimationDTO : FRandomExecutionModule
 {
-    public Animator Animator;
+    public Animator Animator { get; set; }
     [HideInInspector]
-    public string AnimatorAdress;
-    public ScriptValue AnimationName;
-    public ScriptValue AnimationType;
-    public ScriptValue ParameterType;
-    public ScriptValue ParameterName;
+    public string AnimatorAdress { get; set; }
+    public ScriptValue AnimationName { get; set; }
+    public ScriptValue AnimationType { get; set; }
+    public ScriptValue ParameterType { get; set; }
+    public ScriptValue ParameterName { get; set; }
     [Header("If parameter type is bool or trigger, input 0 for false, and input 1 for true.")]
-    public ScriptValue ParameterValue;
+    public ScriptValue ParameterValue { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
@@ -725,7 +719,7 @@ public class FAnimationDTO : FRandomExecutionModule
         {
             if (Animator == null)
             {
-                if (!EventManager.FindObjectWithPath(args.schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
+                if (!EventManager.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
                 {
                     ServerConsole.AddLog("Cannot find appopriate animator!");
                     return;
@@ -768,9 +762,9 @@ public class FAnimationDTO : FRandomExecutionModule
 [Serializable]
 public class RandomExecutionModule
 {
-    public float ChanceWeight;
-    public bool ForceExecute;
-    public float ActionDelay;
+    public float ChanceWeight { get; set; }
+    public bool ForceExecute { get; set; }
+    public float ActionDelay { get; set; }
 
     public static RandomExecutionModule GetSingleton<T>() where T : RandomExecutionModule, new()
     {
@@ -783,8 +777,8 @@ public class RandomExecutionModule
 
     public static List<T> SelectList<T>(List<T> list) where T : RandomExecutionModule, new()
     {
-        float Chance = list.Sum(x => x.ChanceWeight);
-        Chance = UnityEngine.Random.Range(0f, Chance);
+        float chance = list.Sum(x => x.ChanceWeight);
+        chance = UnityEngine.Random.Range(0f, chance);
         List<T> output = new List<T> { };
         foreach (T element in list)
         {
@@ -792,10 +786,10 @@ public class RandomExecutionModule
                 output.Add(element);
             else
             {
-                if (Chance <= 0)
+                if (chance <= 0)
                     continue;
-                Chance -= element.ChanceWeight;
-                if (Chance <= 0)
+                chance -= element.ChanceWeight;
+                if (chance <= 0)
                 {
                     output.Add(element);
                 }
@@ -813,13 +807,13 @@ public class RandomExecutionModule
     {
         List<Player> targets = new List<Player> { };
         if (type.HasFlag(SendType.AllExceptAboveOne))
-            targets.AddRange(Player.List.Where(x => x != args.player));
+            targets.AddRange(Player.List.Where(x => x != args.Player));
         if (type.HasFlag(SendType.Spectators))
             targets.AddRange(Player.List.Where(x => !x.IsAlive));
         if (type.HasFlag(SendType.Alive))
             targets.AddRange(Player.List.Where(x => x.IsAlive));
         if (type.HasFlag(SendType.Interactor))
-            targets.Add(args.player);
+            targets.Add(args.Player);
         return targets.Distinct().ToArray();
     }
 
@@ -829,15 +823,15 @@ public class RandomExecutionModule
 [Serializable]
 public class FRandomExecutionModule
 {
-    public ScriptValue ChanceWeight;
-    public ScriptValue ForceExecute;
-    public ScriptValue ActionDelay;
-    float calcedWeight;
+    public ScriptValue ChanceWeight { get; set; }
+    public ScriptValue ForceExecute { get; set; }
+    public ScriptValue ActionDelay { get; set; }
+    private float calcedWeight;
 
     public static List<T> SelectList<T>(List<T> list, FunctionArgument args) where T : FRandomExecutionModule, new()
     {
-        float Chance = list.Sum(x => x.calcedWeight = x.ChanceWeight.GetValue(args, 0f));
-        Chance = UnityEngine.Random.Range(0f, Chance);
+        float chance = list.Sum(x => x.calcedWeight = x.ChanceWeight.GetValue(args, 0f));
+        chance = UnityEngine.Random.Range(0f, chance);
         List<T> output = new List<T> { };
         foreach (T element in list)
         {
@@ -845,10 +839,10 @@ public class FRandomExecutionModule
                 output.Add(element);
             else
             {
-                if (Chance <= 0)
+                if (chance <= 0)
                     continue;
-                Chance -= element.calcedWeight;
-                if (Chance <= 0)
+                chance -= element.calcedWeight;
+                if (chance <= 0)
                 {
                     output.Add(element);
                 }
@@ -868,18 +862,16 @@ public class FRandomExecutionModule
 [Serializable]
 public class DropItem : RandomExecutionModule
 {
-    public ItemType ItemType;
-    public uint CustomItemId;
-    public int Count;
-    public SVector3 DropLocalPosition;
+    public ItemType ItemType { get; set; }
+    public uint CustomItemId { get; set; }
+    public int Count { get; set; }
+    public SVector3 DropLocalPosition { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
-            //ServerConsole.AddLog("!!!");
-            Vector3 vector3 = args.transform.TransformPoint(DropLocalPosition);
-            //ServerConsole.AddLog(vector3.ToString());
+            Vector3 vector3 = args.Transform.TransformPoint(DropLocalPosition);
             if (CustomItemId != 0 && CustomItem.TryGet(CustomItemId, out CustomItem custom))
             {
                 for (int i = 0; i < Count; i++)
@@ -893,7 +885,7 @@ public class DropItem : RandomExecutionModule
                     return;
                 for (int i = 0; i < Count; i++)
                 {
-                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.transform.rotation);
+                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.Transform.rotation);
                     itemPickupBase.NetworkInfo = new PickupSyncInfo(ItemType, itemBase.Weight, 0, false);
                     NetworkServer.Spawn(itemPickupBase.gameObject);
                 }
@@ -905,18 +897,16 @@ public class DropItem : RandomExecutionModule
 [Serializable]
 public class FDropItem : FRandomExecutionModule
 {
-    public ScriptValue ItemType;
-    public ScriptValue CustomItemId;
-    public ScriptValue Count;
-    public ScriptValue DropLocalPosition;
+    public ScriptValue ItemType { get; set; }
+    public ScriptValue CustomItemId { get; set; }
+    public ScriptValue Count { get; set; }
+    public ScriptValue DropLocalPosition { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
-            //ServerConsole.AddLog("!!!");
-            Vector3 vector3 = args.transform.TransformPoint(DropLocalPosition.GetValue(args, Vector3.zero));
-            //ServerConsole.AddLog(vector3.ToString());
+            Vector3 vector3 = args.Transform.TransformPoint(DropLocalPosition.GetValue(args, Vector3.zero));
             int u = CustomItemId.GetValue(args, 0);
             int c = Count.GetValue(args, 1);
             if (u != 0 && CustomItem.TryGet((uint)u, out CustomItem custom))
@@ -930,10 +920,13 @@ public class FDropItem : FRandomExecutionModule
             {
                 ItemType value = ItemType.GetValue(args, global::ItemType.KeycardJanitor);
                 if (!InventoryItemLoader.AvailableItems.TryGetValue(value, out ItemBase itemBase) || itemBase.PickupDropModel == null)
+                {
                     return;
+                }
+
                 for (int i = 0; i < c; i++)
                 {
-                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.transform.rotation);
+                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.Transform.rotation);
                     itemPickupBase.NetworkInfo = new PickupSyncInfo(value, itemBase.Weight, 0, false);
                     NetworkServer.Spawn(itemPickupBase.gameObject);
                 }
@@ -945,21 +938,21 @@ public class FDropItem : FRandomExecutionModule
 [Serializable]
 public class WhitelistWeapon
 {
-    public ItemType ItemType;
-    public uint CustomItemId;
+    public ItemType ItemType { get; set; }
+    public uint CustomItemId { get; set; }
 }
 
 [Serializable]
 public class FWhitelistWeapon : Value
 {
+    public ScriptValue ItemType { get; set; }
+    public ScriptValue CustomItemId { get; set; }
+
     public override void OnValidate()
     {
         ItemType.OnValidate();
         CustomItemId.OnValidate();
     }
-
-    public ScriptValue ItemType;
-    public ScriptValue CustomItemId;
 }
 
 [Serializable]
@@ -969,31 +962,33 @@ public class SVector3
     public float y;
     public float z;
 
-    public static implicit operator Vector3(SVector3 sVector) => new Vector3(sVector.x, sVector.y, sVector.z);
+    public static implicit operator Vector3(SVector3 sVector) => new(sVector.x, sVector.y, sVector.z);
 }
 
 public class ModuleGeneralArguments
 {
-    public SchematicObject schematic;
-    public Player player;
-    public Player[] targets;
-    public bool TargetCalculated;
-    public Transform transform;
-    public Dictionary<string, Func<object[], string>> interpolations;
-    public object[] interpolationsList;
+    public SchematicObject Schematic { get; set; }
+    public Player Player { get; set; }
+    public Player[] Targets { get; set; }
+    public bool TargetCalculated { get; set; }
+    public Transform Transform { get; set; }
+    public Dictionary<string, Func<object[], string>> Interpolations { get; set; }
+    public object[] InterpolationsList { get; set; }
 }
 
 [Serializable]
 public class CFEModule : RandomExecutionModule
 {
-    public string FunctionName;
+    public string FunctionName { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
-            if (AdvancedMERTools.Singleton.FunctionExecutors[args.schematic].TryGetValue(FunctionName, out FunctionExecutor function))
-                function.data.Execute(new FunctionArgument { player = args.player });
+            if (AdvancedMERTools.Singleton.FunctionExecutors[args.Schematic].TryGetValue(FunctionName, out FunctionExecutor function))
+            {
+                function.Data.Execute(new FunctionArgument { Player = args.Player });
+            }
         });
     }
 }
@@ -1001,16 +996,17 @@ public class CFEModule : RandomExecutionModule
 [Serializable]
 public class FCFEModule : FRandomExecutionModule
 {
-    public ScriptValue FunctionName;
-    public List<ScriptValue> FunctionArguments;
+    public ScriptValue FunctionName { get; set; }
+    public List<ScriptValue> FunctionArguments { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
-            //ServerConsole.AddLog("!!!");
-            if (AdvancedMERTools.Singleton.FunctionExecutors[args.schematic].TryGetValue(FunctionName.GetValue(args, ""), out FunctionExecutor function))
-                function.data.Execute(new FunctionArgument { Arguments = FunctionArguments.Select(x => x.GetValue(args)).ToList(), player = args.player, schematic = args.schematic });
+            if (AdvancedMERTools.Singleton.FunctionExecutors[args.Schematic].TryGetValue(FunctionName.GetValue(args, ""), out FunctionExecutor function))
+            {
+                function.Data.Execute(new FunctionArgument { Arguments = FunctionArguments.Select(x => x.GetValue(args)).ToList(), Player = args.Player, Schematic = args.Schematic });
+            }
         });
     }
 }
@@ -1018,23 +1014,23 @@ public class FCFEModule : FRandomExecutionModule
 [Serializable]
 public class Commanding : RandomExecutionModule
 {
-    public string CommandContext;
+    public string CommandContext { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
-            string Content = CommandContext;
-            foreach (string v in args.interpolations.Keys)
+            string content = CommandContext;
+            foreach (string v in args.Interpolations.Keys)
             {
                 try
                 {
-                    Content = Content.Replace(v, args.interpolations[v](args.interpolationsList));
+                    content = content.Replace(v, args.Interpolations[v](args.InterpolationsList));
                 }
                 catch (Exception) { }
             }
-            Content = ServerConsole.Singleton.NameFormatter.ProcessExpression(Content);
-            AdvancedMERTools.ExecuteCommand(Content);
+            content = ServerConsole.Singleton.NameFormatter.ProcessExpression(content);
+            AdvancedMERTools.ExecuteCommand(content);
         });
     }
 }
@@ -1042,7 +1038,7 @@ public class Commanding : RandomExecutionModule
 [Serializable]
 public class FCommanding : FRandomExecutionModule
 {
-    public ScriptValue CommandContext;
+    public ScriptValue CommandContext { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
@@ -1056,7 +1052,7 @@ public class FCommanding : FRandomExecutionModule
 [Serializable]
 public class GateSerializable
 {
-    public Interactables.Interobjects.DoorUtils.DoorPermissionFlags doorPermissions { get; set; }
+    public Interactables.Interobjects.DoorUtils.DoorPermissionFlags DoorPermissions { get; set; }
     public bool RequireAllPermission { get; set; }
     public bool IsLocked { get; set; }
     public bool IsOpened { get; set; }

@@ -1,31 +1,38 @@
-﻿using System;
+﻿using Exiled.API.Features;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Items;
-using Exiled.CustomItems;
-using CommandSystem;
-using Utf8Json.Formatters;
-using RemoteAdmin;
-using Exiled.CustomItems.API.Features;
 using UserSettings.ServerSpecific;
-//using MapEditorReborn.API.Features.Objects;
-//using MapEditorReborn.API.Features;
-using ProjectMER.Features.Objects;
 
 namespace AdvancedMERTools;
 
 public class InteractableObject : AMERTInteractable
 {
+    public new IODTO Base { get; private set; }
+
+    public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
+    {
+        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
+        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
+        {
+            "{p_pos}", vs =>
+            {
+                Vector3 pos = (vs[0] as Player).Transform.position;
+                return $"{pos.x} {pos.y} {pos.z}";
+            }
+        },
+        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
+        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
+        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
+    };
+
     protected virtual void Start()
     {
         // TODO: Definitely need to test this, probably with logs or something
         this.Base = base.Base as IODTO;
-        AdvancedMERTools.Singleton.interactableObjects.Add(this);
+        AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
@@ -38,21 +45,39 @@ public class InteractableObject : AMERTInteractable
         }
     }
 
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        AdvancedMERTools.Singleton.InteractableObjects.Remove(this);
+    }
+
     public virtual void RunProcess(Player player)
     {
         if (!Active)
+        {
             return;
-        ModuleGeneralArguments args = new ModuleGeneralArguments { interpolations = Formatter, interpolationsList = new object[] { player }, player = player, schematic = OSchematic, transform = this.transform, TargetCalculated = false };
+        }
+
+        ModuleGeneralArguments args = new()
+        {
+            Interpolations = Formatter,
+            InterpolationsList = new object[] { player },
+            Player = player,
+            Schematic = OSchematic,
+            Transform = this.transform,
+            TargetCalculated = false,
+        };
         var actionExecutors = new Dictionary<IPActionType, Action>
         {
             { IPActionType.Disappear, () => Destroy(this.gameObject, 0.1f) },
             { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
             { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-            { IPActionType.UpgradeItem, () =>
+            { IPActionType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
+            {
+                IPActionType.UpgradeItem, () =>
                 {
                     if (player.GameObject.TryGetComponent<Collider>(out Collider col))
                     {
@@ -72,10 +97,10 @@ public class InteractableObject : AMERTInteractable
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) }
+            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {
@@ -85,32 +110,16 @@ public class InteractableObject : AMERTInteractable
             }
         }
     }
-
-    void OnDestroy()
-    {
-        AdvancedMERTools.Singleton.interactableObjects.Remove(this);
-    }
-
-    static readonly Dictionary<string, Func<object[], string>> Formatter = new Dictionary<string, Func<object[], string>>
-    {
-        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
-        { "{p_pos}", vs => { Vector3 pos = (vs[0] as Player).Transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
-        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
-        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
-        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() }
-    };
-
-    public new IODTO Base;
 }
 
 public class FInteractableObject : InteractableObject
 {
+    public new FIODTO Base { get; private set; }
+
     protected override void Start()
     {
         this.Base = ((AMERTInteractable)this).Base as FIODTO;
-        AdvancedMERTools.Singleton.interactableObjects.Add(this);
+        AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
@@ -122,7 +131,9 @@ public class FInteractableObject : InteractableObject
             bool flag = false;
             SSKeybindSetting key = new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode, true, "");
             if (index == -1)
+            {
                 original.Add(new SSGroupHeader("AMERT Keybinds"));
+            }
             else
             {
                 for (index++; index < original.Count; index++)
@@ -136,7 +147,10 @@ public class FInteractableObject : InteractableObject
                 }
             }
             if (!flag)
+            {
                 original.Add(key);
+            }
+
             ServerSpecificSettingsSync.DefinedSettings = original.ToArray();
             ServerSpecificSettingsSync.SendToAll();
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
@@ -146,17 +160,20 @@ public class FInteractableObject : InteractableObject
     public override void RunProcess(Player player)
     {
         if (!Active)
+        {
             return;
+        }
+
         FunctionArgument args = new FunctionArgument(this, player);
         var actionExecutors = new Dictionary<IPActionType, Action>
         {
             { IPActionType.Disappear, () => Destroy(this.gameObject, 0.1f) },
             { IPActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
             { IPActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
+            { IPActionType.DropItems, () => FDropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => FCommanding.Execute(Base.Commandings, args) },
             { IPActionType.UpgradeItem, () =>
                 {
                     if (player.GameObject.TryGetComponent<Collider>(out Collider col))
@@ -178,10 +195,10 @@ public class FInteractableObject : InteractableObject
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) }
+            { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {
@@ -191,11 +208,4 @@ public class FInteractableObject : InteractableObject
             }
         }
     }
-
-    void OnDestroy()
-    {
-        AdvancedMERTools.Singleton.interactableObjects.Remove(this);
-    }
-
-    public new FIODTO Base;
 }

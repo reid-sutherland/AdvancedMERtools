@@ -1,63 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.ComponentModel;
-using System.IO;
-using UnityEditor;
-using UnityEngine;
-using System.Reflection;
-using Exiled.API.Features;
-using System.Threading.Tasks;
-//using MapEditorReborn.API.Features.Objects;
+﻿using Exiled.API.Features;
 using ProjectMER.Features.Objects;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using UnityEngine;
 
 namespace AdvancedMERTools;
 
 public class FunctionExecutor : AMERTInteractable
 {
-    void Start()
+    public FEDTO Data { get; set; }
+
+    public void Start()
     {
         //if (!AdvancedMERTools.Singleton.FunctionExecutors.ContainsKey(OSchematic))
         //    AdvancedMERTools.Singleton.FunctionExecutors.Add(OSchematic, new Dictionary<string, FunctionExecutor> { });
-        if (AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].ContainsKey(data.FunctionName))
+        if (AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].ContainsKey(Data.FunctionName))
         {
-            ServerConsole.AddLog($"WARNING! There's another function named: {data.FunctionName}. Overlapped Function Name is not allowed!", ConsoleColor.Red);
+            ServerConsole.AddLog($"WARNING! There's another function named: {Data.FunctionName}. Overlapped Function Name is not allowed!", ConsoleColor.Red);
             Destroy(this);
             return;
         }
-        AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].Add(data.FunctionName, this);
-        //data.OSchematic = OSchematic;
+        AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].Add(Data.FunctionName, this);
+        //Data.OSchematic = OSchematic;
     }
-
-    public FEDTO data;
 }
 
 public class FunctionArgument
 {
+    public List<object> Arguments { get; set; } = new();
+    public List<(object, int)> Levels { get; set; } = new();
+    public Dictionary<string, object> FunctionVariables { get; set; } = new();
+    public FEDTO Function { get; set; }
+    public Player Player { get; set; }
+    public SchematicObject Schematic { get; set; }
+    public Transform Transform { get; set; }
+
     public FunctionArgument()
     {
     }
 
     public FunctionArgument(AMERTInteractable interactable, Player player = null)
     {
-        schematic = interactable.OSchematic;
-        transform = interactable.transform;
-        this.player = player;
+        Schematic = interactable.OSchematic;
+        Transform = interactable.transform;
+        this.Player = player;
     }
-
-    public List<object> Arguments = new List<object> { };
-    public FEDTO Function;
-    public Player player;
-    public SchematicObject schematic;
-    public Transform transform;
-    public List<(object, int)> Levels = new List<(object, int)> { };
-    public Dictionary<string, object> FunctionVariables = new Dictionary<string, object> { };
 }
 
 public class FunctionReturn
 {
-    public object value;
-    public FunctionResult result;
+    public object Value { get; set; }
+    public FunctionResult Result { get; set; }
 
     public static implicit operator FunctionReturn(Task<FunctionReturn> t) => t.Result;
 }
@@ -69,12 +63,18 @@ public enum FunctionResult
     Return,
     Continue,
     Break,
-    Wait
+    Wait,
 }
 
 [Serializable]
 public class FEDTO : ActionsFunctioner
 {
+    public string FunctionName { get; set; }
+    public string[] ArgumentsName { get; set; }
+    public SchematicObject OSchematic { get; set; }
+    public List<ScriptValue> Conditions { get; set; }
+    public Dictionary<string, object> ScriptVariables { get; set; } = new();
+
     public override FunctionReturn Execute(FunctionArgument args)
     {
         args.Function = this;
@@ -82,37 +82,30 @@ public class FEDTO : ActionsFunctioner
             return new FunctionReturn();
         return ExecuteActions(args, FunctionResult.Return);
     }
-
-    public string FunctionName;
-    public string[] ArgumentsName;
-    public SchematicObject OSchematic;
-    public List<ScriptValue> Conditions;
-    public Dictionary<string, object> ScriptVariables = new Dictionary<string, object> { };
 }
 
 [Serializable]
 public class ScriptAction
 {
-    public FunctionType ActionType;
-    public Function function;
+    public FunctionType ActionType { get; set; }
+    public Function Function { get; set; }
 
     public FunctionReturn Execute(FunctionArgument args)
     {
-        if (function == null)
+        if (Function == null)
             return null;
         if (!EnumToFunc.TryGetValue(ActionType, out _))
         {
             switch (ActionType)
             {
                 case FunctionType.Break:
-                    return new FunctionReturn { result = FunctionResult.Break };
+                    return new FunctionReturn { Result = FunctionResult.Break };
                 case FunctionType.Continue:
-                    return new FunctionReturn { result = FunctionResult.Continue };
-                    
+                    return new FunctionReturn { Result = FunctionResult.Continue };
             }
-            return new FunctionReturn { result = FunctionResult.FunctionCheck };
+            return new FunctionReturn { Result = FunctionResult.FunctionCheck };
         }
-        return function.Execute(args);
+        return Function.Execute(args);
     }
 
     public void OnValidate()
@@ -120,30 +113,30 @@ public class ScriptAction
     }
 
     public static readonly Dictionary<FunctionType, Type> EnumToFunc = new Dictionary<FunctionType, Type>
-{
-    { FunctionType.If, typeof(If) },
-    { FunctionType.ElseIf, typeof(ElseIf) },
-    { FunctionType.Else, typeof(Else) },
-    { FunctionType.While, typeof(While) },
-    { FunctionType.For, typeof(For) },
-    { FunctionType.ForEach, typeof(ForEach) },
-    { FunctionType.SetVariable, typeof(SetVariable) },
-    { FunctionType.Return, typeof(Return) },
-    { FunctionType.Wait, typeof(Wait) },
-    { FunctionType.CallFunction, typeof(CallFunction) },
-    { FunctionType.CallGroovyNoise, typeof(CallGroovyNoise) },
-    { FunctionType.PlayAnimation, typeof(PlayAnimation) },
-    { FunctionType.SendMessage, typeof(SendMessage) },
-    { FunctionType.SendCommand, typeof(SendCommand) },
-    { FunctionType.DropItems, typeof(DropItems) },
-    { FunctionType.Explode, typeof(Explode) },
-    { FunctionType.GiveEffect, typeof(GiveEffect) },
-    { FunctionType.PlayAudio, typeof(PlayAudio) },
-    { FunctionType.Warhead, typeof(FWarhead) },
-    { FunctionType.ChangePlayerValue, typeof(ChangePlayerValue) },
-    { FunctionType.PlayerAction, typeof(PlayerAction) },
-    { FunctionType.ChangeEntityValue, typeof(ChangeEntityValue) }
-};
+    {
+        { FunctionType.If, typeof(If) },
+        { FunctionType.ElseIf, typeof(ElseIf) },
+        { FunctionType.Else, typeof(Else) },
+        { FunctionType.While, typeof(While) },
+        { FunctionType.For, typeof(For) },
+        { FunctionType.ForEach, typeof(ForEach) },
+        { FunctionType.SetVariable, typeof(SetVariable) },
+        { FunctionType.Return, typeof(Return) },
+        { FunctionType.Wait, typeof(Wait) },
+        { FunctionType.CallFunction, typeof(CallFunction) },
+        { FunctionType.CallGroovyNoise, typeof(CallGroovyNoise) },
+        { FunctionType.PlayAnimation, typeof(PlayAnimation) },
+        { FunctionType.SendMessage, typeof(SendMessage) },
+        { FunctionType.SendCommand, typeof(SendCommand) },
+        { FunctionType.DropItems, typeof(DropItems) },
+        { FunctionType.Explode, typeof(Explode) },
+        { FunctionType.GiveEffect, typeof(GiveEffect) },
+        { FunctionType.PlayAudio, typeof(PlayAudio) },
+        { FunctionType.Warhead, typeof(FWarhead) },
+        { FunctionType.ChangePlayerValue, typeof(ChangePlayerValue) },
+        { FunctionType.PlayerAction, typeof(PlayerAction) },
+        { FunctionType.ChangeEntityValue, typeof(ChangeEntityValue) },
+    };
 }
 
 [Serializable]
@@ -172,7 +165,7 @@ public enum FunctionType
     Warhead,
     ChangePlayerValue,
     PlayerAction,
-    ChangeEntityValue
+    ChangeEntityValue,
 }
 
 [Serializable]
@@ -196,7 +189,7 @@ public class DFunction : Function
 [Serializable]
 public class ActionsFunctioner : Function
 {
-    public List<ScriptAction> Actions;
+    public List<ScriptAction> Actions { get; set; }
 
     public override void OnValidate()
     {
@@ -225,18 +218,20 @@ public class ActionsFunctioner : Function
 
     protected async Task<FunctionReturn> ExecuteActions(FunctionArgument args, FunctionResult result = FunctionResult.Default)
     {
-        bool IfActed = false;
+        bool ifActed = false;
         for (int i = 0; i < Actions.Count; i++)
         {
             if (Actions[i].ActionType == FunctionType.ElseIf || Actions[i].ActionType == FunctionType.Else)
             {
-                if (IfActed)
+                if (ifActed)
                     continue;
             }
             else
-                IfActed = false;
+            {
+                ifActed = false;
+            }
             FunctionReturn v = Actions[i].Execute(args);
-            switch (v.result)
+            switch (v.Result)
             {
                 case FunctionResult.Break:
                 case FunctionResult.Continue:
@@ -246,30 +241,30 @@ public class ActionsFunctioner : Function
                     //await Task.Delay(Mathf.RoundToInt(Convert.ToSingle(v.value) * 1000f));
                     break;
             }
-            if (v.result == FunctionResult.FunctionCheck)
+            if (v.Result == FunctionResult.FunctionCheck)
             {
                 switch (Actions[i].ActionType)
                 {
                     case FunctionType.If:
                     case FunctionType.ElseIf:
-                        IfActed = Convert.ToBoolean(v.value);
+                        ifActed = Convert.ToBoolean(v.Value);
                         break;
                 }
             }
         }
-        return new FunctionReturn { result = result, value = true };
+        return new FunctionReturn { Result = result, Value = true };
     }
 }
 
 [Serializable]
 public class ScriptValue
 {
-    public ValueType ValueType;
-    public Value value;
+    public ValueType ValueType { get; set; }
+    public Value Value { get; set; }
 
     public object GetValue(FunctionArgument args)
     {
-        if (value == null)
+        if (Value == null)
             return null;
         if (!EnumToV.TryGetValue(ValueType, out _))
         {
@@ -281,14 +276,14 @@ public class ScriptValue
                     return new object[] { };
             }
         }
-        return value.GetValue(args);
+        return Value.GetValue(args);
     }
     public T GetValue<T>(FunctionArgument args, T def)
     {
         object obj = GetValue(args);
         if (obj == null)
             return def;
-        //ServerConsole.AddLog("!");
+
         if ((typeof(int) == typeof(T) || typeof(float) == typeof(T)) && (obj is int || obj is float))
         {
             if (typeof(int) == typeof(T))
@@ -306,48 +301,48 @@ public class ScriptValue
     }
 
     public static readonly Dictionary<ValueType, Type> EnumToV = new Dictionary<ValueType, Type>
-{
-    { ValueType.Integer, typeof(Integer) },
-    { ValueType.Real, typeof(Real) },
-    { ValueType.Bool, typeof(Bool) },
-    { ValueType.String, typeof(String) },
-    { ValueType.Compare, typeof(Compare) },
-    { ValueType.IfThenElse, typeof(IfThenElse) },
-    { ValueType.Array, typeof(Array) },
-    { ValueType.Variable, typeof(Variable) },
-    { ValueType.Argument, typeof(Argument) },
-    { ValueType.Function, typeof(VFunction) },
-    { ValueType.Vector, typeof(Vector) },
-    { ValueType.NumUnaryOp, typeof(NumUnaryOp) },
-    { ValueType.NumBinomialOp, typeof(NumBinomialOp) },
-    { ValueType.ArrUnaryOp, typeof(ArrUnaryOp) },
-    { ValueType.ArrBinomialOp, typeof(ArrBinomialOp) },
-    { ValueType.VecUnaryOp, typeof(VecUnaryOp) },
-    { ValueType.VecBinomialOp, typeof(VecBinomialOp) },
-    { ValueType.StrUnaryOp, typeof(StrUnaryOp) },
-    { ValueType.StrBinomialOp, typeof(StrBinomialOp) },
-    { ValueType.ArrayEvaluateHelper, typeof(ArrayEvaluateHelper) },
-    { ValueType.ConstValue, typeof(ConstValue) },
-    { ValueType.EvaluateOnce, typeof(EvaluateOnce) },
-    { ValueType.CollisionType, typeof(VCollisionType) },
-    { ValueType.CollisionDetectTarget, typeof(CollisionDetectTarget) },
-    { ValueType.EffectType, typeof(VEffectType) },
-    { ValueType.EffectActionType, typeof(EffectActionType) },
-    //{ ValueType.TeleportInvokeType, typeof(VTeleportInvokeType) },
-    { ValueType.WarheadActionType, typeof(VWarheadActionType) },
-    { ValueType.AnimationActionType, typeof(AnimationActionType) },
-    { ValueType.ParameterType, typeof(VParameterType) },
-    { ValueType.MessageType, typeof(VMessageType) },
-    { ValueType.PlayerArray, typeof(PlayerArray) },
-    { ValueType.Scp914Mode, typeof(VScp914Mode) },
-    { ValueType.ItemType, typeof(VItemType) },
-    { ValueType.RoleType, typeof(VRoleType) },
-    { ValueType.PlayerUnaryOp, typeof(PlayerUnaryOp) },
-    { ValueType.SingleTarget, typeof(SingleTarget) },
-    { ValueType.ItemUnaryOp, typeof(ItemUnaryOp) },
-    { ValueType.EntityUnaryOp, typeof(EntityUnaryOp) },
-    { ValueType.EntityBinomialOp, typeof(EntityBinomialOp) }
-};
+    {
+        { ValueType.Integer, typeof(Integer) },
+        { ValueType.Real, typeof(Real) },
+        { ValueType.Bool, typeof(Bool) },
+        { ValueType.String, typeof(String) },
+        { ValueType.Compare, typeof(Compare) },
+        { ValueType.IfThenElse, typeof(IfThenElse) },
+        { ValueType.Array, typeof(Array) },
+        { ValueType.Variable, typeof(Variable) },
+        { ValueType.Argument, typeof(Argument) },
+        { ValueType.Function, typeof(VFunction) },
+        { ValueType.Vector, typeof(Vector) },
+        { ValueType.NumUnaryOp, typeof(NumUnaryOp) },
+        { ValueType.NumBinomialOp, typeof(NumBinomialOp) },
+        { ValueType.ArrUnaryOp, typeof(ArrUnaryOp) },
+        { ValueType.ArrBinomialOp, typeof(ArrBinomialOp) },
+        { ValueType.VecUnaryOp, typeof(VecUnaryOp) },
+        { ValueType.VecBinomialOp, typeof(VecBinomialOp) },
+        { ValueType.StrUnaryOp, typeof(StrUnaryOp) },
+        { ValueType.StrBinomialOp, typeof(StrBinomialOp) },
+        { ValueType.ArrayEvaluateHelper, typeof(ArrayEvaluateHelper) },
+        { ValueType.ConstValue, typeof(ConstValue) },
+        { ValueType.EvaluateOnce, typeof(EvaluateOnce) },
+        { ValueType.CollisionType, typeof(VCollisionType) },
+        { ValueType.CollisionDetectTarget, typeof(CollisionDetectTarget) },
+        { ValueType.EffectType, typeof(VEffectType) },
+        { ValueType.EffectActionType, typeof(EffectActionType) },
+        //{ ValueType.TeleportInvokeType, typeof(VTeleportInvokeType) },
+        { ValueType.WarheadActionType, typeof(VWarheadActionType) },
+        { ValueType.AnimationActionType, typeof(AnimationActionType) },
+        { ValueType.ParameterType, typeof(VParameterType) },
+        { ValueType.MessageType, typeof(VMessageType) },
+        { ValueType.PlayerArray, typeof(PlayerArray) },
+        { ValueType.Scp914Mode, typeof(VScp914Mode) },
+        { ValueType.ItemType, typeof(VItemType) },
+        { ValueType.RoleType, typeof(VRoleType) },
+        { ValueType.PlayerUnaryOp, typeof(PlayerUnaryOp) },
+        { ValueType.SingleTarget, typeof(SingleTarget) },
+        { ValueType.ItemUnaryOp, typeof(ItemUnaryOp) },
+        { ValueType.EntityUnaryOp, typeof(EntityUnaryOp) },
+        { ValueType.EntityBinomialOp, typeof(EntityBinomialOp) },
+    };
 }
 
 [Serializable]
@@ -394,7 +389,7 @@ public enum ValueType
     ItemUnaryOp,
     PlayerUnaryOp,
     EntityUnaryOp,
-    EntityBinomialOp
+    EntityBinomialOp,
 }
 
 [Serializable]
@@ -403,7 +398,6 @@ public class Value
     public virtual void OnValidate() { }
     public virtual object GetValue(FunctionArgument args)
     {
-        //ServerConsole.AddLog("!!!!");
         return null;
     }
 }

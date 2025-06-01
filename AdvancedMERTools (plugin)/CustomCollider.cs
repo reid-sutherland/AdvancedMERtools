@@ -1,26 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Items;
-using Exiled.CustomItems;
-using CommandSystem;
-using Utf8Json.Formatters;
-using RemoteAdmin;
-using Exiled.CustomItems.API.Features;
+﻿//using Exiled.API.Features;
+//using Exiled.API.Features.Pickups;
+//using Exiled.API.Features.Items;
+//using Exiled.CustomItems;
 using InventorySystem.Items.ThrowableProjectiles;
-using MapGeneration;
-using Mirror;
-
+using LabApi.Features.Wrappers;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace AdvancedMERTools;
 
 public class CustomCollider : AMERTInteractable
 {
+    public new CCDTO Base { get; private set; }
+
+    public MeshCollider MeshCollider { get; private set; }
+
+    public Transform OriginalTransform { get; private set; }
+
     protected virtual void Start()
     {
         this.Base = base.Base as CCDTO;
@@ -35,7 +32,7 @@ public class CustomCollider : AMERTInteractable
         {
             MEC.Timing.CallDelayed(0.1f, () =>
             {
-                meshCollider = customColliders[0].meshCollider;
+                MeshCollider = customColliders[0].MeshCollider;
             });
             return;
         }
@@ -44,7 +41,7 @@ public class CustomCollider : AMERTInteractable
         transform.eulerAngles = Vector3.zero;
 
         MeshFilter[] meshFilters = transform.GetComponentsInChildren<MeshFilter>();
-        meshCollider = gameObject.AddComponent<MeshCollider>();
+        MeshCollider = gameObject.AddComponent<MeshCollider>();
         CombineInstance[] combineInstances = new CombineInstance[meshFilters.Length];
 
         for (int i = 0; i < meshFilters.Length; i++)
@@ -55,9 +52,9 @@ public class CustomCollider : AMERTInteractable
 
         Mesh mesh = new Mesh();
         mesh.CombineMeshes(combineInstances);
-        meshCollider.sharedMesh = mesh;
-        meshCollider.convex = true;
-        meshCollider.isTrigger = true;
+        MeshCollider.sharedMesh = mesh;
+        MeshCollider.convex = true;
+        MeshCollider.isTrigger = true;
         Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>();
         rigidbody.isKinematic = true;
 
@@ -71,22 +68,21 @@ public class CustomCollider : AMERTInteractable
 
         transform.position = vs[0];
         transform.eulerAngles = vs[1];
-
     }
 
-    void OnTriggerEnter(Collider collider)
+    protected void OnTriggerEnter(Collider collider)
     {
         if (Base.CollisionType.HasFlag(CollisionType.OnEnter))
             RunProcess(collider);
     }
 
-    void OnTriggerExit(Collider collider)
+    protected void OnTriggerExit(Collider collider)
     {
         if (Base.CollisionType.HasFlag(CollisionType.OnExit))
             RunProcess(collider);
     }
 
-    void OnTriggerStay(Collider collider)
+    protected void OnTriggerStay(Collider collider)
     {
         if (Base.CollisionType.HasFlag(CollisionType.OnStay))
             RunProcess(collider);
@@ -95,7 +91,10 @@ public class CustomCollider : AMERTInteractable
     public virtual void RunProcess(Collider collider)
     {
         if (!Active)
+        {
             return;
+        }
+
         bool flag = false;
         Player target = null;
         Pickup pickup = Pickup.Get(collider.gameObject);
@@ -115,18 +114,26 @@ public class CustomCollider : AMERTInteractable
             flag = true;
         }
         if (!flag)
+        {
             return;
-        ModuleGeneralArguments args = new ModuleGeneralArguments { player = target, TargetCalculated = false, transform = this.transform, schematic = OSchematic, interpolations = Formatter, interpolationsList = new object[] { target, gameObject } };
+        }
+
+        ModuleGeneralArguments args = new ModuleGeneralArguments { Player = target, TargetCalculated = false, Transform = this.transform, Schematic = OSchematic, Interpolations = Formatter, InterpolationsList = new object[] { target, gameObject } };
         var colliderActionExecutors = new Dictionary<ColliderActionType, Action>
         {
-            { ColliderActionType.ModifyHealth, () =>
+            {
+                ColliderActionType.ModifyHealth, () =>
                 {
                     if (target != null)
                     {
                         if (Base.ModifyHealthAmount > 0)
+                        {
                             target.Heal(Base.ModifyHealthAmount);
+                        }
                         else
+                        {
                             target.Hurt(-1 * Base.ModifyHealthAmount);
+                        }
                     }
                 }
             },
@@ -138,7 +145,7 @@ public class CustomCollider : AMERTInteractable
             { ColliderActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
             { ColliderActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
             { ColliderActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { ColliderActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) }
+            { ColliderActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (ColliderActionType type in Enum.GetValues(typeof(ColliderActionType)))
         {
@@ -161,23 +168,19 @@ public class CustomCollider : AMERTInteractable
         { "{o_pos}", vs => { Vector3 pos = (vs[1] as GameObject).transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
         // TODO: Idk what this is for but RoomIdUtils is supposed to be in "Assembly-CSharp" so just skip for now
         //{ "{o_room}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Name.ToString() },
-        //{ "{o_zone}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Zone.ToString() }
+        //{ "{o_zone}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Zone.ToString() },
     };
 
-    void OnDestroy()
+    protected void OnDestroy()
     {
         AdvancedMERTools.Singleton.CustomColliders.Remove(this);
     }
-
-    public MeshCollider meshCollider;
-
-    public new CCDTO Base;
-
-    public Transform originalT;
 }
 
 public class FCustomCollider : CustomCollider
 {
+    public new FCCDTO Base { get; private set; }
+
     protected override void Start()
     {
         Base = ((AMERTInteractable)this).Base as FCCDTO;
@@ -187,7 +190,10 @@ public class FCustomCollider : CustomCollider
     public override void RunProcess(Collider collider)
     {
         if (!Active)
+        {
             return;
+        }
+
         bool flag = false;
         Player target = null;
         Pickup pickup = Pickup.Get(collider.gameObject);
@@ -208,19 +214,27 @@ public class FCustomCollider : CustomCollider
             flag = true;
         }
         if (!flag)
+        {
             return;
+        }
+
         FunctionArgument args = new FunctionArgument(this, target);
         var colliderActionExecutors = new Dictionary<ColliderActionType, Action>
         {
-            { ColliderActionType.ModifyHealth, () =>
+            {
+                ColliderActionType.ModifyHealth, () =>
                 {
                     if (target != null)
                     {
                         float amount = Base.ModifyHealthAmount.GetValue(args, 0f);
                         if (amount > 0)
+                        {
                             target.Heal(amount);
+                        }
                         else
+                        {
                             target.Hurt(-amount);
+                        }
                     }
                 }
             },
@@ -242,6 +256,4 @@ public class FCustomCollider : CustomCollider
             }
         }
     }
-
-    public new FCCDTO Base;
 }

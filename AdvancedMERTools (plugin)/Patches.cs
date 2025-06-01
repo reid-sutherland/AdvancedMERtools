@@ -1,38 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Exiled.API.Features;
-using Exiled.API.Enums;
-using Exiled.Loader;
-using UnityEngine;
-using CustomCulling;
-using Interactables.Interobjects;
-using Interactables;
-using Interactables.Interobjects.DoorUtils;
-using System.IO;
-using Utf8Json;
-using Exiled.Events.Features;
-using Exiled.Events;
-using PlayerRoles;
-using Exiled.API.Features.Doors;
+﻿using Exiled.API.Features.Doors;
 using HarmonyLib;
-using Mirror;
-using System.Reflection.Emit;
-using System.Reflection;
-using PlayerRoles.FirstPersonControl;
-using CommandSystem;
-using CommandSystem.Commands;
-using RemoteAdmin;
-using Utf8Json.Formatters;
-
-//using MapEditorReborn.API;
-//using MapEditorReborn.API.Enums;
-//using MapEditorReborn.API.Features.Serializable;
-//using MapEditorReborn.API.Features;
-//using MapEditorReborn.API.Features.Objects;
-//using Maps = MapEditorReborn.Events.Handlers.Map;
+using Interactables.Interobjects.DoorUtils;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
@@ -62,22 +30,26 @@ namespace AdvancedMERTools;
 [HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkTargetState), MethodType.Setter)]
 public class DoorVariantPatcher
 {
-    static void Prefix(DoorVariant __instance, bool value)
+    public static void Prefix(DoorVariant instance, bool value)
     {
-        DummyDoor d = AdvancedMERTools.Singleton.dummyDoors.Find(x => x.RealDoor == Door.Get(__instance));
+        DummyDoor d = AdvancedMERTools.Singleton.DummyDoors.Find(x => x.RealDoor == Door.Get(instance));
         if (d != null)
+        {
             d.OnInteractDoor(value);
+        }
     }
 }
 
 [HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkActiveLocks), MethodType.Setter)]
 public class DoorVariantLockPatcher
 {
-    static void Prefix(DoorVariant __instance, ushort value)
+    public static void Prefix(DoorVariant instance, ushort value)
     {
-        CustomDoor d = AdvancedMERTools.Singleton.customDoors.Find(x => x.door == Door.Get(__instance));
+        CustomDoor d = AdvancedMERTools.Singleton.CustomDoors.Find(x => x.Door == Door.Get(instance));
         if (d != null)
+        {
             d.OnLockChange(value);
+        }
     }
 }
 
