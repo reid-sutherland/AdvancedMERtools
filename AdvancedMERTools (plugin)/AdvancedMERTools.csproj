@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<AssemblyName>AdvancedMERTools</AssemblyName>
@@ -9,48 +8,50 @@
 		<Platforms>AnyCPU</Platforms>
 	</PropertyGroup>
 
-	<!-- For development: copy output dll directly to EXILED plugins\dependencies path -->
+	<!-- For development: copy output dll directly to LabAPI plugins\dependencies path -->
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Copy SourceFiles="$(ProjectDir)bin\Debug\$(ProjectName).dll" DestinationFolder="$(EXILED_PLUGINS)\dependencies" SkipUnchangedFiles="false" />
+		<Copy SourceFiles="$(ProjectDir)bin\Debug\$(ProjectName).dll" DestinationFolder="$(LABAPI_PLUGINS)\dependencies" SkipUnchangedFiles="false" />
 	</Target>
 
 	<Import Project="../Plugin.props" />
 	
 	<ItemGroup>
+		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System" />
 		<Reference Include="System.Core" />
-		<Reference Include="System.Xml.Linq" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Data" />
+		<Reference Include="System.Data.DataSetExtensions" />
 		<Reference Include="System.Net.Http" />
 		<Reference Include="System.Xml" />
+		<Reference Include="System.Xml.Linq" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ExMod.Exiled" Version="9.6.0" />
 		<PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" />
+		<PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" IncludeAssets="All" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="AudioPlayerApi" HintPath="$(EXILED_PLUGINS)\dependencies\AudioPlayerApi.dll" Private="false" />
-		<Reference Include="Newtonsoft.Json" HintPath="$(EXILED_PLUGINS)\dependencies\Newtonsoft.Json.dll" Private="false" />
-		<Reference Include="ProjectMER" HintPath="$(EXILED_PLUGINS)\dependencies\ProjectMER.dll" Private="false" />
+		<Reference Include="AudioPlayerApi" HintPath="$(LABAPI_PLUGINS)\dependencies\AudioPlayerApi.dll" Private="false" />
+		<Reference Include="Newtonsoft.Json" HintPath="$(LABAPI_PLUGINS)\dependencies\Newtonsoft.Json.dll" Private="false" />
+		<Reference Include="ProjectMER" HintPath="$(LABAPI_PLUGINS)\ProjectMER.dll" Private="false" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="0Harmony" HintPath="$(EXILED_REFERENCES)\0Harmony.dll" Private="false" />
-		<Reference Include="Assembly-CSharp" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp.dll" Private="false" />
-		<Reference Include="Assembly-CSharp-firstpass" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp-firstpass.dll" Private="false" />
-		<Reference Include="Assembly-CSharp-Publicized" HintPath="$(EXILED_REFERENCES)\Assembly-CSharp-Publicized.dll" Private="false" />
-		<Reference Include="CommandSystem.Core" HintPath="$(EXILED_REFERENCES)\CommandSystem.Core.dll" Private="false" />
-		<Reference Include="Mirror" HintPath="$(EXILED_REFERENCES)\Mirror.dll" Private="false" />
-		<Reference Include="PluginAPI" HintPath="$(EXILED_REFERENCES)\PluginAPI.dll" Private="false" />
-		<Reference Include="Pooling" HintPath="$(EXILED_REFERENCES)\Pooling.dll" Private="false" />
-		<Reference Include="UnityEngine" HintPath="$(EXILED_REFERENCES)\UnityEngine.dll" Private="false" />
-		<Reference Include="UnityEngine.AnimationModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.AnimationModule.dll" Private="false" />
-		<Reference Include="UnityEngine.CoreModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.CoreModule.dll" Private="false" />
-		<Reference Include="UnityEngine.PhysicsModule" HintPath="$(EXILED_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="false" />
-		<Reference Include="YamlDotNet" HintPath="$(EXILED_REFERENCES)\YamlDotNet.dll" Private="false" />
+		<Reference Include="0Harmony" HintPath="$(LABAPI_REFERENCES)\0Harmony.dll" Private="false" />
+		<Reference Include="Assembly-CSharp" HintPath="$(LABAPI_REFERENCES)\Assembly-CSharp.dll" Private="false" />
+		<Reference Include="Assembly-CSharp-firstpass" HintPath="$(LABAPI_REFERENCES)\Assembly-CSharp-firstpass.dll" Private="false" />
+		<Reference Include="Assembly-CSharp-Publicized" HintPath="$(LABAPI_REFERENCES)\Assembly-CSharp-Publicized.dll" Private="false" />
+		<Reference Include="CommandSystem.Core" HintPath="$(LABAPI_REFERENCES)\CommandSystem.Core.dll" Private="false" />
+		<Reference Include="LabApi" HintPath="$(LABAPI_REFERENCES)\LabApi.dll" Private="false" />
+		<Reference Include="Mirror" HintPath="$(LABAPI_REFERENCES)\Mirror.dll" Private="false" />
+		<!--<Reference Include="PluginAPI" HintPath="$(LABAPI_REFERENCES)\PluginAPI.dll" Private="false" />-->
+		<Reference Include="Pooling" HintPath="$(LABAPI_REFERENCES)\Pooling.dll" Private="false" />
+		<Reference Include="UnityEngine" HintPath="$(LABAPI_REFERENCES)\UnityEngine.dll" Private="false" />
+		<Reference Include="UnityEngine.AnimationModule" HintPath="$(LABAPI_REFERENCES)\UnityEngine.AnimationModule.dll" Private="false" />
+		<Reference Include="UnityEngine.CoreModule" HintPath="$(LABAPI_REFERENCES)\UnityEngine.CoreModule.dll" Private="false" />
+		<Reference Include="UnityEngine.PhysicsModule" HintPath="$(LABAPI_REFERENCES)\UnityEngine.PhysicsModule.dll" Private="false" />
+		<Reference Include="YamlDotNet" HintPath="$(LABAPI_REFERENCES)\YamlDotNet.dll" Private="false" />
 	</ItemGroup>
 </Project>
