@@ -7,9 +7,6 @@ using UnityEngine;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Items;
-using MapEditorReborn.Events.EventArgs;
-using MapEditorReborn.API.Features.Objects;
-using MapEditorReborn.API.Features;
 using Exiled.CustomItems;
 using CommandSystem;
 using Utf8Json.Formatters;
@@ -165,8 +162,9 @@ namespace AdvancedMERTools
             { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
             { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
             { "{o_pos}", vs => { Vector3 pos = (vs[1] as GameObject).transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
-            { "{o_room}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Name.ToString() },
-            { "{o_zone}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Zone.ToString() }
+            // TODO: Idk what this is for but RoomIdUtils is supposed to be in "Assembly-CSharp" so just skip for now
+            //{ "{o_room}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Name.ToString() },
+            //{ "{o_zone}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Zone.ToString() }
         };
 
         void OnDestroy()

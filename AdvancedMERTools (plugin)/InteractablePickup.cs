@@ -7,13 +7,14 @@ using UnityEngine;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Items;
-using MapEditorReborn.API.Features.Objects;
-using MapEditorReborn.API.Features;
 using Exiled.CustomItems;
 using CommandSystem;
 using Utf8Json.Formatters;
 using RemoteAdmin;
 using Exiled.CustomItems.API.Features;
+//using MapEditorReborn.API.Features.Objects;
+//using MapEditorReborn.API.Features;
+using ProjectMER.Features.Objects;
 
 namespace AdvancedMERTools
 {
@@ -21,6 +22,7 @@ namespace AdvancedMERTools
     {
         protected virtual void Start()
         {
+            Log.Info($"AMERT: InteractablePickup.Start() has been called: this gameobject: {this.gameObject.name}");
             this.Base = base.Base as IPDTO;
             Pickup = Pickup.Get(this.gameObject);
             if (Pickup != null)
@@ -35,6 +37,8 @@ namespace AdvancedMERTools
 
         public virtual void RunProcess(Player player, Pickup pickup, out bool Remove)
         {
+            Log.Info($"AMERT: InteractablePickup.RunProcess() has been called: player: {player.Nickname}  - pickup: {pickup.GameObject.name}");
+
             bool r = false;
             Remove = false;
             if (pickup != this.Pickup || !Active)
@@ -43,34 +47,34 @@ namespace AdvancedMERTools
             }
             ModuleGeneralArguments args = new ModuleGeneralArguments { interpolations = Formatter, interpolationsList = new object[] { player }, player = player, schematic = OSchematic, transform = this.transform, TargetCalculated = false };
             var ipActionExecutors = new Dictionary<IPActionType, Action>
-{
-    { IPActionType.Disappear, () => r = true },
-    { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
-    { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
-    { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
-    { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
-    { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-    { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-    { IPActionType.UpgradeItem, () =>
-        {
-            if (player.GameObject.TryGetComponent<Collider>(out Collider col))
             {
-                var vs = Enumerable.Range(0, 5)
-                    .Where(j => Base.Scp914Mode.HasFlag((Scp914Mode)j))
-                    .ToList();
-                Scp914.Scp914Upgrader.Upgrade(
-                    new Collider[] { col },
-                    Scp914.Scp914Mode.Held,
-                    (Scp914.Scp914KnobSetting)vs.RandomItem()
-                );
-            }
-        }
-    },
-                { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
-                { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
-                { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-                { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) }
-};
+                { IPActionType.Disappear, () => r = true },
+                { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
+                { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
+                { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
+                { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
+                { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
+                { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
+                { IPActionType.UpgradeItem, () =>
+                    {
+                        if (player.GameObject.TryGetComponent<Collider>(out Collider col))
+                        {
+                            var vs = Enumerable.Range(0, 5)
+                                .Where(j => Base.Scp914Mode.HasFlag((Scp914Mode)j))
+                                .ToList();
+                            Scp914.Scp914Upgrader.Upgrade(
+                                new Collider[] { col },
+                                Scp914.Scp914Mode.Held,
+                                (Scp914.Scp914KnobSetting)vs.RandomItem()
+                            );
+                        }
+                    }
+                },
+                            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
+                            { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
+                            { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
+                            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) }
+            };
             foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
             {
                 if (Base.ActionType.HasFlag(type) && ipActionExecutors.TryGetValue(type, out var execute))
@@ -131,35 +135,35 @@ namespace AdvancedMERTools
             }
             FunctionArgument args = new FunctionArgument(this, player);
             var ipActionExecutors = new Dictionary<IPActionType, Action>
-{
-    { IPActionType.Disappear, () => r = true },
-    { IPActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
-    { IPActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
-    { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
-    { IPActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-    { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-    { IPActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
-    { IPActionType.UpgradeItem, () =>
-        {
-            if (player.GameObject.TryGetComponent<Collider>(out Collider col))
             {
-                Scp914Mode mode = Base.Scp914Mode.GetValue<Scp914Mode>(args, 0);
-                var vs = Enumerable.Range(0, 5)
-                    .Where(j => mode.HasFlag((Scp914Mode)j))
-                    .ToList();
-                Scp914.Scp914Upgrader.Upgrade(
-                    new Collider[] { col },
-                    Scp914.Scp914Mode.Held,
-                    (Scp914.Scp914KnobSetting)vs.RandomItem()
-                );
-            }
-        }
-    },
-    { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
-    { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
-    { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
-    { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) }
-};
+                { IPActionType.Disappear, () => r = true },
+                { IPActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
+                { IPActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
+                { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+                { IPActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
+                { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
+                { IPActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
+                { IPActionType.UpgradeItem, () =>
+                    {
+                        if (player.GameObject.TryGetComponent<Collider>(out Collider col))
+                        {
+                            Scp914Mode mode = Base.Scp914Mode.GetValue<Scp914Mode>(args, 0);
+                            var vs = Enumerable.Range(0, 5)
+                                .Where(j => mode.HasFlag((Scp914Mode)j))
+                                .ToList();
+                            Scp914.Scp914Upgrader.Upgrade(
+                                new Collider[] { col },
+                                Scp914.Scp914Mode.Held,
+                                (Scp914.Scp914KnobSetting)vs.RandomItem()
+                            );
+                        }
+                    }
+                },
+                { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
+                { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
+                { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
+                { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) }
+            };
             foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
             {
                 if (Base.ActionType.HasFlag(type) && ipActionExecutors.TryGetValue(type, out var execute))

@@ -12,12 +12,13 @@ using Exiled.CustomItems.API.Features;
 using RemoteAdmin;
 using CommandSystem.Commands;
 using CommandSystem;
-using MapEditorReborn.API.Features.Objects;
 using InventorySystem.Items.Firearms.Modules;
 using InventorySystem.Items.ThrowableProjectiles;
 using AdminToys;
 using PlayerStatsSystem;
 using Mirror;
+//using MapEditorReborn.API.Features.Objects;
+using ProjectMER.Features.Objects;
 
 namespace AdvancedMERTools
 {

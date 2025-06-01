@@ -13,14 +13,9 @@ using Interactables;
 using Interactables.Interobjects.DoorUtils;
 using System.IO;
 using Utf8Json;
-using MapEditorReborn.API.Features;
-using MapEditorReborn.API.Features.Objects;
 using Exiled.Events.Features;
 using Exiled.Events;
 using PlayerRoles;
-using MapEditorReborn.API;
-using MapEditorReborn.API.Enums;
-using MapEditorReborn.API.Features.Serializable;
 using Exiled.API.Features.Doors;
 using HarmonyLib;
 using Mirror;
@@ -32,28 +27,37 @@ using CommandSystem.Commands;
 using RemoteAdmin;
 using Utf8Json.Formatters;
 
-using Maps = MapEditorReborn.Events.Handlers.Map;
+//using MapEditorReborn.API;
+//using MapEditorReborn.API.Enums;
+//using MapEditorReborn.API.Features.Serializable;
+//using MapEditorReborn.API.Features;
+//using MapEditorReborn.API.Features.Objects;
+//using Maps = MapEditorReborn.Events.Handlers.Map;
+using ProjectMER.Features;
+using ProjectMER.Features.Objects;
+using ProjectMER.Features.Serializable;
 
 namespace AdvancedMERTools
 {
-    [HarmonyPatch(typeof(DoorObject), nameof(DoorObject.Init))]
-    public class DoorSpawnPatcher
-    {
-        static void Prefix(DoorObject __instance)
-        {
-            if (AdvancedMERTools.Singleton.Config.AutoRun && __instance.gameObject.TryGetComponent(out Interactables.Interobjects.BasicDoor basicDoor) && basicDoor.Rooms.Length == 0)
-            {
-                string str = "DoorLCZ";
-                if (__instance.gameObject.name.Contains("HCZ")) str = "DoorHCZ";
-                if (__instance.gameObject.name.Contains("EZ")) str = "DoorEZ";
-                //SchematicObject @object = ObjectSpawner.SpawnSchematic(str, basicDoor.transform.position, basicDoor.transform.rotation, isStatic: false);
-                SchematicObject @object = ObjectSpawner.SpawnSchematic(str, basicDoor.transform.position, basicDoor.transform.rotation, basicDoor.transform.localScale, null);
-                DummyDoor dummy = @object.gameObject.AddComponent<DummyDoor>();
-                AdvancedMERTools.Singleton.dummyDoors.Add(dummy);
-                dummy.RealDoor = Door.Get(basicDoor);
-            }
-        }
-    }
+    // TODO: DoorObject doesn't exist anymore.. no similar methods in SerializableDoor... idk what to patch
+    //[HarmonyPatch(typeof(DoorObject), nameof(DoorObject.Init))]
+    //public class DoorSpawnPatcher
+    //{
+    //    static void Prefix(DoorObject __instance)
+    //    {
+    //        if (AdvancedMERTools.Singleton.Config.AutoRun && __instance.gameObject.TryGetComponent(out Interactables.Interobjects.BasicDoor basicDoor) && basicDoor.Rooms.Length == 0)
+    //        {
+    //            string str = "DoorLCZ";
+    //            if (__instance.gameObject.name.Contains("HCZ")) str = "DoorHCZ";
+    //            if (__instance.gameObject.name.Contains("EZ")) str = "DoorEZ";
+    //            //SchematicObject @object = ObjectSpawner.SpawnSchematic(str, basicDoor.transform.position, basicDoor.transform.rotation, isStatic: false);
+    //            SchematicObject @object = ObjectSpawner.SpawnSchematic(str, basicDoor.transform.position, basicDoor.transform.rotation, basicDoor.transform.localScale, null);
+    //            DummyDoor dummy = @object.gameObject.AddComponent<DummyDoor>();
+    //            AdvancedMERTools.Singleton.dummyDoors.Add(dummy);
+    //            dummy.RealDoor = Door.Get(basicDoor);
+    //        }
+    //    }
+    //}
 
     [HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkTargetState), MethodType.Setter)]
     public class DoorVariantPatcher

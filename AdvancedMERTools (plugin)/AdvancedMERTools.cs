@@ -15,13 +15,9 @@ using Interactables;
 using Interactables.Interobjects.DoorUtils;
 using System.IO;
 using Utf8Json;
-using MapEditorReborn.API.Features.Objects;
 using Exiled.Events.Features;
 using Exiled.Events;
 using PlayerRoles;
-using MapEditorReborn.API;
-using MapEditorReborn.API.Enums;
-using MapEditorReborn.API.Features.Serializable;
 using Exiled.API.Features.Doors;
 using HarmonyLib;
 using Mirror;
@@ -31,10 +27,26 @@ using CommandSystem;
 using CommandSystem.Commands;
 using RemoteAdmin;
 using UserSettings.ServerSpecific;
-
-using Maps = MapEditorReborn.Events.Handlers.Map;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Exiled.Events.EventArgs.Player;
+using InventorySystem.Searching;
+using ProjectMER.Features.Objects;
+using ProjectMER.Features.Serializable;
+using ProjectMER.Features;
+
+/// 
+/// LabApi Update needed:
+/// Generally speaking, ProjectMER is the updated version of MER that 
+/// completely removes EXILED and ONLY uses LabApi.
+/// So, I think if we're updating to match that, we probably need to 
+/// go through this code and refactor all EXILED code to LabApi as well.
+/// 
+/// CURRENT CHANGES FOR ProjectMER REFACTOR
+/// - Generally I think all the doors are scuffed and probably unusable lol.
+/// - DummyDoor: Idk what the hell it's for so I just completely removed it for now.
+/// - InteractableTeleport: Don't need this so removing for now.
+/// 
 
 namespace AdvancedMERTools
 {
@@ -95,8 +107,10 @@ namespace AdvancedMERTools
 
         void Register()
         {
+            ProjectMER.Events.Handlers.Schematic.SchematicSpawned += manager.OnSchematicLoad;
+            //ProjectMER.Events.Handlers.Internal. += manager.OnTeleport;
+
             ServerSpecificSettingsSync.ServerOnSettingValueReceived += manager.OnSSInput;
-            MapEditorReborn.Events.Handlers.Schematic.SchematicSpawned += manager.OnSchematicLoad;
             Exiled.Events.Handlers.Map.Generated += manager.OnGen;
             //Exiled.Events.Handlers.Server.RoundStarted += manager.OnRound;
             //Exiled.Events.Handlers.Map.Decontaminating += manager.OnDecont;
@@ -106,13 +120,14 @@ namespace AdvancedMERTools
             Exiled.Events.Handlers.Player.SearchingPickup += manager.OnItemSearching;
             Exiled.Events.Handlers.Player.PickingUpItem += manager.OnItemPicked;
             //Exiled.Events.Handlers.Player.InteractingDoor += manager.OnInteracted;
-            MapEditorReborn.Events.Handlers.Teleport.Teleporting += manager.OnTeleport;
         }
 
         void UnRegister()
         {
+            ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= manager.OnSchematicLoad;
+            //MapEditorReborn.Events.Handlers.Teleport.Teleporting -= manager.OnTeleport;
+
             ServerSpecificSettingsSync.ServerOnSettingValueReceived -= manager.OnSSInput;
-            MapEditorReborn.Events.Handlers.Schematic.SchematicSpawned -= manager.OnSchematicLoad;
             Exiled.Events.Handlers.Map.Generated -= manager.OnGen;
             //Exiled.Events.Handlers.Server.RoundStarted -= manager.OnRound;
             //Exiled.Events.Handlers.Map.Decontaminating -= manager.OnDecont;
@@ -122,7 +137,6 @@ namespace AdvancedMERTools
             Exiled.Events.Handlers.Player.SearchingPickup -= manager.OnItemSearching;
             Exiled.Events.Handlers.Player.PickingUpItem -= manager.OnItemPicked;
             //Exiled.Events.Handlers.Player.InteractingDoor -= manager.OnInteracted;
-            MapEditorReborn.Events.Handlers.Teleport.Teleporting -= manager.OnTeleport;
         }
 
         public static void ExecuteCommand(string context)
@@ -168,14 +182,19 @@ namespace AdvancedMERTools
 
         public void OnItemSearching(Exiled.Events.EventArgs.Player.SearchingPickupEventArgs ev)
         {
+            Log.Debug($"AMERT: OnItemSearching() has been called: player: {ev.Player.Nickname} - pickup type: {ev.Pickup.Type}");
+
             List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
             List<Pickup> removeList = new List<Pickup> { };
+            Log.Debug($"AMERT: OnItemSearching(): found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
             foreach (InteractablePickup interactable in list)
             {
+                Log.Debug($"- interactable.name: {interactable.name} - interactable.Pickup.GameObject.name: {interactable.Pickup.GameObject.name}");
                 if (interactable is FInteractablePickup)
                     continue;
                 if (interactable.Base.InvokeType.HasFlag(InvokeType.Searching))
                 {
+                    Log.Debug($"-- calling RunProcess with ev.Pickup.GameObject.name: {ev.Pickup.GameObject.name} and pickup type: {ev.Pickup.Type}");
                     interactable.RunProcess(ev.Player, ev.Pickup, out bool Remove);
                     if (interactable.Base.CancelActionWhenActive)
                     {
@@ -208,8 +227,11 @@ namespace AdvancedMERTools
 
         public void OnItemPicked(Exiled.Events.EventArgs.Player.PickingUpItemEventArgs ev)
         {
+            Log.Debug($"AMERT: OnItemPicked() has been called: player: {ev.Player.Nickname} - pickup type: {ev.Pickup.Type}");
+
             List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
             List<Pickup> removeList = new List<Pickup> { };
+            Log.Debug($"AMERT: OnItemPicked(): found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
             foreach (InteractablePickup interactable in list)
             {
                 if (interactable is FInteractablePickup)
@@ -251,8 +273,10 @@ namespace AdvancedMERTools
                     //ServerConsole.AddLog(hit.collider.gameObject.name);
                     foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
                     {
+                        Log.Debug($"-- found interactable with type: {interactable.GetType()} - name: {interactable.gameObject.name}");
                         if (!(interactable is FInteractableObject) && interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange)
                         {
+                            Log.Debug($"--- running process....");
                             interactable.RunProcess(Player.Get(sender));
                         }
                     }
@@ -267,17 +291,17 @@ namespace AdvancedMERTools
             }
         }
 
-        public void OnTeleport(MapEditorReborn.Events.EventArgs.TeleportingEventArgs ev)
-        {
-            //List<InteractableTeleporter> ITO = AdvancedMERTools.Singleton.InteractableTPs.FindAll(x => (x.TO == ev.EntranceTeleport && x.Base.InvokeType.HasFlag(TeleportInvokeType.Enter))
-            //|| (x.TO == ev.ExitTeleport && x.Base.InvokeType.HasFlag(TeleportInvokeType.Exit)));
-            //if (ITO.Count != 0 && ev.Player != null)
-            //{
-            //    ITO.ForEach(x => x.RunProcess(ev.Player));
-            //}
-        }
+        //public void OnTeleport(MapEditorReborn.Events.EventArgs.TeleportingEventArgs ev)
+        //{
+        //    //List<InteractableTeleporter> ITO = AdvancedMERTools.Singleton.InteractableTPs.FindAll(x => (x.TO == ev.EntranceTeleport && x.Base.InvokeType.HasFlag(TeleportInvokeType.Enter))
+        //    //|| (x.TO == ev.ExitTeleport && x.Base.InvokeType.HasFlag(TeleportInvokeType.Exit)));
+        //    //if (ITO.Count != 0 && ev.Player != null)
+        //    //{
+        //    //    ITO.ForEach(x => x.RunProcess(ev.Player));
+        //    //}
+        //}
 
-        public void OnSchematicLoad(MapEditorReborn.Events.EventArgs.SchematicSpawnedEventArgs ev)
+        public void OnSchematicLoad(ProjectMER.Events.Arguments.SchematicSpawnedEventArgs ev)
         {
             AdvancedMERTools.Singleton.SchematicVariables.Add(ev.Schematic, new Dictionary<string, object> { });
             AdvancedMERTools.Singleton.AMERTGroup.Add(ev.Schematic, new Dictionary<string, List<AMERTInteractable>> { });
@@ -299,7 +323,7 @@ namespace AdvancedMERTools
             DataLoad<FIODTO, FInteractableObject>("FObjects", ev);
 
             AdvancedMERTools.Singleton.FunctionExecutors.Add(ev.Schematic, new Dictionary<string, FunctionExecutor> { });
-            string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Base.SchematicName + "-Functions.json");
+            string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + "-Functions.json");
             if (File.Exists(path))
             {
                 List<FEDTO> ts = JsonConvert.DeserializeObject<List<FEDTO>>(File.ReadAllText(path), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = DSbinder });
@@ -313,12 +337,12 @@ namespace AdvancedMERTools
             }
         }
 
-        public void DataLoad<Tdto, Tclass>(string name, MapEditorReborn.Events.EventArgs.SchematicSpawnedEventArgs ev) where Tdto : AMERTDTO where Tclass : AMERTInteractable, new()
+        public void DataLoad<Tdto, Tclass>(string name, ProjectMER.Events.Arguments.SchematicSpawnedEventArgs ev) where Tdto : AMERTDTO where Tclass : AMERTInteractable, new()
         {
             //ServerConsole.AddLog(ev.Schematic.DirectoryPath);
             //ServerConsole.AddLog(ev.Schematic.Base.SchematicName);
             //ServerConsole.AddLog(Assembly.GetAssembly(typeof(Real)).FullName);
-            string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Base.SchematicName + $"-{name}.json");
+            string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + $"-{name}.json");
             if (File.Exists(path))
             {
                 List<Tdto> ts = JsonConvert.DeserializeObject<List<Tdto>>(File.ReadAllText(path), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = DSbinder });
@@ -407,7 +431,7 @@ namespace AdvancedMERTools
 
         public void ApplyCustomSpawnPoint(Exiled.Events.EventArgs.Player.SpawnedEventArgs ev)
         {
-            if (API.CurrentLoadedMap == null)
+            if (MapUtils.LoadedMaps.IsEmpty())
             {
                 return;
             }
@@ -415,34 +439,21 @@ namespace AdvancedMERTools
             {
                 return;
             }
-            List<PlayerSpawnPointSerializable> list = API.CurrentLoadedMap.PlayerSpawnPoints.FindAll(x => keyValuePairs.TryGetValue(ev.Player.RoleManager.CurrentRole.RoleTypeId, out SpawnableTeam team) ? x.SpawnableTeam == team : false);
+
+            RoleTypeId playerRoleId = ev.Player.RoleManager.CurrentRole.RoleTypeId;
+            List<SerializablePlayerSpawnpoint> list = new();
+            foreach (var item in MapUtils.LoadedMaps)
+            {
+                MapSchematic loadedMapSchematic = item.Value;
+                List<SerializablePlayerSpawnpoint> roleSpawns = loadedMapSchematic.PlayerSpawnpoints.Values.Where(spawnPoint => spawnPoint.Roles.Contains(playerRoleId)).ToList();
+                list.AddRange(roleSpawns);
+            }
             if (list.Count != 0)
             {
-                PlayerSpawnPointSerializable serializable = list.RandomItem();
-                ev.Player.Teleport(API.GetRelativePosition(serializable.Position, API.GetRandomRoom(serializable.RoomType)));
+                SerializablePlayerSpawnpoint serializable = list.RandomItem();
+                // TODO: I think serializable.Position is the position within the room. So need to find a new way to transform that position to the global position
+                ev.Player.Teleport(serializable.Position);
             }
         }
-
-        public static Dictionary<RoleTypeId, SpawnableTeam> keyValuePairs = new Dictionary<RoleTypeId, SpawnableTeam>
-        {
-            { RoleTypeId.ChaosConscript, SpawnableTeam.Chaos },
-            { RoleTypeId.ChaosMarauder, SpawnableTeam.Chaos },
-            { RoleTypeId.ChaosRepressor, SpawnableTeam.Chaos },
-            { RoleTypeId.ChaosRifleman, SpawnableTeam.Chaos },
-            { RoleTypeId.ClassD, SpawnableTeam.ClassD },
-            { RoleTypeId.FacilityGuard, SpawnableTeam.FacilityGuard },
-            { RoleTypeId.NtfCaptain, SpawnableTeam.MTF },
-            { RoleTypeId.NtfPrivate, SpawnableTeam.MTF },
-            { RoleTypeId.NtfSergeant, SpawnableTeam.MTF },
-            { RoleTypeId.NtfSpecialist, SpawnableTeam.MTF },
-            { RoleTypeId.Scientist, SpawnableTeam.Scientist },
-            { RoleTypeId.Scp049, SpawnableTeam.Scp049 },
-            { RoleTypeId.Scp0492, SpawnableTeam.Scp0492 },
-            { RoleTypeId.Scp096, SpawnableTeam.Scp096 },
-            { RoleTypeId.Scp106, SpawnableTeam.Scp106 },
-            { RoleTypeId.Scp173, SpawnableTeam.Scp173 },
-            { RoleTypeId.Scp939, SpawnableTeam.Scp939 },
-            { RoleTypeId.Tutorial, SpawnableTeam.Tutorial }
-        };
     }
 }

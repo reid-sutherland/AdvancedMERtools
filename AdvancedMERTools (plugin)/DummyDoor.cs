@@ -4,12 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MapEditorReborn.API.Features;
 using UnityEngine;
 using Exiled.API.Features;
-using MapEditorReborn.API.Features.Serializable;
-using MapEditorReborn.API.Features.Objects;
 using Exiled.API.Features.Doors;
+using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using System.IO;
 using Utf8Json;
@@ -20,12 +18,19 @@ using PlayerRoles.FirstPersonControl.NetworkMessages;
 using Mirror;
 using PlayerRoles;
 using RelativePositioning;
+using Interactables.Interobjects.DoorUtils;
+//using MapEditorReborn.API.Features;
+//using MapEditorReborn.API.Features.Serializable;
+//using MapEditorReborn.API.Features.Objects;
+using ProjectMER.Features;
+using ProjectMER.Features.Serializable;
+using ProjectMER.Features.Objects;
 
 namespace AdvancedMERTools
 {
     public class DummyDoor : MonoBehaviour
     {
-        public DoorSerializable door;
+        public SerializableDoor door;
         public Door RealDoor = null;
 
         public Animator animator;
@@ -39,11 +44,13 @@ namespace AdvancedMERTools
                 animator = this.transform.GetChild(0).GetComponent<Animator>();
                 if (RealDoor == null)
                 {
-                    foreach (DoorObject Door in GameObject.FindObjectsOfType<DoorObject>())
+                    // DoorObject doesn't exist anymore so try to find MapEditorObjects that are doors
+                    foreach (MapEditorObject mapEditorObject in FindObjectsByType(typeof(MapEditorObject), FindObjectsSortMode.None))
                     {
-                        if (door == Door.Base)
+                        if (door == mapEditorObject.Base)
                         {
-                            RealDoor = Door.Door;
+                            // TODO: ????
+                            RealDoor = mapEditorObject.GetComponent<Door>();
                             break;
                         }
                     }
@@ -102,17 +109,28 @@ namespace AdvancedMERTools
         {
             pickups = (from item in this.gameObject.GetComponentsInChildren<InventorySystem.Items.Pickups.ItemPickupBase>()
                        select Exiled.API.Features.Pickups.Pickup.Get(item)).ToArray();
-            if (MapEditorReborn.API.API.CurrentLoadedMap != null && AdvancedMERTools.Singleton.Config.Gates.TryGetValue(MapEditorReborn.API.API.CurrentLoadedMap.Name, out List<GateSerializable> ser))
+
+            if (MapUtils.LoadedMaps.Count > 0)
             {
-                if (ser.Count > AdvancedMERTools.Singleton.dummyGates.Count)
+                List<GateSerializable> gates = new();
+                foreach (MapSchematic map in MapUtils.LoadedMaps.Values)
                 {
-                    GateSerializable = ser[AdvancedMERTools.Singleton.dummyGates.Count];
+                    if (AdvancedMERTools.Singleton.Config.Gates.TryGetValue(map.Name, out List<GateSerializable> mapGates))
+                    {
+                        gates.AddRange(mapGates);
+                    }
+                }
+                // wtf is this code...
+                if (gates.Count > AdvancedMERTools.Singleton.dummyGates.Count)
+                {
+                    GateSerializable = gates[AdvancedMERTools.Singleton.dummyGates.Count];
                     if (GateSerializable.IsOpened)
                     {
                         MEC.Timing.CallDelayed(3f, () => { IsOpened = true; });
                     }
                 }
             }
+
             animator = this.transform.GetChild(1).GetComponent<Animator>();
             AdvancedMERTools.Singleton.dummyGates.Add(this);
             MEC.Timing.RunCoroutine(enumerator());
@@ -125,6 +143,7 @@ namespace AdvancedMERTools
             yield break;
         }
 
+        // NOTE: This was already commented out by AMERT
         /*public void Apply()
         //{
             //AudioSource = AdvancedMERTools.MakeAudio("Dummy Gate #" + AdvancedMERTools.Singleton.dummyGates.Count.ToString());
@@ -170,6 +189,7 @@ namespace AdvancedMERTools
 
         public void Apply()
         {
+            // NOTE: This was already commented out by AMERT
             //ReferenceHub hub = AdvancedMERTools.MakeAudio(out int id);
             //MEC.Timing.CallDelayed(0.35f, () =>
             //{
@@ -215,7 +235,7 @@ namespace AdvancedMERTools
                 ev.IsAllowed = false;
                 if (GateSerializable != null)
                 {
-                    if (!GateSerializable.IsLocked && CheckPermission(ev.Player, GateSerializable.keycardPermissions))
+                    if (!GateSerializable.IsLocked && CheckPermission(ev.Player, GateSerializable.doorPermissions))
                     {
                         goto IL_01;
                     }
@@ -233,11 +253,12 @@ namespace AdvancedMERTools
             }
         }
 
-        public bool CheckPermission(Exiled.API.Features.Player player, Interactables.Interobjects.DoorUtils.KeycardPermissions keycard)
+        public bool CheckPermission(Player player, DoorPermissionFlags doorPermission)
         {
-            if (keycard == Interactables.Interobjects.DoorUtils.KeycardPermissions.None)
+            if (doorPermission == DoorPermissionFlags.None)
             {
-                return true;
+                // LOL: in AMERT, this returned true, so no permissions => open xD
+                return false;
             }
             if (player != null)
             {
@@ -247,20 +268,20 @@ namespace AdvancedMERTools
                 }
                 if (player.IsScp)
                 {
-                    return keycard.HasFlag(Interactables.Interobjects.DoorUtils.KeycardPermissions.ScpOverride);
+                    return doorPermission.HasFlag(DoorPermissionFlags.ScpOverride);
                 }
                 if (player.CurrentItem == null)
                 {
                     return false;
                 }
-                InventorySystem.Items.Keycards.KeycardItem keycardItem = player.CurrentItem.Base as InventorySystem.Items.Keycards.KeycardItem;
-                if (keycardItem != null)
+                if (player.CurrentItem is Keycard keycard)
                 {
+                    DoorPermissionFlags keycardPermissions = (DoorPermissionFlags)keycard.Permissions;
                     if (GateSerializable != null && GateSerializable.RequireAllPermission)
                     {
-                        return (keycardItem.Permissions & keycard) == keycard;
+                        return (keycardPermissions & doorPermission) == doorPermission;
                     }
-                    return (keycardItem.Permissions & keycard) > Interactables.Interobjects.DoorUtils.KeycardPermissions.None;
+                    return (keycardPermissions & doorPermission) > DoorPermissionFlags.None;
                 }
             }
             return false;

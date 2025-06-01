@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Exiled.API.Enums;
 using UnityEngine;
-using MapEditorReborn.API.Features.Objects;
 using Utils;
 using Footprinting;
 using Exiled.CustomItems.API.Features;
@@ -16,6 +15,8 @@ using InventorySystem;
 using InventorySystem.Items;
 using InventorySystem.Items.Pickups;
 using System.IO;
+//using MapEditorReborn.API.Features.Objects;
+using ProjectMER.Features.Objects;
 
 namespace AdvancedMERTools
 {
@@ -587,7 +588,7 @@ namespace AdvancedMERTools
                 }
                 try
                 {
-                    Content = ServerConsole.singleton.NameFormatter.ProcessExpression(Content);
+                    Content = ServerConsole.Singleton.NameFormatter.ProcessExpression(Content);
                 }
                 catch (Exception e) { }
                 if (!args.TargetCalculated)
@@ -1032,7 +1033,7 @@ namespace AdvancedMERTools
                     }
                     catch (Exception) { }
                 }
-                Content = ServerConsole.singleton.NameFormatter.ProcessExpression(Content);
+                Content = ServerConsole.Singleton.NameFormatter.ProcessExpression(Content);
                 AdvancedMERTools.ExecuteCommand(Content);
             });
         }
@@ -1055,7 +1056,7 @@ namespace AdvancedMERTools
     [Serializable]
     public class GateSerializable
     {
-        public Interactables.Interobjects.DoorUtils.KeycardPermissions keycardPermissions { get; set; }
+        public Interactables.Interobjects.DoorUtils.DoorPermissionFlags doorPermissions { get; set; }
         public bool RequireAllPermission { get; set; }
         public bool IsLocked { get; set; }
         public bool IsOpened { get; set; }
