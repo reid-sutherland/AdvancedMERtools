@@ -1,17 +1,12 @@
-﻿using System;
+﻿using InventorySystem.Items.Pickups;
+using LabApi.Features.Extensions;
+using LabApi.Features.Wrappers;
+using MapGeneration;
+using PlayerRoles;
+using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.ComponentModel;
-using System.IO;
-using UnityEditor;
-using UnityEngine;
-using System.Reflection;
-using Exiled.API.Enums;
 using System.Linq;
-using Exiled.API.Features;
-using InventorySystem.Items.Pickups;
-using Exiled.API.Features.Items;
-using Exiled.API.Features.Pickups;
+using UnityEngine;
 
 namespace AdvancedMERTools;
 
@@ -1160,20 +1155,21 @@ public class EffectActionType : Value
     }
 }
 
-[Serializable]
-public class VEffectType : Value
-{
-    public EffectType Value;
+// TODO: Can't find a EffectType in LabApi...
+//[Serializable]
+//public class VEffectType : Value
+//{
+//    public EffectType Value;
 
-    public override void OnValidate()
-    {
-    }
+//    public override void OnValidate()
+//    {
+//    }
 
-    public override object GetValue(FunctionArgument args)
-    {
-        return Value;
-    }
-}
+//    public override object GetValue(FunctionArgument args)
+//    {
+//        return Value;
+//    }
+//}
 
 //[Serializable]
 //public class VTeleportInvokeType : Value
@@ -1285,27 +1281,27 @@ public class PlayerArray : Value
             case PlayerArrayType.AllPlayers:
                 return Player.List.ToArray();
             case PlayerArrayType.AntiFoundationSide:
-                return Player.List.Where(x => x.LeadingTeam != LeadingTeam.FacilityForces).ToArray();
+                return Player.List.Where(x => x.Team.GetFaction() == Faction.FoundationEnemy).ToArray();
             case PlayerArrayType.Chaos:
-                return Player.List.Where(x => x.LeadingTeam == LeadingTeam.ChaosInsurgency && x.Role.Type != PlayerRoles.RoleTypeId.ClassD).ToArray();
+                return Player.List.Where(x => x.Team == Team.ChaosInsurgency).ToArray();
             case PlayerArrayType.Dclass:
-                return Player.List.Where(x => x.Role.Type == PlayerRoles.RoleTypeId.ClassD).ToArray();
+                return Player.List.Where(x => x.Team == Team.ClassD).ToArray();
             case PlayerArrayType.FoundationSide:
-                return Player.List.Where(x => x.LeadingTeam == LeadingTeam.FacilityForces).ToArray();
+                return Player.List.Where(x => x.Team.GetFaction() == Faction.FoundationStaff).ToArray();
             case PlayerArrayType.Guards:
-                return Player.List.Where(x => x.Role.Type == PlayerRoles.RoleTypeId.FacilityGuard).ToArray();
+                return Player.List.Where(x => x.Role == RoleTypeId.FacilityGuard).ToArray();
             case PlayerArrayType.Humans:
                 return Player.List.Where(x => x.IsHuman).ToArray();
             case PlayerArrayType.Mtfs:
-                return Player.List.Where(x => x.Role.Team == PlayerRoles.Team.FoundationForces && x.Role.Type != PlayerRoles.RoleTypeId.FacilityGuard).ToArray();
+                return Player.List.Where(x => x.Team == Team.FoundationForces && x.Role != RoleTypeId.FacilityGuard).ToArray();
             case PlayerArrayType.Scientist:
-                return Player.List.Where(x => x.Role.Type == PlayerRoles.RoleTypeId.Scientist);
+                return Player.List.Where(x => x.Team == Team.Scientists).ToArray();
             case PlayerArrayType.Scps:
-                return Player.List.Where(x => x.Role.Team == PlayerRoles.Team.SCPs);
+                return Player.List.Where(x => x.Team == Team.SCPs).ToArray();
             case PlayerArrayType.ScpsExcludeScp0492:
-                return Player.List.Where(x => x.Role.Team == PlayerRoles.Team.SCPs && x.Role.Type != PlayerRoles.RoleTypeId.Scp0492);
+                return Player.List.Where(x => x.Team == Team.SCPs && x.Role != RoleTypeId.Scp0492).ToArray();
             case PlayerArrayType.Spectators:
-                return Player.List.Where(x => x.Role.Type == PlayerRoles.RoleTypeId.Spectator).ToArray();
+                return Player.List.Where(x => x.Role == RoleTypeId.Spectator).ToArray();
         }
         return null;
     }
@@ -1396,7 +1392,7 @@ public class ItemUnaryOp : Value
         ItemType,
         Entity,
         Owner,
-        PrevOwner
+        PrevOwner,
     }
 
     public ScriptValue ItemOrPickup;
@@ -1417,7 +1413,7 @@ public class ItemUnaryOp : Value
                 case ItemUnaryOpType.ItemType:
                     return item.Type;
                 case ItemUnaryOpType.Owner:
-                    return item.Owner;
+                    return item.CurrentOwner;
             }
             return null;
         }
@@ -1504,21 +1500,24 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.AHP:
                 return p.ArtificialHealth;
             case PlayerUnaryOpType.Cuffer:
-                return p.Cuffer;
+                // TODO: LabAPI has cuffing events but no cuffed/cuffer status on player
+                //return p.Cuffer;
+                return null;
             case PlayerUnaryOpType.CurrentItem:
                 return p.CurrentItem;
             case PlayerUnaryOpType.CurrentSpectatingPlayers:
-                return p.CurrentSpectatingPlayers.ToArray();
+                return LabApi.Features.Wrappers.Player.List.Where(x => x.Role == RoleTypeId.Spectator).ToArray();
             case PlayerUnaryOpType.CustomInfo:
                 return p.CustomInfo;
             case PlayerUnaryOpType.CustomName:
-                return p.CustomName;
+                // TODO: Not 100% sure if this is what's intended by CustomName
+                return p.ReferenceHub.nicknameSync.CombinedName;
             case PlayerUnaryOpType.DisplayNickname:
-                return p.DisplayNickname;
+                return p.Nickname;
             case PlayerUnaryOpType.EntityObject:
                 return p.GameObject;
             case PlayerUnaryOpType.FacingDirection:
-                return p.CameraTransform.forward;
+                return p.Camera.forward;
             case PlayerUnaryOpType.GroupName:
                 return p.GroupName;
             case PlayerUnaryOpType.HP:
@@ -1526,43 +1525,49 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.HumeShield:
                 return p.HumeShield;
             case PlayerUnaryOpType.Id:
-                return p.Id;
+                return p.PlayerId;
             case PlayerUnaryOpType.IsAlive:
                 return p.IsAlive;
             case PlayerUnaryOpType.IsCHI:
-                return p.IsCHI;
+                // No idea what CHI is
+                return false;
             case PlayerUnaryOpType.IsCuffed:
-                return p.IsCuffed;
+                // TODO: See cuff not above
+                return false;
             case PlayerUnaryOpType.IsDead:
-                return p.IsDead;
+                return !p.IsAlive;
             case PlayerUnaryOpType.IsFFon:
-                return p.IsFriendlyFireEnabled;
+                return Server.FriendlyFire;
             case PlayerUnaryOpType.IsFoundationSide:
-                return p.Role.Side == Side.Mtf;
+                return p.Team.GetFaction() == Faction.FoundationStaff;
             case PlayerUnaryOpType.IsHuman:
                 return p.IsHuman;
             case PlayerUnaryOpType.IsInPocketDimension:
-                return p.IsInPocketDimension;
+                return p.Room.Name == RoomName.Pocket;
             case PlayerUnaryOpType.IsInventoryEmpty:
-                return p.IsInventoryEmpty;
+                return p.IsWithoutItems;
             case PlayerUnaryOpType.IsInventoryFull:
                 return p.IsInventoryFull;
             case PlayerUnaryOpType.IsJumping:
-                return p.IsJumping;
+                // TODO: Has events but no player flag
+                return false;
             case PlayerUnaryOpType.IsNPC:
-                return p.IsNPC;
+                return p.IsNpc;
             case PlayerUnaryOpType.IsNTF:
                 return p.IsNTF;
             case PlayerUnaryOpType.IsReloading:
-                return p.CurrentItem != null && p.CurrentItem.Category == ItemCategory.Firearm && (p.CurrentItem as Exiled.API.Features.Items.Firearm).IsReloading;
+                // TODO: Has events but no player flag
+                //return p.CurrentItem != null && p.CurrentItem.Category == ItemCategory.Firearm && (p.CurrentItem as FirearmItem).IsReloading;
+                return false;
             case PlayerUnaryOpType.IsScp:
-                return p.IsScp;
+                return p.IsSCP;
             case PlayerUnaryOpType.IsSpeaking:
                 return p.IsSpeaking;
             case PlayerUnaryOpType.IsTutorial:
                 return p.IsTutorial;
             case PlayerUnaryOpType.IsUsingStamina:
-                return p.IsUsingStamina;
+                // TODO: No events or player flag, must be somewhere in builtin game code
+                return false;
             case PlayerUnaryOpType.Items:
                 return p.Items.ToArray();
             case PlayerUnaryOpType.MaxAHP:
@@ -1574,13 +1579,15 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.Position:
                 return p.Position;
             case PlayerUnaryOpType.Role:
-                return p.Role.Type;
+                return p.Role;
             case PlayerUnaryOpType.Scale:
-                return p.Scale;
+                return p.GameObject.transform.localScale;
             case PlayerUnaryOpType.Stamina:
-                return p.Stamina;
+                return p.StaminaRemaining;
             case PlayerUnaryOpType.UniqueRole:
-                return p.UniqueRole;
+                // TODO: UniqueRole?
+                //return p.Role.GetRoleBase().RoleName;
+                return p.Role;
             case PlayerUnaryOpType.Velocity:
                 return p.Velocity;
         }
@@ -1633,7 +1640,7 @@ public class EntityUnaryOp : Value
             case EntityUnaryOpType.Scale:
                 return game.transform.localScale;
             case EntityUnaryOpType.ToItemPickup:
-                return Pickup.Get(game);
+                return game.GetComponent<Pickup>();
             case EntityUnaryOpType.ToPlayer:
                 return Player.Get(game);
         }

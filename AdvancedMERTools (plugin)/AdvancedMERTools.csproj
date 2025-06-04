@@ -27,15 +27,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ExMod.Exiled" Version="9.6.0" />
 		<PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" />
 		<PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" IncludeAssets="All" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="ProjectMER" HintPath="$(LABAPI_PLUGINS)\ProjectMER.dll" Private="false" />
+		
 		<Reference Include="AudioPlayerApi" HintPath="$(LABAPI_DEPENDENCIES)\AudioPlayerApi.dll" Private="false" />
 		<Reference Include="Newtonsoft.Json" HintPath="$(LABAPI_DEPENDENCIES)\Newtonsoft.Json.dll" Private="false" />
-		<Reference Include="ProjectMER" HintPath="$(LABAPI_PLUGINS)\ProjectMER.dll" Private="false" />
 	</ItemGroup>
 
 	<ItemGroup>

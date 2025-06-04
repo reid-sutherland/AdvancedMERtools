@@ -1,30 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using Exiled.API.Features;
-using Exiled.API.Features.Doors;
-using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Player;
-using System.IO;
-using Utf8Json;
-using System.Reflection.Emit;
-using System.Reflection;
-using PlayerRoles.FirstPersonControl;
-using PlayerRoles.FirstPersonControl.NetworkMessages;
-using Mirror;
-using PlayerRoles;
-using RelativePositioning;
-using Interactables.Interobjects.DoorUtils;
-//using MapEditorReborn.API.Features;
-//using MapEditorReborn.API.Features.Serializable;
-//using MapEditorReborn.API.Features.Objects;
+﻿using Interactables.Interobjects.DoorUtils;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Features.Wrappers;
 using ProjectMER.Features;
 using ProjectMER.Features.Serializable;
 using ProjectMER.Features.Objects;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace AdvancedMERTools;
 
@@ -58,12 +41,12 @@ public class DummyDoor : MonoBehaviour
                 if (RealDoor == null)
                 {
                     float distance = float.MaxValue;
-                    foreach (Door Door in Door.List)
+                    foreach (Door door in Door.List)
                     {
-                        if (distance > Vector3.Distance(Door.Position, this.transform.position))
+                        if (distance > Vector3.Distance(door.Position, this.transform.position))
                         {
-                            distance = Vector3.Distance(Door.Position, transform.position);
-                            RealDoor = Door;
+                            distance = Vector3.Distance(door.Position, transform.position);
+                            RealDoor = door;
                         }
                     }
                     if (RealDoor == null)
@@ -101,7 +84,7 @@ public class DummyDoor : MonoBehaviour
         {
             return;
         }
-        if ((RealDoor as BreakableDoor).IsDestroyed)
+        if ((RealDoor as BreakableDoor).IsBroken)
         {
             AdvancedMERTools.Singleton.DummyDoors.Remove(this);
             Destroy(this.gameObject, 0.5f);
@@ -109,23 +92,32 @@ public class DummyDoor : MonoBehaviour
     }
 }
 
-public class DummyGate : MonoBehaviour
+public class DummyGate : MonoBehaviour, IDoorPermissionRequester
 {
     public Animator Animator { get; private set; }
 
     public GateSerializable GateSerializable { get; private set; }
 
-    public Exiled.API.Features.Pickups.Pickup[] Pickups { get; set; }
+    public Pickup[] Pickups { get; set; }
 
     public float Cooldown { get; set; } = 0f;
 
     private bool isOpened = false;
 
+    // IDoorPermissionRequester
+    public DoorPermissionsPolicy PermissionsPolicy { get; set; }
+    public string RequesterLogSignature { get; } = "DummyGate";
+
     public void Start()
     {
-        Pickups = (from item in this.gameObject.GetComponentsInChildren<InventorySystem.Items.Pickups.ItemPickupBase>()
-                   select Exiled.API.Features.Pickups.Pickup.Get(item)).ToArray();
+        PermissionsPolicy = new()
+        {
+            RequiredPermissions = GateSerializable.DoorPermissions,
+            RequireAll = GateSerializable.RequireAllPermission,
+            Bypass2176 = false,
+        };
 
+        Pickups = gameObject.GetComponentsInChildren<InventorySystem.Items.Pickups.ItemPickupBase>().Select(x => Pickup.Get(x)).ToArray();
         if (MapUtils.LoadedMaps.Count > 0)
         {
             List<GateSerializable> gates = new();
@@ -154,7 +146,7 @@ public class DummyGate : MonoBehaviour
 
     private IEnumerator<float> Enumerator()
     {
-        yield return MEC.Timing.WaitUntilTrue(() => Round.IsStarted);
+        yield return MEC.Timing.WaitUntilTrue(() => Round.IsRoundStarted);
         MEC.Timing.CallDelayed(0.3f, Apply);
         yield break;
     }
@@ -202,8 +194,14 @@ public class DummyGate : MonoBehaviour
         }
     }
 
-    public void OnPickingUp(SearchingPickupEventArgs ev)
+    public void OnSearchingPickup(PlayerSearchingPickupEventArgs ev)
     {
+        if (Cooldown > 0)
+        {
+            return;
+        }
+
+        bool toggleOpen = false;
         if (Pickups.Contains(ev.Pickup))
         {
             ev.IsAllowed = false;
@@ -211,18 +209,15 @@ public class DummyGate : MonoBehaviour
             {
                 if (!GateSerializable.IsLocked && CheckPermission(ev.Player, GateSerializable.DoorPermissions))
                 {
-                    goto IL_01;
+                    toggleOpen = true;
                 }
             }
             else
             {
-                goto IL_01;
+                toggleOpen = true;
             }
         }
-        return;
-        // TODO: wtf is this syntax
-    IL_01:;
-        if (Cooldown <= 0)
+        if (toggleOpen)
         {
             IsOpened = !IsOpened;
         }
@@ -237,11 +232,11 @@ public class DummyGate : MonoBehaviour
         }
         if (player != null)
         {
-            if (player.IsBypassModeEnabled)
+            if (player.IsBypassEnabled)
             {
                 return true;
             }
-            if (player.IsScp)
+            if (player.IsSCP)
             {
                 return doorPermission.HasFlag(DoorPermissionFlags.ScpOverride);
             }
@@ -249,9 +244,9 @@ public class DummyGate : MonoBehaviour
             {
                 return false;
             }
-            if (player.CurrentItem is Keycard keycard)
+            if (player.CurrentItem is KeycardItem keycard)
             {
-                DoorPermissionFlags keycardPermissions = (DoorPermissionFlags)keycard.Permissions;
+                DoorPermissionFlags keycardPermissions = keycard.Base.GetPermissions(this);
                 if (GateSerializable != null && GateSerializable.RequireAllPermission)
                 {
                     return (keycardPermissions & doorPermission) == doorPermission;

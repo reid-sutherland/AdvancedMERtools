@@ -1,9 +1,7 @@
 ﻿using AdminToys;
-using Exiled.API.Features;
-using Exiled.API.Features.Items;
-using Exiled.CustomItems.API.Features;
 using InventorySystem.Items.Armor;
 using InventorySystem.Items.ThrowableProjectiles;
+using LabApi.Features.Wrappers;
 using Mirror;
 using PlayerStatsSystem;
 using ProjectMER.Features.Objects;
@@ -12,6 +10,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using LabApi.Features.Extensions;
 
 namespace AdvancedMERTools;
 
@@ -65,18 +64,18 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     protected static Dictionary<string, Func<object[], string>> Formatter { get; } = new Dictionary<string, Func<object[], string>>
     {
-        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
+        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_name}", vs => (vs[0] as Player).Nickname },
         {
             "{p_pos}", vs =>
             {
-                Vector3 pos = (vs[0] as Player).Transform.position;
+                Vector3 pos = (vs[0] as Player).Position;
                 return $"{pos.x} {pos.y} {pos.z}";
             }
         },
-        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
+        { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
         { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.GetRoleBase().ToString() },
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
         {
             "{o_pos}", vs =>
@@ -85,8 +84,8 @@ public class HealthObject : AMERTInteractable, IDestructible
                 return $"{pos.x} {pos.y} {pos.z}";
             }
         },
-        { "{o_room}", vs => Room.Get((vs[1] as Transform).position).RoomName.ToString() },
-        { "{o_zone}", vs => Room.Get((vs[1] as Transform).position).Zone.ToString() },
+        { "{o_room}", vs => Room.GetRoomAtPosition((vs[1] as Transform).position).Name.ToString() },
+        { "{o_zone}", vs => Room.GetRoomAtPosition((vs[1] as Transform).position).Zone.ToString() },
         { "{damage}", vs => (vs[2] as float?).ToString() },
     };
 
@@ -115,7 +114,7 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     protected void Register()
     {
-        this.transform.GetComponentsInChildren<PrimitiveObjectToy>().ForEach(x =>
+        this.transform.GetComponentsInChildren<AdminToys.PrimitiveObjectToy>().ForEach(x =>
         {
             if (x.gameObject.TryGetComponent<Healther>(out Healther healther))
             {
@@ -160,16 +159,16 @@ public class HealthObject : AMERTInteractable, IDestructible
         AttackerDamageHandler damageHandler = handler as AttackerDamageHandler;
         if (damageHandler != null)
         {
-            attacker = Player.Get(damageHandler.Attacker);
+            attacker = Player.Get(damageHandler.Attacker.PlayerId);
             FirearmDamageHandler firearm = handler as FirearmDamageHandler;
             ExplosionDamageHandler explosion = handler as ExplosionDamageHandler;
             if (firearm != null)
             {
                 if (Base.WhitelistWeapons.Count == 0 || Base.WhitelistWeapons.Any(x =>
                 {
-                    if (CustomItem.TryGet(attacker.CurrentItem, out CustomItem custom))
+                    if (Item.TryGet(attacker.CurrentItem.Base, out Item item))
                     {
-                        return custom.Id == x.CustomItemId;
+                        return item.Base.ItemId.SerialNumber == x.CustomItemId;
                     }
                     else
                     {
@@ -204,26 +203,26 @@ public class HealthObject : AMERTInteractable, IDestructible
         return true;
     }
 
-    public virtual void OnGrenadeExplode(Exiled.Events.EventArgs.Map.ExplodingGrenadeEventArgs ev)
-    {
-        if (!ev.IsAllowed || !IsAlive || !Active)
-        {
-            return;
-        }
-        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
-        {
-            return;
-        }
+    //public virtual void OnGrenadeExplode(Exiled.Events.EventArgs.Map.ExplodingGrenadeEventArgs ev)
+    //{
+    //    if (!ev.IsAllowed || !IsAlive || !Active)
+    //    {
+    //        return;
+    //    }
+    //    if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
+    //    {
+    //        return;
+    //    }
 
-        if (ev.Projectile.Type == ItemType.GrenadeHE)
-        {
-            float distance = Vector3.Distance(this.transform.position, ev.Position);
-            FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
-            float damage = ((AnimationCurve)info.GetValue(ev.Projectile.Base as ExplosionGrenade)).Evaluate(distance);
-            damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient, damage, 50);
-            CheckDead(ev.Player, damage);
-        }
-    }
+    //    if (ev.Projectile.Type == ItemType.GrenadeHE)
+    //    {
+    //        float distance = Vector3.Distance(this.transform.position, ev.Position);
+    //        FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
+    //        float damage = ((AnimationCurve)info.GetValue(ev.Projectile.Base as ExplosionGrenade)).Evaluate(distance);
+    //        damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient, damage, 50);
+    //        CheckDead(ev.Player, damage);
+    //    }
+    //}
 
     public virtual void CheckDead(Player player, float damage)
     {
@@ -240,7 +239,7 @@ public class HealthObject : AMERTInteractable, IDestructible
             };
             IsAlive = false;
             ModuleGeneralArguments args = new ModuleGeneralArguments { Interpolations = Formatter, InterpolationsList = new object[] { player, transform }, Player = player, Schematic = OSchematic, Transform = transform, TargetCalculated = false };
-            EventHandler.OnHealthObjectDead(new HealthObjectDeadEventArgs(clone, player));
+            //EventHandler.OnHealthObjectDead(new HealthObjectDeadEventArgs(clone, player));
             MEC.Timing.CallDelayed(Base.DeadActionDelay, () =>
             {
                 var deadTypeExecutors = new Dictionary<DeadType, Action>
@@ -267,7 +266,7 @@ public class HealthObject : AMERTInteractable, IDestructible
                     { DeadType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
                     { DeadType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
                     { DeadType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
-                    { DeadType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
+                    { DeadType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
                     { DeadType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
                     { DeadType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
                     { DeadType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
@@ -324,7 +323,7 @@ public class FHealthObject : HealthObject
         AttackerDamageHandler damageHandler = handler as AttackerDamageHandler;
         if (damageHandler != null)
         {
-            attacker = Player.Get(damageHandler.Attacker);
+            attacker = Player.Get(damageHandler.Attacker.PlayerId);
             FunctionArgument args = new FunctionArgument(this, attacker);
             FirearmDamageHandler firearm = handler as FirearmDamageHandler;
             ExplosionDamageHandler explosion = handler as ExplosionDamageHandler;
@@ -332,9 +331,9 @@ public class FHealthObject : HealthObject
             {
                 if (Base.WhitelistWeapons.Count == 0 || Base.WhitelistWeapons.Any(x =>
                 {
-                    if (CustomItem.TryGet(attacker.CurrentItem, out CustomItem custom))
+                    if (Item.TryGet(attacker.CurrentItem.Base, out Item item))
                     {
-                        return custom.Id == x.CustomItemId.GetValue(args, 0);
+                        return item.Base.ItemId.SerialNumber == x.CustomItemId.GetValue(args, 0);
                     }
                     else
                     {
@@ -369,27 +368,27 @@ public class FHealthObject : HealthObject
         return true;
     }
 
-    public override void OnGrenadeExplode(Exiled.Events.EventArgs.Map.ExplodingGrenadeEventArgs ev)
-    {
-        if (!ev.IsAllowed || !IsAlive || !Active)
-        {
-            return;
-        }
-        FunctionArgument args = new FunctionArgument(this, ev.Player);
-        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
-        {
-            return;
-        }
+    //public override void OnGrenadeExplode(Exiled.Events.EventArgs.Map.ExplodingGrenadeEventArgs ev)
+    //{
+    //    if (!ev.IsAllowed || !IsAlive || !Active)
+    //    {
+    //        return;
+    //    }
+    //    FunctionArgument args = new FunctionArgument(this, ev.Player);
+    //    if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
+    //    {
+    //        return;
+    //    }
 
-        if (ev.Projectile.Type == ItemType.GrenadeHE)
-        {
-            float distance = Vector3.Distance(this.transform.position, ev.Position);
-            FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
-            float damage = ((AnimationCurve)info.GetValue(ev.Projectile.Base as ExplosionGrenade)).Evaluate(distance);
-            damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient.GetValue(args, 0), damage, 50);
-            CheckDead(ev.Player, damage);
-        }
-    }
+    //    if (ev.Projectile.Type == ItemType.GrenadeHE)
+    //    {
+    //        float distance = Vector3.Distance(this.transform.position, ev.Position);
+    //        FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
+    //        float damage = ((AnimationCurve)info.GetValue(ev.Projectile.Base as ExplosionGrenade)).Evaluate(distance);
+    //        damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient.GetValue(args, 0), damage, 50);
+    //        CheckDead(ev.Player, damage);
+    //    }
+    //}
 
     public override void CheckDead(Player player, float damage)
     {
@@ -422,11 +421,11 @@ public class FHealthObject : HealthObject
                         }
                     },
                     { DeadType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
-                    { DeadType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+                    { DeadType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
                     { DeadType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-                    { DeadType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-                    { DeadType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
-                    { DeadType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
+                    { DeadType.DropItems, () => FDropItem.Execute(Base.DropItems, args) },
+                    { DeadType.SendCommand, () => FCommanding.Execute(Base.Commandings, args) },
+                    { DeadType.GiveEffect, () => FEffectGivingModule.Execute(Base.EffectGivingModules, args) },
                     { DeadType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
                     { DeadType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
                     { DeadType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },

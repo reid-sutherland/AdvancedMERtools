@@ -1,4 +1,5 @@
-﻿using Exiled.API.Features;
+﻿using CustomPlayerEffects;
+using LabApi.Features.Wrappers;
 using ProjectMER.Features.Objects;
 using System;
 using System.Collections.Generic;
@@ -326,7 +327,7 @@ public class ScriptValue
         { ValueType.EvaluateOnce, typeof(EvaluateOnce) },
         { ValueType.CollisionType, typeof(VCollisionType) },
         { ValueType.CollisionDetectTarget, typeof(CollisionDetectTarget) },
-        { ValueType.EffectType, typeof(VEffectType) },
+        { ValueType.EffectType, typeof(StatusEffectBase) },
         { ValueType.EffectActionType, typeof(EffectActionType) },
         //{ ValueType.TeleportInvokeType, typeof(VTeleportInvokeType) },
         { ValueType.WarheadActionType, typeof(VWarheadActionType) },

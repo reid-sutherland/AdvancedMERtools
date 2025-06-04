@@ -1,6 +1,6 @@
-﻿using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
-using ProjectMER.Features.Objects;
+﻿using InventorySystem.Items.Pickups;
+using LabApi.Features.Extensions;
+using LabApi.Features.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,24 +10,24 @@ namespace AdvancedMERTools;
 
 public class InteractablePickup : AMERTInteractable
 {
-    public new IPDTO Base { get; private set; }
+    public new IPDTO Base { get; set; }
 
     public Pickup Pickup { get; set; }
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
     {
-        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
+        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_name}", vs => (vs[0] as Player).Nickname },
         {
             "{p_pos}", vs =>
             {
-                Vector3 pos = (vs[0] as Player).Transform.position;
+                Vector3 pos = (vs[0] as Player).Position;
                 return $"{pos.x} {pos.y} {pos.z}";
             }
         },
-        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
+        { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
         { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.GetRoleBase().ToString() },
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
         {
             "{o_pos}", vs =>
@@ -36,15 +36,18 @@ public class InteractablePickup : AMERTInteractable
                 return $"{pos.x} {pos.y} {pos.z}";
             }
         },
-        { "{o_room}", vs => (vs[1] as Pickup).Room.RoomName.ToString() },
+        { "{o_room}", vs => (vs[1] as Pickup).Room.Name.ToString() },
         { "{o_zone}", vs => (vs[1] as Pickup).Room.Zone.ToString() },
     };
 
     protected virtual void Start()
     {
-        Log.Info($"AMERT: InteractablePickup.Start() has been called: this gameobject: {this.gameObject.name}");
+        Log.Info($"AMERT: InteractablePickup.Start() has been called: this gameobject: {gameObject.name}");
         this.Base = base.Base as IPDTO;
-        Pickup = Pickup.Get(this.gameObject);
+        if (gameObject.TryGetComponent<ItemPickupBase>(out var pickupBase))
+        {
+            Pickup = Pickup.Get(pickupBase);
+        }
         if (Pickup != null)
         {
             AdvancedMERTools.Singleton.InteractablePickups.Add(this);
@@ -85,10 +88,10 @@ public class InteractablePickup : AMERTInteractable
             { IPActionType.Disappear, () => r = true },
             { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
             { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
+            { IPActionType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
             {
                 IPActionType.UpgradeItem, () =>
                 {
@@ -105,7 +108,7 @@ public class InteractablePickup : AMERTInteractable
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
             { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
@@ -123,12 +126,15 @@ public class InteractablePickup : AMERTInteractable
 
 public class FInteractablePickup : InteractablePickup
 {
-    public new FIPDTO Base { get; private set; }
+    public new FIPDTO Base { get; set; }
 
     protected override void Start()
     {
         this.Base = ((AMERTInteractable)this).Base as FIPDTO;
-        Pickup = Pickup.Get(this.gameObject);
+        if (gameObject.TryGetComponent<ItemPickupBase>(out var pickupBase))
+        {
+            Pickup = Pickup.Get(pickupBase);
+        }
         if (Pickup != null)
         {
             AdvancedMERTools.Singleton.InteractablePickups.Add(this);
@@ -153,10 +159,10 @@ public class FInteractablePickup : InteractablePickup
             { IPActionType.Disappear, () => r = true },
             { IPActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
             { IPActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
+            { IPActionType.DropItems, () => FDropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => FCommanding.Execute(Base.Commandings, args) },
             { IPActionType.UpgradeItem, () =>
                 {
                     if (player.GameObject.TryGetComponent<Collider>(out Collider col))
@@ -173,7 +179,7 @@ public class FInteractablePickup : InteractablePickup
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
             { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },

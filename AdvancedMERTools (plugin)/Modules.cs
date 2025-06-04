@@ -1,11 +1,10 @@
-﻿using Exiled.API.Enums;
-using Exiled.API.Features;
-using Exiled.API.Features.Items;
-using Exiled.CustomItems.API.Features;
+﻿using CustomPlayerEffects;
 using Footprinting;
+using Interactables.Interobjects.DoorUtils;
 using InventorySystem;
 using InventorySystem.Items;
 using InventorySystem.Items.Pickups;
+using LabApi.Features.Wrappers;
 using Mirror;
 using ProjectMER.Features.Objects;
 using System;
@@ -14,6 +13,8 @@ using System.Linq;
 using System.IO;
 using UnityEngine;
 using Utils;
+//using Exiled.API.Enums;
+//using Exiled.API.Extensions;
 
 namespace AdvancedMERTools;
 
@@ -203,9 +204,13 @@ public class CGNModule : RandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
             if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId, out AMERTInteractable v))
+            {
                 v.Active = true;
+            }
             if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup, out List<AMERTInteractable> vs))
+            {
                 vs.ForEach(x => x.Active = true);
+            }
         });
     }
 }
@@ -221,9 +226,13 @@ public class FCGNModule : FRandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () => 
         {
             if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId.GetValue(args, 0), out AMERTInteractable v))
+            {
                 v.Active = true;
+            }
             if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup.GetValue(args, ""), out List<AMERTInteractable> vs))
+            {
                 vs.ForEach(x => x.Active = true);
+            }
         });
     }
 }
@@ -253,18 +262,18 @@ public class CDDTO : AMERTDTO
     public Vector3 DoorInstallPos { get; set; }
     public Vector3 DoorInstallRot { get; set; }
     public Vector3 DoorInstallScl { get; set; }
-    public KeycardPermissions DoorPermissions { get; set; }
     public float DoorHealth { get; set; }
-    public Interactables.Interobjects.DoorUtils.DoorDamageType DoorDamageType { get; set; }
+    public DoorPermissionFlags DoorPermissions { get; set; }
+    public DoorDamageType DoorDamageType { get; set; }
 }
 
 [Serializable]
 public class DGDTO
 {
-    public float Health { get; set; }
-    public Interactables.Interobjects.DoorUtils.DoorDamageType DamagableDamageType { get; set; }
-    public KeycardPermissions KeycardPermissions { get; set; }
     public string ObjectId { get; set; }
+    public float Health { get; set; }
+    public DoorDamageType DamagableDamageType { get; set; }
+    public DoorPermissionFlags DoorPermissions { get; set; }
 }
 
 [Serializable]
@@ -281,12 +290,16 @@ public class GMDTO : RandomExecutionModule
             Targets.ForEach(x =>
             {
                 if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(x, out AMERTInteractable v))
+                {
                     v.Active = Enable;
+                }
             });
-            TargetGroups.ForEach(x => 
+            TargetGroups.ForEach(x =>
             {
                 if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(x, out List<AMERTInteractable> vs))
+                {
                     vs.ForEach(y => y.Active = Enable);
+                }
             });
         });
     }
@@ -306,12 +319,16 @@ public class FGMDTO : FRandomExecutionModule
             Targets.GetValue(args, new int[] { }).ForEach(x =>
             {
                 if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(x, out AMERTInteractable v))
+                {
                     v.Active = Enable.GetValue(args, v.Active);
+                }
             });
             TargetGroups.GetValue(args, new string[] { }).ForEach(x =>
             {
                 if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(x, out List<AMERTInteractable> vs))
+                {
                     vs.ForEach(y => y.Active = Enable.GetValue(args, y.Active));
+                }
             });
         });
     }
@@ -330,7 +347,7 @@ public class AMERTDTO
 [Serializable]
 public class AMERTInteractable : NetworkBehaviour
 {
-    public AMERTDTO Base { get; private set; }
+    public AMERTDTO Base { get; set; }
     public SchematicObject OSchematic { get; set; }
     public bool Active { get; set; }
 
@@ -376,9 +393,9 @@ public class AMERTInteractable : NetworkBehaviour
 public class EffectGivingModule : RandomExecutionModule
 {
     public EffectFlagE EffectFlag { get; set; }
-    public EffectType EffectType { get; set; }
+    public string EffectName { get; set; }
     public SendType GivingTo { get; set; }
-    public byte Inensity { get; set; }
+    public byte Intensity { get; set; }
     public float Duration { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
@@ -386,15 +403,31 @@ public class EffectGivingModule : RandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
             if (!args.TargetCalculated)
+            {
                 args.Targets = GetTargets(GivingTo, args);
+            }
             foreach (Player player in args.Targets)
             {
                 if (EffectFlag.HasFlag(EffectFlagE.Disable))
-                    player.DisableEffect(EffectType);
+                {
+                    if (player.TryGetEffect(EffectName, out StatusEffectBase effect))
+                    {
+                        player.DisableEffect(effect);
+                    }
+                }
                 else if (EffectFlag.HasFlag(EffectFlagE.Enable))
                 {
-                    byte intensity = (byte)((EffectFlag.HasFlag(EffectFlagE.ModifyIntensity) ? player.GetEffect(EffectType).Intensity : 0) + Inensity);
-                    player.EnableEffect(EffectType, intensity, Duration, EffectFlag.HasFlag(EffectFlagE.ModifyDuration));
+                    byte intensity = Intensity;
+                    // TODO: This must be reworked in order to give new Effect
+                    //       Need to serialize StatusEffectBase (T) in some way
+                    if (player.TryGetEffect(EffectName, out StatusEffectBase effect))
+                    {
+                        if (EffectFlag.HasFlag(EffectFlagE.ModifyIntensity))
+                        {
+                            intensity += effect.Intensity;
+                        }
+                        player.EnableEffect(effect, intensity, Duration, addDuration: EffectFlag.HasFlag(EffectFlagE.ModifyDuration));
+                    }
                 }
             }
         });
@@ -404,26 +437,43 @@ public class EffectGivingModule : RandomExecutionModule
 [Serializable]
 public class FEffectGivingModule : FRandomExecutionModule
 {
+    // TODO: StatusEffect?
     public ScriptValue EffectFlag { get; set; }
-    public ScriptValue EffectType { get; set; }
+    public ScriptValue StatusEffect { get; set; }
+    public ScriptValue EffectName { get; set; }
     public ScriptValue GivingTo { get; set; }
-    public ScriptValue Inensity { get; set; }
+    public ScriptValue Intensity { get; set; }
     public ScriptValue Duration { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
+            //StatusEffectBase type = StatusEffect.GetValue<StatusEffectBase>(args, null);
+            //if (type is null)
+            //{
+            //    return;
+            //}
             EffectFlagE flag = EffectFlag.GetValue<EffectFlagE>(args, 0);
-            EffectType type = EffectType.GetValue(args, Exiled.API.Enums.EffectType.None);
+            string effectName = EffectName.GetValue(args, "");
             foreach (Player player in GivingTo.GetValue(args, new Player[] { }))
             {
-                if (flag.HasFlag(EffectFlagE.Disable))
-                    player.DisableEffect(type);
-                else if (flag.HasFlag(EffectFlagE.Enable))
+                // TODO: Need to rework so new effect can be added
+                if (player.TryGetEffect(effectName, out StatusEffectBase effect))
                 {
-                    byte intensity = (byte)((flag.HasFlag(EffectFlagE.ModifyIntensity) ? player.GetEffect(type).Intensity : 0) + Inensity.GetValue(args, 0));
-                    player.EnableEffect(type, intensity, Duration.GetValue(args, 0f), flag.HasFlag(EffectFlagE.ModifyDuration));
+                    if (flag.HasFlag(EffectFlagE.Disable))
+                    {
+                        player.DisableEffect(effect);
+                    }
+                    else if (flag.HasFlag(EffectFlagE.Enable))
+                    {
+                        byte intensity = (byte)Intensity.GetValue(args, 0);
+                        if (flag.HasFlag(EffectFlagE.ModifyIntensity))
+                        {
+                            intensity += effect.Intensity;
+                        }
+                        player.EnableEffect(effect, intensity, Duration.GetValue(args, 0), addDuration: flag.HasFlag(EffectFlagE.ModifyDuration));
+                    }
                 }
             }
         });
@@ -443,9 +493,13 @@ public class ExplodeModule : RandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
             if (EffectOnly)
+            {
                 ExplosionUtils.ServerSpawnEffect(args.Transform.TransformPoint(LocalPosition), ItemType.GrenadeHE);
+            }
             else
+            {
                 ExplosionUtils.ServerExplode(args.Transform.TransformPoint(LocalPosition), FFon ? new Footprint(local) : new Footprint(args.Player.ReferenceHub), ExplosionType.Grenade);
+            }
         });
     }
 }
@@ -463,9 +517,13 @@ public class FExplodeModule : FRandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
             if (EffectOnly.GetValue(args, true))
+            {
                 ExplosionUtils.ServerSpawnEffect(args.Transform.TransformPoint(LocalPosition.GetValue(args, Vector3.zero)), ItemType.GrenadeHE);
+            }
             else
+            {
                 ExplosionUtils.ServerExplode(args.Transform.TransformPoint(LocalPosition.GetValue(args, Vector3.zero)), FFon.GetValue(args, false) ? new Footprint(local) : new Footprint(args.Player.ReferenceHub), ExplosionType.Grenade);
+            }
         });
     }
 }
@@ -481,7 +539,7 @@ public class AudioModule : RandomExecutionModule
     public float MinDistance { get; set; }
     public float Volume { get; set; }
     public SVector3 LocalPlayPosition { get; set; }
-    public AudioPlayer AP { get; set; }
+    public AudioPlayer AudioPlayer { get; set; }
     private bool loaded;
 
     public override void Execute(ModuleGeneralArguments args)
@@ -496,20 +554,28 @@ public class AudioModule : RandomExecutionModule
                     return;
                 }
                 if (!AudioClipStorage.AudioClips.ContainsKey(AudioName))
+                {
                     AudioClipStorage.LoadClip(Path.Combine(AdvancedMERTools.Singleton.Config.AudioFolderPath, AudioName), AudioName);
+                }
+
                 loaded = true;
             }
-            if (AP == null)
+
+            if (AudioPlayer == null)
             {
-                AP = AudioPlayer.Create($"AudioHandler-{args.Transform.GetHashCode()}-{GetHashCode()}");
-                Speaker speaker = AP.AddSpeaker("Primary", args.Transform.TransformPoint(LocalPlayPosition), Volume, IsSpatial, MinDistance, MaxDistance);
-                AP.transform.parent = speaker.transform.parent = args.Transform;
-                AP.transform.localPosition = speaker.transform.localPosition = LocalPlayPosition;
+                AudioPlayer = AudioPlayer.Create($"AudioHandler-{args.Transform.GetHashCode()}-{GetHashCode()}");
+                Speaker speaker = AudioPlayer.AddSpeaker("Primary", args.Transform.TransformPoint(LocalPlayPosition), Volume, IsSpatial, MinDistance, MaxDistance);
+                AudioPlayer.transform.parent = speaker.transform.parent = args.Transform;
+                AudioPlayer.transform.localPosition = speaker.transform.localPosition = LocalPlayPosition;
             }
             if (PlayCount == 0)
-                AP.AddClip(AudioName, Volume, true, false);
+            {
+                AudioPlayer.AddClip(AudioName, Volume, true, false);
+            }
             for (int i = 0; i < PlayCount; i++)
-                AP.AddClip(AudioName, Volume, false, false);
+            {
+                AudioPlayer.AddClip(AudioName, Volume, false, false);
+            }
         });
     }
 }
@@ -525,7 +591,7 @@ public class FAudioModule : FRandomExecutionModule
     public ScriptValue MinDistance { get; set; }
     public ScriptValue Volume { get; set; }
     public ScriptValue LocalPlayPosition { get; set; }
-    public AudioPlayer AP { get; set; }
+    public AudioPlayer AudioPlayer { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
@@ -533,28 +599,37 @@ public class FAudioModule : FRandomExecutionModule
         {
             string audioName = AudioName.GetValue<string>(args, null);
             if (audioName == null)
+            {
                 return;
+            }
             if (!Directory.Exists(AdvancedMERTools.Singleton.Config.AudioFolderPath))
             {
                 ServerConsole.AddLog("Cannot find Audio Folder Directory!", ConsoleColor.Red);
                 return;
             }
             if (!AudioClipStorage.AudioClips.ContainsKey(audioName))
+            {
                 AudioClipStorage.LoadClip(Path.Combine(AdvancedMERTools.Singleton.Config.AudioFolderPath, audioName), audioName);
+            }
+
             Vector3 vector = LocalPlayPosition.GetValue(args, Vector3.zero);
             float vol = Volume.GetValue(args, 1f);
-            if (AP == null)
+            if (AudioPlayer == null)
             {
-                AP = AudioPlayer.Create($"AudioHandler-{args.Transform.GetHashCode()}-{GetHashCode()}");
-                Speaker speaker = AP.AddSpeaker($"Primary-{audioName}", args.Transform.TransformPoint(vector), vol, IsSpatial.GetValue(args, true), MinDistance.GetValue(args, 5f), MaxDistance.GetValue(args, 5f));
+                AudioPlayer = AudioPlayer.Create($"AudioHandler-{args.Transform.GetHashCode()}-{GetHashCode()}");
+                Speaker speaker = AudioPlayer.AddSpeaker($"Primary-{audioName}", args.Transform.TransformPoint(vector), vol, IsSpatial.GetValue(args, true), MinDistance.GetValue(args, 5f), MaxDistance.GetValue(args, 5f));
             }
-            AP.SpeakersByName[$"Primary-{audioName}"].transform.parent = args.Transform;
-            AP.SpeakersByName[$"Primary-{audioName}"].transform.localPosition = vector;
-            int PC = PlayCount.GetValue(args, 1);
-            if (PC == 0)
-                AP.AddClip(audioName, vol, true, false);
-            for (int i = 0; i < PC; i++)
-                AP.AddClip(audioName, vol, false, false);
+            AudioPlayer.SpeakersByName[$"Primary-{audioName}"].transform.parent = args.Transform;
+            AudioPlayer.SpeakersByName[$"Primary-{audioName}"].transform.localPosition = vector;
+            int count = PlayCount.GetValue(args, 1);
+            if (count == 0)
+            {
+                AudioPlayer.AddClip(audioName, vol, true, false);
+            }
+            for (int i = 0; i < count; i++)
+            {
+                AudioPlayer.AddClip(audioName, vol, false, false);
+            }
         });
     }
 }
@@ -586,7 +661,10 @@ public class MessageModule : RandomExecutionModule
             }
             catch (Exception e) { }
             if (!args.TargetCalculated)
+            {
                 args.Targets = GetTargets(SendType, args);
+            }
+
             if (MessageType == MessageTypeE.Cassie)
             {
                 Cassie.Message(content);
@@ -597,11 +675,11 @@ public class MessageModule : RandomExecutionModule
                 {
                     if (MessageType == MessageTypeE.BroadCast)
                     {
-                        p.Broadcast((ushort)Math.Round(Duration), content);
+                        p.SendBroadcast(content, (ushort)Math.Round(Duration));
                     }
                     else
                     {
-                        p.ShowHint(content, Duration);
+                        p.SendHint(content, Duration);
                     }
                 }
             }
@@ -633,11 +711,11 @@ public class FMessageModule : FRandomExecutionModule
                 {
                     if (type == MessageTypeE.BroadCast)
                     {
-                        p.Broadcast((ushort)Math.Round(Duration.GetValue(args, 0f)), content);
+                        p.SendBroadcast(content, (ushort)Math.Round(Duration.GetValue(args, 0f)));
                     }
                     else
                     {
-                        p.ShowHint(content, Duration.GetValue(args, 0f));
+                        p.SendHint(content, Duration.GetValue(args, 0f));
                     }
                 }
             }
@@ -664,7 +742,7 @@ public class AnimationDTO : RandomExecutionModule
         {
             if (Animator == null)
             {
-                if (!EventManager.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
+                if (!AMERTEventsHandler.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
                 {
                     ServerConsole.AddLog("Cannot find appopriate animator!");
                     return;
@@ -677,7 +755,9 @@ public class AnimationDTO : RandomExecutionModule
                 Animator.speed = 1f;
             }
             else if (AnimationType == AnimationTypeE.Stop)
+            {
                 Animator.speed = 0f;
+            }
             else
             {
                 switch (ParameterType)
@@ -719,7 +799,7 @@ public class FAnimationDTO : FRandomExecutionModule
         {
             if (Animator == null)
             {
-                if (!EventManager.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
+                if (!AMERTEventsHandler.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
                 {
                     ServerConsole.AddLog("Cannot find appopriate animator!");
                     return;
@@ -733,12 +813,17 @@ public class FAnimationDTO : FRandomExecutionModule
                 Animator.speed = 1f;
             }
             else if (type == AnimationTypeE.Stop)
+            {
                 Animator.speed = 0f;
+            }
             else
             {
                 string pm = ParameterName.GetValue<string>(args, null);
                 if (pm == null)
+                {
                     return;
+                }
+
                 switch (ParameterType.GetValue(args, ParameterTypeE.Integer))
                 {
                     case ParameterTypeE.Bool:
@@ -766,7 +851,8 @@ public class RandomExecutionModule
     public bool ForceExecute { get; set; }
     public float ActionDelay { get; set; }
 
-    public static RandomExecutionModule GetSingleton<T>() where T : RandomExecutionModule, new()
+    public static RandomExecutionModule GetSingleton<T>()
+        where T : RandomExecutionModule, new()
     {
         if (!AdvancedMERTools.Singleton.TypeSingletonPair.TryGetValue(typeof(T), out RandomExecutionModule type))
         {
@@ -775,7 +861,8 @@ public class RandomExecutionModule
         return type;
     }
 
-    public static List<T> SelectList<T>(List<T> list) where T : RandomExecutionModule, new()
+    public static List<T> SelectList<T>(List<T> list)
+        where T : RandomExecutionModule, new()
     {
         float chance = list.Sum(x => x.ChanceWeight);
         chance = UnityEngine.Random.Range(0f, chance);
@@ -783,11 +870,15 @@ public class RandomExecutionModule
         foreach (T element in list)
         {
             if (element.ForceExecute)
+            {
                 output.Add(element);
+            }
             else
             {
                 if (chance <= 0)
+                {
                     continue;
+                }
                 chance -= element.ChanceWeight;
                 if (chance <= 0)
                 {
@@ -798,7 +889,8 @@ public class RandomExecutionModule
         return output;
     }
 
-    public static void Execute<T>(List<T> list, ModuleGeneralArguments args) where T : RandomExecutionModule, new()
+    public static void Execute<T>(List<T> list, ModuleGeneralArguments args)
+        where T : RandomExecutionModule, new()
     {
         SelectList(list).ForEach(x => x.Execute(args));
     }
@@ -807,13 +899,22 @@ public class RandomExecutionModule
     {
         List<Player> targets = new List<Player> { };
         if (type.HasFlag(SendType.AllExceptAboveOne))
+        {
             targets.AddRange(Player.List.Where(x => x != args.Player));
+        }
         if (type.HasFlag(SendType.Spectators))
+        {
             targets.AddRange(Player.List.Where(x => !x.IsAlive));
+        }
         if (type.HasFlag(SendType.Alive))
+        {
             targets.AddRange(Player.List.Where(x => x.IsAlive));
+        }
         if (type.HasFlag(SendType.Interactor))
+        {
             targets.Add(args.Player);
+        }
+
         return targets.Distinct().ToArray();
     }
 
@@ -828,7 +929,8 @@ public class FRandomExecutionModule
     public ScriptValue ActionDelay { get; set; }
     private float calcedWeight;
 
-    public static List<T> SelectList<T>(List<T> list, FunctionArgument args) where T : FRandomExecutionModule, new()
+    public static List<T> SelectList<T>(List<T> list, FunctionArgument args)
+        where T : FRandomExecutionModule, new()
     {
         float chance = list.Sum(x => x.calcedWeight = x.ChanceWeight.GetValue(args, 0f));
         chance = UnityEngine.Random.Range(0f, chance);
@@ -836,11 +938,15 @@ public class FRandomExecutionModule
         foreach (T element in list)
         {
             if (element.ForceExecute.GetValue(args, false))
+            {
                 output.Add(element);
+            }
             else
             {
                 if (chance <= 0)
+                {
                     continue;
+                }
                 chance -= element.calcedWeight;
                 if (chance <= 0)
                 {
@@ -851,7 +957,8 @@ public class FRandomExecutionModule
         return output;
     }
 
-    public static void Execute<T>(List<T> list, FunctionArgument args) where T : FRandomExecutionModule, new()
+    public static void Execute<T>(List<T> list, FunctionArgument args)
+        where T : FRandomExecutionModule, new()
     {
         SelectList(list, args).ForEach(x => x.Execute(args));
     }
@@ -871,18 +978,22 @@ public class DropItem : RandomExecutionModule
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
+            // TODO: Item.Spawn() - not sure if this is the right LabApi way
             Vector3 vector3 = args.Transform.TransformPoint(DropLocalPosition);
-            if (CustomItemId != 0 && CustomItem.TryGet(CustomItemId, out CustomItem custom))
+            if (CustomItemId != 0 && Item.TryGet((ushort)CustomItemId, out Item customItem))
             {
                 for (int i = 0; i < Count; i++)
                 {
-                    custom.Spawn(vector3);
+                    Pickup customPickup = customItem.DropItem();
+                    customPickup.Position = vector3;
                 }
             }
             else
             {
                 if (!InventoryItemLoader.AvailableItems.TryGetValue(ItemType, out ItemBase itemBase) || itemBase.PickupDropModel == null)
+                {
                     return;
+                }
                 for (int i = 0; i < Count; i++)
                 {
                     ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.Transform.rotation);
@@ -909,11 +1020,12 @@ public class FDropItem : FRandomExecutionModule
             Vector3 vector3 = args.Transform.TransformPoint(DropLocalPosition.GetValue(args, Vector3.zero));
             int u = CustomItemId.GetValue(args, 0);
             int c = Count.GetValue(args, 1);
-            if (u != 0 && CustomItem.TryGet((uint)u, out CustomItem custom))
+            if (u != 0 && Item.TryGet((ushort)u, out Item customItem))
             {
                 for (int i = 0; i < c; i++)
                 {
-                    custom.Spawn(vector3);
+                    Pickup customPickup = customItem.DropItem();
+                    customPickup.Position = vector3;
                 }
             }
             else
@@ -923,7 +1035,6 @@ public class FDropItem : FRandomExecutionModule
                 {
                     return;
                 }
-
                 for (int i = 0; i < c; i++)
                 {
                     ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.Transform.rotation);
@@ -1052,7 +1163,7 @@ public class FCommanding : FRandomExecutionModule
 [Serializable]
 public class GateSerializable
 {
-    public Interactables.Interobjects.DoorUtils.DoorPermissionFlags DoorPermissions { get; set; }
+    public DoorPermissionFlags DoorPermissions { get; set; }
     public bool RequireAllPermission { get; set; }
     public bool IsLocked { get; set; }
     public bool IsOpened { get; set; }

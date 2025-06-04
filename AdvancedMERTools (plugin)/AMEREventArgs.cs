@@ -4,14 +4,27 @@ using System;
 
 namespace AdvancedMERTools;
 
-public class HealthObjectDeadEventArgs : EventArgs  // TODO: Interface for labapi event?
+// TODO: Interface for labapi event?
+public class HealthObjectDeadEventArgs : EventArgs
 {
-    public HealthObjectDeadEventArgs(HODTO healthObject, Player Attacker)
+    public HODTO HealthObject { get; set; }
+    public Player Killer { get; set; }
+
+    public HealthObjectDeadEventArgs(HODTO healthObject, Player attacker)
     {
         HealthObject = healthObject;
-        Killer = Attacker;
+        Killer = attacker;
     }
+}
 
-    public HODTO HealthObject;
-    public Player Killer;
+public static class EventHandler
+{
+    // TODO: Event class?
+    //public static event LabEventHandler<HealthObjectDeadEventArgs>? HealthObjectDead;
+    ////public static Event<HealthObjectDeadEventArgs> HealthObjectDead { get; set; } = new Event<HealthObjectDeadEventArgs>();
+
+    //internal static void OnHealthObjectDead(HealthObjectDeadEventArgs ev)
+    //{
+    //    EventHandler.HealthObjectDead.InvokeSafely(ev);
+    //}
 }

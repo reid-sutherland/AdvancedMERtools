@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.ComponentModel;
-using System.IO;
-using UnityEditor;
-using UnityEngine;
-using System.Reflection;
-using Exiled.API.Enums;
-using System.Linq;
-using Exiled.API.Features;
-using InventorySystem.Items.Pickups;
-using Exiled.API.Features.Items;
-using Exiled.API.Features.Pickups;
+﻿using LabApi.Features.Extensions;
+using LabApi.Features.Wrappers;
 using PlayerRoles;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace AdvancedMERTools;
 
@@ -446,7 +437,8 @@ public class ChangePlayerValue : Function
                 p.ArtificialHealth = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Cuffer:
-                p.Cuffer = player;
+                // TODO: Maybe set cuffer by invoking cuffing event
+                //p.Cuffer = player;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.CurrentItem:
                 p.CurrentItem = item;
@@ -455,10 +447,10 @@ public class ChangePlayerValue : Function
                 p.CustomInfo = str;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.CustomName:
-                p.CustomName = str;
+                // TODO: CustomName in player?
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.DisplayNickname:
-                p.DisplayNickname = str;
+                p.DisplayName = str;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.GroupName:
                 p.GroupName = str;
@@ -482,16 +474,17 @@ public class ChangePlayerValue : Function
                 p.Position = vector;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Role:
-                p.Role.Set(roleType);
+                p.Role = roleType;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Scale:
-                p.Scale = vector;
+                p.GameObject.transform.localScale = vector;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Stamina:
-                p.Stamina = real;
+                p.StaminaRemaining = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.UniqueRole:
-                p.UniqueRole = str;
+                // TODO: UniqueRole? from str
+                //p.Role = str;
                 break;
         }
         return new FunctionReturn();
@@ -546,7 +539,7 @@ public class PlayerAction : Function
             case PlayerActionType.GiveItem:
                 if (item != null)
                 {
-                    item.Give(p);
+                    p.AddItem(item.Type);
                 }
                 else if (pickup != null)
                 {
@@ -558,7 +551,7 @@ public class PlayerAction : Function
                 }
                 break;
             case PlayerActionType.RemoveItem:
-                p.RemoveItem(item, true);
+                p.RemoveItem(item);
                 break;
         }
         return new FunctionReturn();

@@ -2,7 +2,9 @@
 
 using CommandSystem;
 using HarmonyLib;
+using LabApi.Events.CustomHandlers;
 using LabApi.Loader.Features.Plugins;
+using MEC;
 using ProjectMER.Features.Objects;
 using RemoteAdmin;
 using System;
@@ -11,14 +13,9 @@ using System.IO;
 using UserSettings.ServerSpecific;
 
 /// <NOTES>
-/// LabApi Update needed:
-/// Generally speaking, ProjectMER is the updated version of MER that 
-/// completely removes EXILED and ONLY uses LabApi.
-/// So, I think if we're updating to match that, we probably need to 
-/// go through this code and refactor all EXILED code to LabApi as well.
-///
 /// CURRENT CHANGES FOR ProjectMER REFACTOR
 /// - Generally I think all the doors are scuffed and probably unusable lol.
+/// - Effects: How the hell do CustomEffects (or any effects for that matter) work in LabApi???
 /// - DummyDoor: Idk what the hell it's for so I just completely removed it for now.
 /// - InteractableTeleport: Don't need this so removing for now.
 /// </NOTES>
@@ -87,51 +84,54 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override void Enable()
     {
-        Log.Info($"AdvancedMERTools Enabled!");
         Singleton = this;
+        CustomHandlersManager.RegisterEventsHandler(AMERTEventsHandler);
 
-        if (!Directory.Exists(MapsDir))
+        // Make sure this plugin is enabled later so that ProjectMER is set up first
+        Timing.CallDelayed(3.0f, () =>
         {
-            Log.Warn("ProjectMER Maps directory does not exist. Creating...");
-            Directory.CreateDirectory(MapsDir);
-        }
-        if (!Directory.Exists(SchematicsDir))
-        {
-            Log.Warn("ProjectMER Schematics directory does not exist. Creating...");
-            Directory.CreateDirectory(SchematicsDir);
-        }
-        if (!Directory.Exists(AudioDir))
-        {
-            Log.Warn("AMERT Audio directory does not exist. Creating...");
-            Directory.CreateDirectory(AudioDir);
-        }
+            if (!Directory.Exists(MapsDir))
+            {
+                Log.Warn("ProjectMER Maps directory does not exist. Creating...");
+                Directory.CreateDirectory(MapsDir);
+            }
+            if (!Directory.Exists(SchematicsDir))
+            {
+                Log.Warn("ProjectMER Schematics directory does not exist. Creating...");
+                Directory.CreateDirectory(SchematicsDir);
+            }
+            if (!Directory.Exists(AudioDir))
+            {
+                Log.Warn("AMERT Audio directory does not exist. Creating...");
+                Directory.CreateDirectory(AudioDir);
+            }
+            Log.Info($"AdvancedMERTools: ProjectMER is loading Schematics directory: {SchematicsDir}");
 
-        manager = new EventManager();
-        //CustomHandlersManager.RegisterEventsHandler(GenericEventsHandler);
+            Harmony harmony = new Harmony("AMERT");
+            harmony.PatchAll();
 
-        Harmony harmony = new Harmony("AMERT");
-        harmony.PatchAll();
+            ServerSpecificSettingsSync.ServerOnSettingValueReceived += AMERTEventsHandler.OnSSInput;
 
-        ServerSpecificSettingsSync.ServerOnSettingValueReceived += manager.OnSSInput;
-        ProjectMER.Events.Handlers.Schematic.SchematicSpawned += manager.OnSchematicLoad;
-        LabApi.Events.Handlers.ServerEvents.MapGenerated += manager.OnMapGenerated;
-        //LabApi.Events.Handlers.PlayerEvents. += manager.OnGrenade;
-        LabApi.Events.Handlers.PlayerEvents.Spawned += manager.ApplyCustomSpawnPoint;
-        LabApi.Events.Handlers.PlayerEvents.SearchingPickup += manager.OnSearchingPickup;
-        LabApi.Events.Handlers.PlayerEvents.PickedUpItem += manager.OnPickedUpItem;
+            LabApi.Events.Handlers.ServerEvents.MapGenerated += AMERTEventsHandler.OnMapGenerated;
+            //LabApi.Events.Handlers.PlayerEvents. += AMERTEventsHandler.OnGrenade;
+            LabApi.Events.Handlers.PlayerEvents.Spawned += AMERTEventsHandler.ApplyCustomSpawnPoint;
+            LabApi.Events.Handlers.PlayerEvents.SearchingPickup += AMERTEventsHandler.OnSearchingPickup;
+            LabApi.Events.Handlers.PlayerEvents.PickingUpItem += AMERTEventsHandler.OnPickingUpItem;
+            ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicLoad;
+        });
     }
 
     public override void Disable()
     {
-        ServerSpecificSettingsSync.ServerOnSettingValueReceived -= manager.OnSSInput;
-        ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= manager.OnSchematicLoad;
-        LabApi.Events.Handlers.ServerEvents.MapGenerated -= manager.OnMapGenerated;
-        //LabApi.Events.Handlers.PlayerEvents. -= manager.OnGrenade;
-        LabApi.Events.Handlers.PlayerEvents.Spawned -= manager.ApplyCustomSpawnPoint;
-        LabApi.Events.Handlers.PlayerEvents.SearchingPickup -= manager.OnSearchingPickup;
-        LabApi.Events.Handlers.PlayerEvents.PickedUpItem -= manager.OnPickedUpItem;
+        ServerSpecificSettingsSync.ServerOnSettingValueReceived -= AMERTEventsHandler.OnSSInput;
+        LabApi.Events.Handlers.ServerEvents.MapGenerated -= AMERTEventsHandler.OnMapGenerated;
+        //LabApi.Events.Handlers.PlayerEvents. -= AMERTEventsHandler.OnGrenade;
+        LabApi.Events.Handlers.PlayerEvents.Spawned -= AMERTEventsHandler.ApplyCustomSpawnPoint;
+        LabApi.Events.Handlers.PlayerEvents.SearchingPickup -= AMERTEventsHandler.OnSearchingPickup;
+        LabApi.Events.Handlers.PlayerEvents.PickingUpItem -= AMERTEventsHandler.OnPickingUpItem;
+        ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= AMERTEventsHandler.OnSchematicLoad;
 
-        manager = null;
+        CustomHandlersManager.UnregisterEventsHandler(AMERTEventsHandler);
         Singleton = null;
     }
 

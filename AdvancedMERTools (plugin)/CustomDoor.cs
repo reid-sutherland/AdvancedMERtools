@@ -1,27 +1,16 @@
-﻿//using Exiled.API.Features;
-//using Exiled.API.Features.Doors;
-//using Exiled.API.Enums;
-//using Exiled.Events.EventArgs.Player;
-using LabApi;
-using ProjectMER.Features;
+﻿using LabApi.Features.Wrappers;
+using LabApi.Events.Handlers;
+using LabApi.Events.Arguments.PlayerEvents;
+using MapGeneration;
 using ProjectMER.Features.Serializable;
+using System.Linq;
 using UnityEngine;
-
-//using System.IO;
-//using Utf8Json;
-//using System.Reflection.Emit;
-//using System.Reflection;
-//using PlayerRoles.FirstPersonControl;
-//using PlayerRoles.FirstPersonControl.NetworkMessages;
-//using Mirror;
-//using PlayerRoles;
-//using RelativePositioning;
 
 namespace AdvancedMERTools;
 
 public class CustomDoor : AMERTInteractable
 {
-    public new CDDTO Base { get; private set; }
+    public new CDDTO Base { get; set; }
 
     public Animator Animator { get; private set; }
 
@@ -31,56 +20,52 @@ public class CustomDoor : AMERTInteractable
     {
         Base = base.Base as CDDTO;
         AdvancedMERTools.Singleton.CustomDoors.Add(this);
-        Animator = EventManager.FindObjectWithPath(transform, Base.Animator).GetComponent<Animator>();
+        Animator = AMERTEventsHandler.FindObjectWithPath(transform, Base.Animator).GetComponent<Animator>();
 
         SerializableDoor serializableDoor = new()
         {
             // health?
-            DoorType = Base.DoorType switch
-            {
-                DoorType.LightContainmentDoor => ProjectMER.Features.Enums.DoorType.LightContainmentDoor,
-                DoorType.HeavyContainmentDoor => ProjectMER.Features.Enums.DoorType.HeavyContainmentDoor,
-                DoorType.EntranceDoor => ProjectMER.Features.Enums.DoorType.EntranceDoor,
-                _ => ProjectMER.Features.Enums.DoorType.HeavyContainmentDoor,
-            },
+            DoorType = (ProjectMER.Features.Enums.DoorType)(int)Base.DoorType,
             // ignored damage sources?
-            RequiredPermissions = (Interactables.Interobjects.DoorUtils.DoorPermissionFlags)Base.DoorPermissions,
-            Room = Room.Get(RoomType.Surface).Name,     // this seems odd but the original code had Surface so
+            RequiredPermissions = Base.DoorPermissions,
+            Room = Room.Get(FacilityZone.Surface).ToList().FirstOrDefault().Name.ToString(),        // this seems odd but the original code had Surface so
             Position = transform.position + transform.rotation.eulerAngles + Base.DoorInstallPos,
             Rotation = Quaternion.LookRotation(transform.TransformDirection(Base.DoorInstallRot), Vector3.up).eulerAngles,
             Scale = Base.DoorInstallScl,
         };
 
         // TODO: I have no idea if this in on the right track lol
-        LabApi.Features.Wrappers.Room doorRoom = LabApi.Features.Wrappers.Room.GetRoomAtPosition(serializableDoor.Position);
+        Room doorRoom = Room.GetRoomAtPosition(serializableDoor.Position);
         GameObject doorGameObject = serializableDoor.SpawnOrUpdateObject(doorRoom);
-        Door = Door.Get(doorGameObject);    // this should create a new Exiled Door using the gameObject
-        Door.Transform.parent = this.transform;
-        Exiled.Events.Handlers.Player.InteractingDoor += OnInteract;
-        Exiled.Events.Handlers.Player.DamagingDoor += OnDestroy;
+        Door = doorGameObject.GetComponent<Door>();  // this should create a new Exiled Door using the gameObject
+        Door.Transform.parent = transform;
+
+        PlayerEvents.InteractingDoor += OnInteractingDoor;
+        PlayerEvents.DamagingShootingTarget += OnDamagingDoor;
     }
 
-    public void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         AdvancedMERTools.Singleton.CustomDoors.Remove(this);
     }
 
-    public void OnInteract(Exiled.Events.EventArgs.Player.InteractingDoorEventArgs ev)
+    public void OnInteractingDoor(PlayerInteractingDoorEventArgs ev)
     {
-        if (ev.Door != Door || !ev.IsAllowed)
+        if (!ev.IsAllowed || !ev.Door.Equals(Door))
         {
             return;
         }
-        Animator.Play(Door.IsOpen ? Base.CloseAnimation : Base.OpenAnimation);
+        Animator.Play(Door.IsOpened ? Base.CloseAnimation : Base.OpenAnimation);
     }
 
-    public void OnDestroy(Exiled.Events.EventArgs.Player.DamagingDoorEventArgs ev)
+    public void OnDamagingDoor(PlayerDamagingShootingTargetEventArgs ev)
     {
-        if (ev.Door != Door || !ev.IsAllowed)
+        if (!ev.IsAllowed || !ev.ShootingTarget.GameObject.Equals(Door.GameObject))
         {
             return;
         }
-        if (ev.Damage >= (Door.Base as Interactables.Interobjects.BreakableDoor).RemainingHealth)
+        if (ev.ShootingTarget.IsDestroyed)
         {
             Animator.Play(Base.BrokenAnimation);
         }

@@ -1,4 +1,5 @@
-﻿using Exiled.API.Features;
+﻿using LabApi.Features.Extensions;
+using LabApi.Features.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,22 +10,22 @@ namespace AdvancedMERTools;
 
 public class InteractableObject : AMERTInteractable
 {
-    public new IODTO Base { get; private set; }
+    public new IODTO Base { get; set; }
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
     {
-        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
+        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_name}", vs => (vs[0] as Player).Nickname },
         {
             "{p_pos}", vs =>
             {
-                Vector3 pos = (vs[0] as Player).Transform.position;
+                Vector3 pos = (vs[0] as Player).Position;
                 return $"{pos.x} {pos.y} {pos.z}";
             }
         },
-        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
+        { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
         { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.GetRoleBase().ToString() },
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
     };
 
@@ -114,7 +115,7 @@ public class InteractableObject : AMERTInteractable
 
 public class FInteractableObject : InteractableObject
 {
-    public new FIODTO Base { get; private set; }
+    public new FIODTO Base { get; set; }
 
     protected override void Start()
     {

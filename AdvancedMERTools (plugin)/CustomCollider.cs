@@ -1,8 +1,6 @@
-﻿//using Exiled.API.Features;
-//using Exiled.API.Features.Pickups;
-//using Exiled.API.Features.Items;
-//using Exiled.CustomItems;
+﻿using InventorySystem.Items.Pickups;
 using InventorySystem.Items.ThrowableProjectiles;
+using LabApi.Features.Extensions;
 using LabApi.Features.Wrappers;
 using System;
 using System.Collections.Generic;
@@ -12,16 +10,48 @@ namespace AdvancedMERTools;
 
 public class CustomCollider : AMERTInteractable
 {
-    public new CCDTO Base { get; private set; }
+    public new CCDTO Base { get; set; }
 
     public MeshCollider MeshCollider { get; private set; }
 
     public Transform OriginalTransform { get; private set; }
 
+    public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
+    {
+        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_name}", vs => (vs[0] as Player).Nickname },
+        {
+            "{p_pos}", vs =>
+            {
+                Vector3 pos = (vs[0] as Player).Position;
+                return $"{pos.x} {pos.y} {pos.z}";
+            }
+        },
+        { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
+        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.ToString() },
+        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
+        {
+            "{o_pos}", vs =>
+            {
+                Vector3 pos = (vs[1] as GameObject).transform.position;
+                return $"{pos.x} {pos.y} {pos.z}";
+            }
+        },
+        { "{o_room}", vs => Room.GetRoomAtPosition((vs[1] as GameObject).transform.position).Name.ToString() },
+        { "{o_zone}", vs => Room.GetRoomAtPosition((vs[1] as GameObject).transform.position).Zone.ToString() },
+    };
+
     protected virtual void Start()
     {
         this.Base = base.Base as CCDTO;
         Register();
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        AdvancedMERTools.Singleton.CustomColliders.Remove(this);
     }
 
     protected void Register()
@@ -73,19 +103,25 @@ public class CustomCollider : AMERTInteractable
     protected void OnTriggerEnter(Collider collider)
     {
         if (Base.CollisionType.HasFlag(CollisionType.OnEnter))
+        {
             RunProcess(collider);
+        }
     }
 
     protected void OnTriggerExit(Collider collider)
     {
         if (Base.CollisionType.HasFlag(CollisionType.OnExit))
+        {
             RunProcess(collider);
+        }
     }
 
     protected void OnTriggerStay(Collider collider)
     {
         if (Base.CollisionType.HasFlag(CollisionType.OnStay))
+        {
             RunProcess(collider);
+        }
     }
 
     public virtual void RunProcess(Collider collider)
@@ -95,23 +131,29 @@ public class CustomCollider : AMERTInteractable
             return;
         }
 
+        Pickup pickup = collider.GetComponent<Pickup>();
+        if (pickup is null)
+        {
+            Log.Debug($"AMERT CustomCollider: Pickup compenent in collider was null");
+            return;
+        }
+
         bool flag = false;
         Player target = null;
-        Pickup pickup = Pickup.Get(collider.gameObject);
         if (Base.DetectType.HasFlag(DetectType.Pickup) && pickup != null)
         {
-            target = pickup.PreviousOwner;
             flag = true;
+            target = pickup.LastOwner;
         }
-        if (Base.DetectType.HasFlag(DetectType.Player) && Player.TryGet(collider, out target))
+        if (Base.DetectType.HasFlag(DetectType.Player) && Player.TryGet(collider.gameObject, out target))
         {
-            flag = target.Role.Base.ActiveTime > 0.25f;
+            flag = target.Role.GetRoleBase().ActiveTime > 0.25f;
         }
         ThrownProjectile projectile = collider.GetComponentInParent<ThrownProjectile>();
         if (Base.DetectType.HasFlag(DetectType.Projectile) && projectile != null)
         {
-            target = Player.Get(projectile.PreviousOwner);
             flag = true;
+            target = Player.Get(projectile.PreviousOwner.Hub);
         }
         if (!flag)
         {
@@ -132,17 +174,17 @@ public class CustomCollider : AMERTInteractable
                         }
                         else
                         {
-                            target.Hurt(-1 * Base.ModifyHealthAmount);
+                            target.Damage(-1f * Base.ModifyHealthAmount, "AMERT CustomCollider");
                         }
                     }
                 }
             },
             { ColliderActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
             { ColliderActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
-            { ColliderActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
+            { ColliderActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
             { ColliderActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
-            { ColliderActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-            { ColliderActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { ColliderActionType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
+            { ColliderActionType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { ColliderActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
             { ColliderActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
             { ColliderActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
@@ -155,31 +197,11 @@ public class CustomCollider : AMERTInteractable
             }
         }
     }
-
-    static readonly Dictionary<string, Func<object[], string>> Formatter = new Dictionary<string, Func<object[], string>>
-    {
-        { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-        { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
-        { "{p_pos}", vs => { Vector3 pos = (vs[0] as Player).Transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
-        { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
-        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
-        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
-        { "{o_pos}", vs => { Vector3 pos = (vs[1] as GameObject).transform.position; return $"{pos.x} {pos.y} {pos.z}"; } },
-        // TODO: Idk what this is for but RoomIdUtils is supposed to be in "Assembly-CSharp" so just skip for now
-        //{ "{o_room}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Name.ToString() },
-        //{ "{o_zone}", vs => RoomIdUtils.RoomAtPosition((vs[1] as GameObject).transform.position).Zone.ToString() },
-    };
-
-    protected void OnDestroy()
-    {
-        AdvancedMERTools.Singleton.CustomColliders.Remove(this);
-    }
 }
 
 public class FCustomCollider : CustomCollider
 {
-    public new FCCDTO Base { get; private set; }
+    public new FCCDTO Base { get; set; }
 
     protected override void Start()
     {
@@ -194,24 +216,30 @@ public class FCustomCollider : CustomCollider
             return;
         }
 
+        Pickup pickup = collider.GetComponent<Pickup>();
+        if (pickup is null)
+        {
+            Log.Debug($"AMERT FCustomCollider: Pickup compenent in collider was null");
+            return;
+        }
+
         bool flag = false;
         Player target = null;
-        Pickup pickup = Pickup.Get(collider.gameObject);
         CollisionType collision = Base.DetectType.GetValue<CollisionType>(new FunctionArgument(this), 0);
         if (collision.HasFlag(DetectType.Pickup) && pickup != null)
         {
-            target = pickup.PreviousOwner;
             flag = true;
+            target = pickup.LastOwner;
         }
-        if (collision.HasFlag(DetectType.Player) && Player.TryGet(collider, out target))
+        if (collision.HasFlag(DetectType.Player) && Player.TryGet(collider.gameObject, out target))
         {
-            flag = target.Role.Base.ActiveTime > 0.25f;
+            flag = target.Role.GetRoleBase().ActiveTime > 0.25f;
         }
         ThrownProjectile projectile = collider.GetComponentInParent<ThrownProjectile>();
         if (collision.HasFlag(DetectType.Projectile) && projectile != null)
         {
-            target = Player.Get(projectile.PreviousOwner);
             flag = true;
+            target = Player.Get(projectile.PreviousOwner.Hub);
         }
         if (!flag)
         {
@@ -233,17 +261,17 @@ public class FCustomCollider : CustomCollider
                         }
                         else
                         {
-                            target.Hurt(-amount);
+                            target.Damage(-amount, "AMERT FCustomCollider");
                         }
                     }
                 }
             },
             { ColliderActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
             { ColliderActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
-            { ColliderActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+            { ColliderActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
             { ColliderActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-            { ColliderActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
-            { ColliderActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
+            { ColliderActionType.SendCommand, () => FCommanding.Execute(Base.Commandings, args) },
+            { ColliderActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { ColliderActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
             { ColliderActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
             { ColliderActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },

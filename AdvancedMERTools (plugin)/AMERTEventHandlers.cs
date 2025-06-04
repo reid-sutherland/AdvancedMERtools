@@ -1,5 +1,7 @@
 ﻿using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
+using LabApi.Events.CustomHandlers;
+using LabApi.Features.Wrappers;
 using Mirror;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
@@ -16,19 +18,7 @@ using UserSettings.ServerSpecific;
 
 namespace AdvancedMERTools;
 
-public static class EventHandler
-{
-    // TODO: Event class?
-    //public static event LabEventHandler<HealthObjectDeadEventArgs>? HealthObjectDead;
-    ////public static Event<HealthObjectDeadEventArgs> HealthObjectDead { get; set; } = new Event<HealthObjectDeadEventArgs>();
-
-    //internal static void OnHealthObjectDead(HealthObjectDeadEventArgs ev)
-    //{
-    //    EventHandler.HealthObjectDead.InvokeSafely(ev);
-    //}
-}
-
-public class EventManager
+public class AMERTEventsHandler : CustomEventsHandler
 {
     public Config Config => AdvancedMERTools.Singleton.Config;
 
@@ -61,12 +51,12 @@ public class EventManager
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Searching))
             {
                 //Log.Debug($"-- calling RunProcess with ev.Pickup.GameObject.name: {ev.Pickup.GameObject.name} and pickup type: {ev.Pickup.Type}");
-                interactable.RunProcess(ev.Player, ev.Pickup, out bool Remove);
+                interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
                 if (interactable.Base.CancelActionWhenActive)
                 {
                     ev.IsAllowed = false;
                 }
-                if (Remove && !removeList.Contains(interactable.Pickup))
+                if (remove && !removeList.Contains(interactable.Pickup))
                 {
                     removeList.Add(interactable.Pickup);
                 }
@@ -76,22 +66,22 @@ public class EventManager
         {
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Searching))
             {
-                interactable.RunProcess(ev.Player, ev.Pickup, out bool Remove);
+                interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
                 if (interactable.Base.CancelActionWhenActive.GetValue(new FunctionArgument(interactable, ev.Player), true))
                 {
                     ev.IsAllowed = false;
                 }
-                if (Remove && !removeList.Contains(interactable.Pickup))
+                if (remove && !removeList.Contains(interactable.Pickup))
                 {
                     removeList.Add(interactable.Pickup);
                 }
             }
         }
         removeList.ForEach(x => x.Destroy());
-        AdvancedMERTools.Singleton.DummyGates.ForEach(x => x.OnPickingUp(ev));
+        AdvancedMERTools.Singleton.DummyGates.ForEach(x => x.OnSearchingPickup(ev));
     }
 
-    public void OnPickedUpItem(PlayerPickedUpItemEventArgs ev)
+    public void OnPickingUpItem(PlayerPickingUpItemEventArgs ev)
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
         List<Pickup> removeList = new List<Pickup> { };
@@ -102,8 +92,8 @@ public class EventManager
                 continue;
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Picked))
             {
-                interactable.RunProcess(ev.Player, ev.Pickup, out bool Remove);
-                if (Remove && !removeList.Contains(interactable.Pickup))
+                interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
+                if (remove && !removeList.Contains(interactable.Pickup))
                 {
                     removeList.Add(interactable.Pickup);
                 }
@@ -113,8 +103,8 @@ public class EventManager
         {
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Picked))
             {
-                interactable.RunProcess(ev.Player, ev.Pickup, out bool Remove);
-                if (Remove && !removeList.Contains(interactable.Pickup))
+                interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
+                if (remove && !removeList.Contains(interactable.Pickup))
                 {
                     removeList.Add(interactable.Pickup);
                 }
@@ -189,9 +179,6 @@ public class EventManager
 
     public void DataLoad<Tdto, Tclass>(string name, ProjectMER.Events.Arguments.SchematicSpawnedEventArgs ev) where Tdto : AMERTDTO where Tclass : AMERTInteractable, new()
     {
-        //ServerConsole.AddLog(ev.Schematic.DirectoryPath);
-        //ServerConsole.AddLog(ev.Schematic.Base.SchematicName);
-        //ServerConsole.AddLog(Assembly.GetAssembly(typeof(Real)).FullName);
         string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + $"-{name}.json");
         if (File.Exists(path))
         {
@@ -205,39 +192,42 @@ public class EventManager
                 tclass.OSchematic = ev.Schematic;
                 AdvancedMERTools.Singleton.CodeClassPair[ev.Schematic].Add(dto.Code, tclass);
                 if (!AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic].ContainsKey(dto.ScriptGroup))
+                {
                     AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic].Add(dto.ScriptGroup, new List<AMERTInteractable> { });
+                }
                 if (dto.ScriptGroup != null && dto.ScriptGroup != "")
+                {
                     AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic][dto.ScriptGroup].Add(tclass);
+                }
             }
         }
     }
 
-    static DataSerializationBinder DSbinder = new DataSerializationBinder();
+    public static DataSerializationBinder DSbinder { get; set; } = new();
 
     public class DataSerializationBinder : ISerializationBinder
     {
-        Dictionary<string, Type> types;
-        DefaultSerializationBinder db = new DefaultSerializationBinder();
+        public Dictionary<string, Type> Types { get; set; }
+        public DefaultSerializationBinder DefaultBinder { get; set; } = new();
 
         void ISerializationBinder.BindToName(Type serializedType, out string assemblyName, out string typeName)
         {
-            db.BindToName(serializedType, out assemblyName, out typeName);
+            DefaultBinder.BindToName(serializedType, out assemblyName, out typeName);
         }
 
         Type ISerializationBinder.BindToType(string assemblyName, string typeName)
         {
-            if (types == null)
+            if (Types == null)
             {
-                types = Assembly.GetAssembly(typeof(AdvancedMERTools)).GetTypes().Where(t => t.IsClass && !t.IsAbstract && (typeof(Value).IsAssignableFrom(t) || typeof(Function).IsAssignableFrom(t))).ToDictionary(x => x.Name);
-                //ServerConsole.AddLog(string.Join("\n", types.Keys));
+                Types = Assembly.GetAssembly(typeof(AdvancedMERTools)).GetTypes().Where(t => t.IsClass && !t.IsAbstract && (typeof(Value).IsAssignableFrom(t) || typeof(Function).IsAssignableFrom(t))).ToDictionary(x => x.Name);
             }
-            if (types.ContainsKey(typeName))
+            if (Types.ContainsKey(typeName))
             {
-                return types[typeName];
+                return Types[typeName];
             }
             else
             {
-                return db.BindToType(assemblyName, typeName);
+                return DefaultBinder.BindToType(assemblyName, typeName);
             }
         }
     }
@@ -276,10 +266,11 @@ public class EventManager
         AdvancedMERTools.Singleton.RoundVariable.Clear();
     }
 
-    List<NetworkIdentity> identities = new List<NetworkIdentity> { };
+    public static List<NetworkIdentity> Identities { get; set; } = new();
 
     public void ApplyCustomSpawnPoint(PlayerSpawnedEventArgs ev)
     {
+        Log.Debug($"AMERT: Player spawned: {ev.Player.Nickname}");
         if (MapUtils.LoadedMaps.IsEmpty())
         {
             return;
