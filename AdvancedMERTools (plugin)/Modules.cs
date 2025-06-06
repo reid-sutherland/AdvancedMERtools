@@ -16,6 +16,76 @@ using Utils;
 
 namespace AdvancedMERTools;
 
+public class ModuleGeneralArguments
+{
+    public SchematicObject Schematic { get; set; }
+    public Player Player { get; set; }
+    public Player[] Targets { get; set; }
+    public bool TargetCalculated { get; set; }
+    public Transform Transform { get; set; }
+    public Dictionary<string, Func<object[], string>> Interpolations { get; set; }
+    public object[] InterpolationsList { get; set; }
+}
+
+[Serializable]
+public class AMERTInteractable : NetworkBehaviour
+{
+    public AMERTDTO Base { get; set; }
+    public SchematicObject OSchematic { get; set; }
+    public bool Active { get; set; }
+
+    protected virtual void OnDestroy()
+    {
+        AdvancedMERTools.Singleton.CodeClassPair[OSchematic].Remove(Base.Code);
+        AdvancedMERTools.Singleton.AMERTGroup[OSchematic][Base.ScriptGroup].Remove(this);
+    }
+
+    public static void AlphaWarhead(WarheadActionType type)
+    {
+        foreach (WarheadActionType warhead in Enum.GetValues(typeof(WarheadActionType)))
+        {
+            if (type.HasFlag(warhead))
+            {
+                switch (warhead)
+                {
+                    case WarheadActionType.Start:
+                        Warhead.Start();
+                        break;
+                    case WarheadActionType.Stop:
+                        Warhead.Stop();
+                        break;
+                    case WarheadActionType.Lock:
+                        Warhead.IsLocked = true;
+                        break;
+                    case WarheadActionType.UnLock:
+                        Warhead.IsLocked = false;
+                        break;
+                    case WarheadActionType.Disable:
+                        Warhead.LeverStatus = false;
+                        break;
+                    case WarheadActionType.Enable:
+                        Warhead.LeverStatus = true;
+                        break;
+                }
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////
+// AMERT DTO Classes
+////////////////////////////////////////////////
+
+[Serializable]
+public class AMERTDTO
+{
+    public bool Active { get; set; }
+    public string ObjectId { get; set; }
+    public int Code { get; set; }
+    public string ScriptGroup { get; set; }
+    public bool UseScriptValue { get; set; }
+}
+
 [Serializable]
 public class HODTO : AMERTDTO
 {
@@ -276,6 +346,132 @@ public class DGDTO
     public DoorPermissionFlags DoorPermissions { get; set; }
 }
 
+////////////////////////////////////////////////
+// Random Execution Modules
+////////////////////////////////////////////////
+
+[Serializable]
+public class RandomExecutionModule
+{
+    public float ChanceWeight { get; set; }
+    public bool ForceExecute { get; set; }
+    public float ActionDelay { get; set; }
+
+    public static RandomExecutionModule GetSingleton<T>()
+        where T : RandomExecutionModule, new()
+    {
+        if (!AdvancedMERTools.Singleton.TypeSingletonPair.TryGetValue(typeof(T), out RandomExecutionModule type))
+        {
+            AdvancedMERTools.Singleton.TypeSingletonPair.Add(typeof(T), type = new T());
+        }
+        return type;
+    }
+
+    public static List<T> SelectList<T>(List<T> list)
+        where T : RandomExecutionModule, new()
+    {
+        float chance = list.Sum(x => x.ChanceWeight);
+        chance = UnityEngine.Random.Range(0f, chance);
+        List<T> output = new List<T> { };
+        foreach (T element in list)
+        {
+            if (element.ForceExecute)
+            {
+                output.Add(element);
+            }
+            else
+            {
+                if (chance <= 0)
+                {
+                    continue;
+                }
+                chance -= element.ChanceWeight;
+                if (chance <= 0)
+                {
+                    output.Add(element);
+                }
+            }
+        }
+        return output;
+    }
+
+    public static void Execute<T>(List<T> list, ModuleGeneralArguments args)
+        where T : RandomExecutionModule, new()
+    {
+        SelectList(list).ForEach(x => x.Execute(args));
+    }
+
+    public static Player[] GetTargets(SendType type, ModuleGeneralArguments args)
+    {
+        List<Player> targets = new List<Player> { };
+        if (type.HasFlag(SendType.AllExceptAboveOne))
+        {
+            targets.AddRange(Player.List.Where(x => x != args.Player));
+        }
+        if (type.HasFlag(SendType.Spectators))
+        {
+            targets.AddRange(Player.List.Where(x => !x.IsAlive));
+        }
+        if (type.HasFlag(SendType.Alive))
+        {
+            targets.AddRange(Player.List.Where(x => x.IsAlive));
+        }
+        if (type.HasFlag(SendType.Interactor))
+        {
+            targets.Add(args.Player);
+        }
+
+        return targets.Distinct().ToArray();
+    }
+
+    public virtual void Execute(ModuleGeneralArguments args) { }
+}
+
+[Serializable]
+public class FRandomExecutionModule
+{
+    public ScriptValue ChanceWeight { get; set; }
+    public ScriptValue ForceExecute { get; set; }
+    public ScriptValue ActionDelay { get; set; }
+    private float calcedWeight;
+
+    public static List<T> SelectList<T>(List<T> list, FunctionArgument args)
+        where T : FRandomExecutionModule, new()
+    {
+        float chance = list.Sum(x => x.calcedWeight = x.ChanceWeight.GetValue(args, 0f));
+        chance = UnityEngine.Random.Range(0f, chance);
+        List<T> output = new List<T> { };
+        foreach (T element in list)
+        {
+            if (element.ForceExecute.GetValue(args, false))
+            {
+                output.Add(element);
+            }
+            else
+            {
+                if (chance <= 0)
+                {
+                    continue;
+                }
+                chance -= element.calcedWeight;
+                if (chance <= 0)
+                {
+                    output.Add(element);
+                }
+            }
+        }
+        return output;
+    }
+
+    public static void Execute<T>(List<T> list, FunctionArgument args)
+        where T : FRandomExecutionModule, new()
+    {
+        SelectList(list, args).ForEach(x => x.Execute(args));
+    }
+
+    public virtual void Execute(FunctionArgument args) { }
+}
+
 [Serializable]
 public class GMDTO : RandomExecutionModule
 {
@@ -331,61 +527,6 @@ public class FGMDTO : FRandomExecutionModule
                 }
             });
         });
-    }
-}
-
-[Serializable]
-public class AMERTDTO
-{
-    public bool Active { get; set; }
-    public string ObjectId { get; set; }
-    public int Code { get; set; }
-    public string ScriptGroup { get; set; }
-    public bool UseScriptValue { get; set; }
-}
-
-[Serializable]
-public class AMERTInteractable : NetworkBehaviour
-{
-    public AMERTDTO Base { get; set; }
-    public SchematicObject OSchematic { get; set; }
-    public bool Active { get; set; }
-
-    protected virtual void OnDestroy()
-    {
-        AdvancedMERTools.Singleton.CodeClassPair[OSchematic].Remove(Base.Code);
-        AdvancedMERTools.Singleton.AMERTGroup[OSchematic][Base.ScriptGroup].Remove(this);
-    }
-
-    public static void AlphaWarhead(WarheadActionType type)
-    {
-        foreach (WarheadActionType warhead in Enum.GetValues(typeof(WarheadActionType)))
-        {
-            if (type.HasFlag(warhead))
-            {
-                switch (warhead)
-                {
-                    case WarheadActionType.Start:
-                        Warhead.Start();
-                        break;
-                    case WarheadActionType.Stop:
-                        Warhead.Stop();
-                        break;
-                    case WarheadActionType.Lock:
-                        Warhead.IsLocked = true;
-                        break;
-                    case WarheadActionType.UnLock:
-                        Warhead.IsLocked = false;
-                        break;
-                    case WarheadActionType.Disable:
-                        Warhead.LeverStatus = false;
-                        break;
-                    case WarheadActionType.Enable:
-                        Warhead.LeverStatus = true;
-                        break;
-                }
-            }
-        }
     }
 }
 
@@ -845,128 +986,6 @@ public class FAnimationDTO : FRandomExecutionModule
 }
 
 [Serializable]
-public class RandomExecutionModule
-{
-    public float ChanceWeight { get; set; }
-    public bool ForceExecute { get; set; }
-    public float ActionDelay { get; set; }
-
-    public static RandomExecutionModule GetSingleton<T>()
-        where T : RandomExecutionModule, new()
-    {
-        if (!AdvancedMERTools.Singleton.TypeSingletonPair.TryGetValue(typeof(T), out RandomExecutionModule type))
-        {
-            AdvancedMERTools.Singleton.TypeSingletonPair.Add(typeof(T), type = new T());
-        }
-        return type;
-    }
-
-    public static List<T> SelectList<T>(List<T> list)
-        where T : RandomExecutionModule, new()
-    {
-        float chance = list.Sum(x => x.ChanceWeight);
-        chance = UnityEngine.Random.Range(0f, chance);
-        List<T> output = new List<T> { };
-        foreach (T element in list)
-        {
-            if (element.ForceExecute)
-            {
-                output.Add(element);
-            }
-            else
-            {
-                if (chance <= 0)
-                {
-                    continue;
-                }
-                chance -= element.ChanceWeight;
-                if (chance <= 0)
-                {
-                    output.Add(element);
-                }
-            }
-        }
-        return output;
-    }
-
-    public static void Execute<T>(List<T> list, ModuleGeneralArguments args)
-        where T : RandomExecutionModule, new()
-    {
-        SelectList(list).ForEach(x => x.Execute(args));
-    }
-
-    public static Player[] GetTargets(SendType type, ModuleGeneralArguments args)
-    {
-        List<Player> targets = new List<Player> { };
-        if (type.HasFlag(SendType.AllExceptAboveOne))
-        {
-            targets.AddRange(Player.List.Where(x => x != args.Player));
-        }
-        if (type.HasFlag(SendType.Spectators))
-        {
-            targets.AddRange(Player.List.Where(x => !x.IsAlive));
-        }
-        if (type.HasFlag(SendType.Alive))
-        {
-            targets.AddRange(Player.List.Where(x => x.IsAlive));
-        }
-        if (type.HasFlag(SendType.Interactor))
-        {
-            targets.Add(args.Player);
-        }
-
-        return targets.Distinct().ToArray();
-    }
-
-    public virtual void Execute(ModuleGeneralArguments args) { }
-}
-
-[Serializable]
-public class FRandomExecutionModule
-{
-    public ScriptValue ChanceWeight { get; set; }
-    public ScriptValue ForceExecute { get; set; }
-    public ScriptValue ActionDelay { get; set; }
-    private float calcedWeight;
-
-    public static List<T> SelectList<T>(List<T> list, FunctionArgument args)
-        where T : FRandomExecutionModule, new()
-    {
-        float chance = list.Sum(x => x.calcedWeight = x.ChanceWeight.GetValue(args, 0f));
-        chance = UnityEngine.Random.Range(0f, chance);
-        List<T> output = new List<T> { };
-        foreach (T element in list)
-        {
-            if (element.ForceExecute.GetValue(args, false))
-            {
-                output.Add(element);
-            }
-            else
-            {
-                if (chance <= 0)
-                {
-                    continue;
-                }
-                chance -= element.calcedWeight;
-                if (chance <= 0)
-                {
-                    output.Add(element);
-                }
-            }
-        }
-        return output;
-    }
-
-    public static void Execute<T>(List<T> list, FunctionArgument args)
-        where T : FRandomExecutionModule, new()
-    {
-        SelectList(list, args).ForEach(x => x.Execute(args));
-    }
-
-    public virtual void Execute(FunctionArgument args) { }
-}
-
-[Serializable]
 public class DropItem : RandomExecutionModule
 {
     public ItemType ItemType { get; set; }
@@ -1047,47 +1066,6 @@ public class FDropItem : FRandomExecutionModule
 }
 
 [Serializable]
-public class WhitelistWeapon
-{
-    public ItemType ItemType { get; set; }
-    public uint CustomItemId { get; set; }
-}
-
-[Serializable]
-public class FWhitelistWeapon : Value
-{
-    public ScriptValue ItemType { get; set; }
-    public ScriptValue CustomItemId { get; set; }
-
-    public override void OnValidate()
-    {
-        ItemType.OnValidate();
-        CustomItemId.OnValidate();
-    }
-}
-
-[Serializable]
-public class SVector3
-{
-    public float x;
-    public float y;
-    public float z;
-
-    public static implicit operator Vector3(SVector3 sVector) => new(sVector.x, sVector.y, sVector.z);
-}
-
-public class ModuleGeneralArguments
-{
-    public SchematicObject Schematic { get; set; }
-    public Player Player { get; set; }
-    public Player[] Targets { get; set; }
-    public bool TargetCalculated { get; set; }
-    public Transform Transform { get; set; }
-    public Dictionary<string, Func<object[], string>> Interpolations { get; set; }
-    public object[] InterpolationsList { get; set; }
-}
-
-[Serializable]
 public class CFEModule : RandomExecutionModule
 {
     public string FunctionName { get; set; }
@@ -1160,6 +1138,20 @@ public class FCommanding : FRandomExecutionModule
     }
 }
 
+////////////////////////////////////////////////
+// Misc. Utility Classes
+////////////////////////////////////////////////
+
+[Serializable]
+public class SVector3
+{
+    public float x;
+    public float y;
+    public float z;
+
+    public static implicit operator Vector3(SVector3 sVector) => new(sVector.x, sVector.y, sVector.z);
+}
+
 [Serializable]
 public class GateSerializable
 {
@@ -1167,4 +1159,24 @@ public class GateSerializable
     public bool RequireAllPermission { get; set; }
     public bool IsLocked { get; set; }
     public bool IsOpened { get; set; }
+}
+
+[Serializable]
+public class WhitelistWeapon
+{
+    public ItemType ItemType { get; set; }
+    public uint CustomItemId { get; set; }
+}
+
+[Serializable]
+public class FWhitelistWeapon : Value
+{
+    public ScriptValue ItemType { get; set; }
+    public ScriptValue CustomItemId { get; set; }
+
+    public override void OnValidate()
+    {
+        ItemType.OnValidate();
+        CustomItemId.OnValidate();
+    }
 }
