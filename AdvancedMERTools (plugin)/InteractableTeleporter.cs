@@ -1,99 +1,108 @@
-﻿//using CommandSystem;
-//using LabApi.Features.Wrappers;
-//using RemoteAdmin;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using UnityEngine;
+﻿using LabApi.Features.Wrappers;
+using ProjectMER.Features.Objects;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
-//namespace AMERT
-//{
-//    public class InteractableTeleporter : AMERTInteractable
-//    {
-//        void Start()
-//        {
-//            this.Base = base.Base as ITDTO;
-//            if (transform.TryGetComponent<TeleportObject>(out TO))
-//            {
-//                AdvancedMERTools.Singleton.InteractableTPs.Add(this);
-//            }
-//            else
-//            {
-//                Destroy(this);
-//            }
-//        }
+namespace AdvancedMERTools;
 
-//        void OnTriggerEnter(Collider collider)
-//        {
-//            if (Player.TryGet(collider, out Player player) && Base.InvokeType.HasFlag(TeleportInvokeType.Collide))
-//            {
-//                RunProcess(player);
-//            }
-//        }
+public class InteractableTeleporter : AMERTInteractable
+{
+    public new ITDTO Base { get; set; }
 
-//        public void RunProcess(Player player)
-//        {
-//            if (!Active)
-//                return;
-//            foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
-//            {
-//                if (Base.ActionType.HasFlag(type))
-//                {
-//                    switch (type)
-//                    {
-//                        case IPActionType.Disappear:
-//                            Destroy(gameObject, 0.1f);
-//                            break;
-//                        case IPActionType.Explode:
-//                            ExplodeModule.GetSingleton<ExplodeModule>().Execute(ExplodeModule.SelectList<ExplodeModule>(Base.ExplodeModules), this.transform, player.ReferenceHub);
-//                            break;
-//                        case IPActionType.PlayAnimation:
-//                            AnimationDTO.GetSingleton<AnimationDTO>().Execute(AnimationDTO.SelectList<AnimationDTO>(Base.animationDTOs), this.gameObject);
-//                            break;
-//                        case IPActionType.Warhead:
-//                            AlphaWarhead(Base.warheadActionType);
-//                            break;
-//                        case IPActionType.SendMessage:
-//                            MessageModule.GetSingleton<MessageModule>().Execute(MessageModule.SelectList<MessageModule>(Base.MessageModules), Formatter, player, TO);
-//                            break;
-//                        case IPActionType.SendCommand:
-//                            Commanding.GetSingleton<Commanding>().Execute(Commanding.SelectList<Commanding>(Base.commandings), Formatter, player, TO);
-//                            break;
-//                        case IPActionType.GiveEffect:
-//                            EffectGivingModule.GetSingleton<EffectGivingModule>().Execute(EffectGivingModule.SelectList<EffectGivingModule>(Base.effectGivingModules), player);
-//                            break;
-//                        case IPActionType.PlayAudio:
-//                            AudioModule.GetSingleton<AudioModule>().Execute(AudioModule.SelectList<AudioModule>(Base.AudioModules), this.transform);
-//                            break;
-//                        case IPActionType.CallGroovieNoise:
-//                            CGNModule.GetSingleton<CGNModule>().Execute(CGNModule.SelectList<CGNModule>(Base.GroovieNoiseToCall), OSchematic);
-//                            break;
-//                    }
-//                }
-//            }
-//        }
+    public TeleportObject Teleport { get; set; }
 
-//        void OnDestroy()
-//        {
-//            AdvancedMERTools.Singleton.InteractableTPs.Remove(this);
-//        }
+    public static readonly Dictionary<string, Func<object[], string>> Formatter = new ()
+    {
+        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_name}", vs => (vs[0] as Player).Nickname },
+        {
+            "{p_pos}", vs =>
+            {
+                Vector3 pos = (vs[0] as Player).Position;
+                return string.Format("{0} {1} {2}", pos.x, pos.y, pos.z);
+            }
+        },
+        { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
+        { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.ToString() },
+        { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
+        {
+            "{o_pos}", vs =>
+            {
+                Vector3 pos = (vs[1] as TeleportObject).transform.position;
+                return string.Format("{0} {1} {2}", pos.x, pos.y, pos.z);
+            }
+        },
+        { "{o_room}", vs => Room.GetRoomAtPosition((vs[1] as TeleportObject).transform.position).Name.ToString() },
+        { "{o_zone}", vs => Room.GetRoomAtPosition((vs[1] as TeleportObject).transform.position).Zone.ToString() },
+    };
 
-//        static readonly Dictionary<string, Func<object[], string>> Formatter = new Dictionary<string, Func<object[], string>>
-//        {
-//            { "{p_i}", vs => (vs[0] as Player).Id.ToString() },
-//            { "{p_name}", vs => (vs[0] as Player).Nickname.ToString() },
-//            { "{p_pos}", vs => { Vector3 pos = (vs[0] as Player).Transform.position; return string.Format("{0} {1} {2}", pos.x, pos.y, pos.z); } },
-//            { "{p_room}", vs => (vs[0] as Player).CurrentRoom.RoomName.ToString() },
-//            { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-//            { "{p_role}", vs => (vs[0] as Player).Role.Type.ToString() },
-//            { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
-//            { "{o_pos}", vs => { Vector3 pos = (vs[1] as TeleportObject).transform.position; return string.Format("{0} {1} {2}", pos.x, pos.y, pos.z); } },
-//            { "{o_room}", vs => (vs[1] as TeleportObject).CurrentRoom.RoomName.ToString() },
-//            { "{o_zone}", vs => (vs[1] as TeleportObject).CurrentRoom.Zone.ToString() }
-//        };
+    protected virtual void Start()
+    {
+        this.Base = base.Base as ITDTO;
+        if (transform.TryGetComponent<TeleportObject>(out TeleportObject tpObject))
+        {
+            Teleport = tpObject;
+            AdvancedMERTools.Singleton.InteractableTeleporters.Add(this);
+        }
+        else
+        {
+            Destroy(this);
+        }
+    }
 
-//        public new ITDTO Base;
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        AdvancedMERTools.Singleton.InteractableTeleporters.Remove(this);
+    }
 
-//        public TeleportObject TO;
-//    }
-//}
+    public void OnTriggerEnter(Collider collider)
+    {
+        if (Player.TryGet(collider.gameObject, out Player player) && Base.InvokeType.HasFlag(TeleportInvokeType.Collide))
+        {
+            RunProcess(player);
+        }
+    }
+
+    public void RunProcess(Player player)
+    {
+        if (!Active)
+        {
+            return;
+        }
+
+        ModuleGeneralArguments args = new()
+        {
+            Interpolations = Formatter,
+            InterpolationsList = new object[] { player },
+            Player = player,
+            Schematic = OSchematic,
+            Transform = transform,
+            TargetCalculated = false,
+        };
+        var actionExecutors = new Dictionary<IPActionType, Action>
+        {
+            { IPActionType.Disappear, () => Destroy(gameObject, 0.1f) },
+            { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
+            { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
+            { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
+            { IPActionType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
+            // TODO: Not sure if it makes any sense for InteractableTeleport to have an SCP914 Upgrade routine
+            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
+            { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
+            { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
+            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
+        };
+        foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
+        {
+            if (Base.ActionType.HasFlag(type) && actionExecutors.TryGetValue(type, out var execute))
+            {
+                execute();
+            }
+        }
+    }
+}

@@ -1,9 +1,13 @@
 ﻿using LabApi.Features.Wrappers;
 using HarmonyLib;
 using Interactables.Interobjects.DoorUtils;
-//using ProjectMER.Features;
-//using ProjectMER.Features.Objects;
-//using ProjectMER.Features.Serializable;
+using ProjectMER.Features;
+using ProjectMER.Features.Objects;
+using ProjectMER.Features.Serializable;
+using System.Collections.Generic;
+using System.IO;
+using Utf8Json;
+using System.Linq;
 
 namespace AdvancedMERTools;
 
@@ -53,30 +57,38 @@ public class DoorVariantLockPatcher
     }
 }
 
-//[HarmonyPatch(typeof(MapUtils), nameof(MapUtils.LoadMap), new Type[] { typeof(MapSchematic) })]
-//public class MapLoadingPatcher
-//{
-//    static void Postfix(MapSchematic map)
-//    {
-//        if (map == null || !map.IsValid)
-//            return;
-//        string path = Path.Combine(MapEditorReborn.MapEditorReborn.MapsDir, map.Name + "-ITeleporters.json");
-//        if (File.Exists(path))
-//        {
-//            List<ITDTO> iTDTOs = JsonSerializer.Deserialize<List<ITDTO>>(File.ReadAllText(path));
-//            TeleportObject[] teleports = API.SpawnedObjects.Where(x => x is TeleportObject).Cast<TeleportObject>().ToArray();
-//            foreach (ITDTO to in iTDTOs)
-//            {
-//                int n = int.Parse(to.ObjectId);
-//                if (n > 0 && n <= teleports.Length)
-//                {
-//                    InteractableTeleporter interactable = teleports[n - 1].gameObject.AddComponent<InteractableTeleporter>();
-//                    interactable.Base = to;
-//                }
-//            }
-//        }
-//    }
-//}
+[HarmonyPatch(typeof(MapUtils), nameof(MapUtils.LoadMap), typeof(string))]
+public class MapLoadingPatcher
+{
+    public static void Postfix(string mapName)
+    {
+        if (string.IsNullOrEmpty(mapName))
+        {
+            return;
+        }
+        if (!MapUtils.LoadedMaps.ContainsKey(mapName))
+        {
+            Log.Error($"MapLoadingPatcher.Postfix: Map '{mapName}' does not exist in MapUtils.LoadedMaps");
+            return;
+        }
+
+        string path = Path.Combine(ProjectMER.ProjectMER.MapsDir, mapName + "-ITeleporters.json");
+        if (File.Exists(path))
+        {
+            List<ITDTO> iTDTOs = JsonSerializer.Deserialize<List<ITDTO>>(File.ReadAllText(path));
+            TeleportObject[] teleports = MapUtils.LoadedMaps[mapName].SpawnedObjects.Where(x => x.Base is SerializableTeleport).Cast<TeleportObject>().ToArray();
+            foreach (ITDTO to in iTDTOs)
+            {
+                int n = int.Parse(to.ObjectId);
+                if (n > 0 && n <= teleports.Length)
+                {
+                    InteractableTeleporter interactable = teleports[n - 1].gameObject.AddComponent<InteractableTeleporter>();
+                    interactable.Base = to;
+                }
+            }
+        }
+    }
+}
 
 //[HarmonyPatch(typeof(ServerListFormatter), nameof(ServerListFormatter.Serialize))]
 //public class PlayerCountPatcher

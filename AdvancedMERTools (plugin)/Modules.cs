@@ -13,8 +13,6 @@ using System.Linq;
 using System.IO;
 using UnityEngine;
 using Utils;
-//using Exiled.API.Enums;
-//using Exiled.API.Extensions;
 
 namespace AdvancedMERTools;
 
@@ -64,20 +62,22 @@ public class FHODTO : AMERTDTO
     public List<FCFEModule> FunctionToCall { get; set; }
 }
 
-//[Serializable]
-//public class ITDTO : AMERTDTO
-//{
-//    public TeleportInvokeType InvokeType { get; set; }
-//    public IPActionType ActionType { get; set; }
-//    public List<AnimationDTO> animationDTOs { get; set; }
-//    public WarheadActionType WarheadActionType { get; set; }
-//    public List<MessageModule> MessageModules { get; set; }
-//    public List<Commanding> Commandings { get; set; }
-//    public List<ExplodeModule> ExplodeModules { get; set; }
-//    public List<EffectGivingModule> EffectGivingModules { get; set; }
-//    public List<AudioModule> AudioModules { get; set; }
-//    public List<CGNModule> GroovieNoiseToCall { get; set; }
-//}
+[Serializable]
+public class ITDTO : AMERTDTO
+{
+    public TeleportInvokeType InvokeType { get; set; }
+    public IPActionType ActionType { get; set; }
+    public List<AnimationDTO> AnimationModules { get; set; }
+    public WarheadActionType WarheadActionType { get; set; }
+    public List<MessageModule> MessageModules { get; set; }
+    public List<DropItem> DropItems { get; set; }
+    public List<Commanding> Commandings { get; set; }
+    public List<ExplodeModule> ExplodeModules { get; set; }
+    public List<EffectGivingModule> EffectGivingModules { get; set; }
+    public List<AudioModule> AudioModules { get; set; }
+    public List<CGNModule> GroovieNoiseToCall { get; set; }
+    public List<CFEModule> FunctionToCall { get; set; }
+}
 
 [Serializable]
 public class IPDTO : AMERTDTO

@@ -41,10 +41,6 @@ public class AdvancedMERTools : Plugin<Config>
 
     public static AdvancedMERTools Singleton { get; private set; }
 
-    public static string MapsDir => ProjectMER.ProjectMER.MapsDir;
-
-    public static string SchematicsDir => ProjectMER.ProjectMER.SchematicsDir;
-
     public static string AudioDir => Singleton.Config.AudioFolderPath;
 
     private AMERTEventHandlers AMERTEventsHandler { get; } = new();
@@ -57,7 +53,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public List<InteractablePickup> InteractablePickups { get; set; } = new();
 
-    //public List<InteractableTeleporter> InteractableTPs { get; set; } = new();
+    public List<InteractableTeleporter> InteractableTeleporters { get; set; } = new();
 
     public List<CustomCollider> CustomColliders { get; set; } = new();
 
@@ -99,29 +95,14 @@ public class AdvancedMERTools : Plugin<Config>
         LabApi.Events.Handlers.PlayerEvents.PickingUpItem += AMERTEventsHandler.OnPickingUpItem;
         ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicLoad;
 
-        // Make sure this section happens later so that ProjectMER is set up first
-        Timing.CallDelayed(3.0f, () =>
+        if (!Directory.Exists(AudioDir))
         {
-            if (!Directory.Exists(MapsDir))
-            {
-                Log.Warn("ProjectMER Maps directory does not exist. Creating...");
-                Directory.CreateDirectory(MapsDir);
-            }
-            if (!Directory.Exists(SchematicsDir))
-            {
-                Log.Warn("ProjectMER Schematics directory does not exist. Creating...");
-                Directory.CreateDirectory(SchematicsDir);
-            }
-            if (!Directory.Exists(AudioDir))
-            {
-                Log.Warn("AMERT Audio directory does not exist. Creating...");
-                Directory.CreateDirectory(AudioDir);
-            }
-            Log.Debug($"ProjectMER is loading Schematics directory: {SchematicsDir}");
+            Log.Warn("AMERT Audio directory does not exist. Creating...");
+            Directory.CreateDirectory(AudioDir);
+        }
 
-            Harmony harmony = new Harmony("AMERT");
-            harmony.PatchAll();
-        });
+        Harmony harmony = new Harmony("AMERT");
+        harmony.PatchAll();
     }
 
     public override void Disable()

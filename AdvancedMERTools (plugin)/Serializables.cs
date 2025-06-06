@@ -68,14 +68,14 @@ public enum Scp914Mode
     VeryFine = 4,
 }
 
-//[Flags]
-//[Serializable]
-//public enum TeleportInvokeType
-//{
-//    Enter = 1,
-//    Exit = 2,
-//    Collide = 4,
-//}
+[Flags]
+[Serializable]
+public enum TeleportInvokeType
+{
+    Enter = 1,
+    Exit = 2,
+    Collide = 4,
+}
 
 [Flags]
 [Serializable]

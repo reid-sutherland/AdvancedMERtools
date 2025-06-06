@@ -1171,20 +1171,20 @@ public class EffectActionType : Value
 //    }
 //}
 
-//[Serializable]
-//public class VTeleportInvokeType : Value
-//{
-//    public TeleportInvokeType Value;
+[Serializable]
+public class VTeleportInvokeType : Value
+{
+    public TeleportInvokeType Value;
 
-//    public override void OnValidate()
-//    {
-//    }
+    public override void OnValidate()
+    {
+    }
 
-//    public override object GetValue(FunctionArgument args)
-//    {
-//        return Value;
-//    }
-//}
+    public override object GetValue(FunctionArgument args)
+    {
+        return Value;
+    }
+}
 
 [Serializable]
 public class VWarheadActionType : Value
