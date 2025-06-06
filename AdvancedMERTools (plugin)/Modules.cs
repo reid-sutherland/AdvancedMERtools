@@ -742,7 +742,7 @@ public class AnimationDTO : RandomExecutionModule
         {
             if (Animator == null)
             {
-                if (!AMERTEventsHandler.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
+                if (!AMERTEventHandlers.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
                 {
                     ServerConsole.AddLog("Cannot find appopriate animator!");
                     return;
@@ -799,7 +799,7 @@ public class FAnimationDTO : FRandomExecutionModule
         {
             if (Animator == null)
             {
-                if (!AMERTEventsHandler.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
+                if (!AMERTEventHandlers.FindObjectWithPath(args.Schematic.GetComponentInParent<SchematicObject>().transform, AnimatorAdress).TryGetComponent(out Animator animator))
                 {
                     ServerConsole.AddLog("Cannot find appopriate animator!");
                     return;

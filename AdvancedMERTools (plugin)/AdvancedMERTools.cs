@@ -10,6 +10,7 @@ using RemoteAdmin;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 using UserSettings.ServerSpecific;
 
 /// <NOTES>
@@ -24,15 +25,19 @@ namespace AdvancedMERTools;
 
 public class AdvancedMERTools : Plugin<Config>
 {
+    // LabApi Plugin overrides
+
     public override string Name => "AdvancedMERTools";
 
     public override string Description => "AdvancedMERTools";
 
-    public override string Author => "Michal78900 -> DeadServer Team";
+    public override string Author => "Michal78900 + DeadServer Team";
 
     public override Version Version => new Version(2025, 6, 1, 1);
 
     public override Version RequiredApiVersion => new Version(1, 0, 0, 0);
+
+    // Plugin objects
 
     public static AdvancedMERTools Singleton { get; private set; }
 
@@ -42,13 +47,11 @@ public class AdvancedMERTools : Plugin<Config>
 
     public static string AudioDir => Singleton.Config.AudioFolderPath;
 
-    // TODO: Replace EventManager with Lab's CustomHandlersManager
+    private AMERTEventHandlers AMERTEventsHandler { get; } = new();
 
-    //public GenericEventsHandler GenericEventsHandler { get; } = new();
+    public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(69, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E, true, "");
 
-    private EventManager manager;
-
-
+    // Tracked collections
 
     public List<HealthObject> HealthObjects { get; set; } = new();
 
@@ -85,9 +88,18 @@ public class AdvancedMERTools : Plugin<Config>
     public override void Enable()
     {
         Singleton = this;
+        // TODO: Instead of manually registering all, can override base OnEvent methods and this call will auto-register them
         CustomHandlersManager.RegisterEventsHandler(AMERTEventsHandler);
 
-        // Make sure this plugin is enabled later so that ProjectMER is set up first
+        ServerSpecificSettingsSync.ServerOnSettingValueReceived += AMERTEventsHandler.OnSSInput;
+        LabApi.Events.Handlers.ServerEvents.MapGenerated += AMERTEventsHandler.OnMapGenerated;
+        LabApi.Events.Handlers.ServerEvents.ProjectileExploded += AMERTEventsHandler.OnProjectileExploded;
+        LabApi.Events.Handlers.PlayerEvents.Spawned += AMERTEventsHandler.ApplyCustomSpawnPoint;
+        LabApi.Events.Handlers.PlayerEvents.SearchingPickup += AMERTEventsHandler.OnSearchingPickup;
+        LabApi.Events.Handlers.PlayerEvents.PickingUpItem += AMERTEventsHandler.OnPickingUpItem;
+        ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicLoad;
+
+        // Make sure this section happens later so that ProjectMER is set up first
         Timing.CallDelayed(3.0f, () =>
         {
             if (!Directory.Exists(MapsDir))
@@ -105,19 +117,10 @@ public class AdvancedMERTools : Plugin<Config>
                 Log.Warn("AMERT Audio directory does not exist. Creating...");
                 Directory.CreateDirectory(AudioDir);
             }
-            Log.Info($"AdvancedMERTools: ProjectMER is loading Schematics directory: {SchematicsDir}");
+            Log.Debug($"ProjectMER is loading Schematics directory: {SchematicsDir}");
 
             Harmony harmony = new Harmony("AMERT");
             harmony.PatchAll();
-
-            ServerSpecificSettingsSync.ServerOnSettingValueReceived += AMERTEventsHandler.OnSSInput;
-
-            LabApi.Events.Handlers.ServerEvents.MapGenerated += AMERTEventsHandler.OnMapGenerated;
-            //LabApi.Events.Handlers.PlayerEvents. += AMERTEventsHandler.OnGrenade;
-            LabApi.Events.Handlers.PlayerEvents.Spawned += AMERTEventsHandler.ApplyCustomSpawnPoint;
-            LabApi.Events.Handlers.PlayerEvents.SearchingPickup += AMERTEventsHandler.OnSearchingPickup;
-            LabApi.Events.Handlers.PlayerEvents.PickingUpItem += AMERTEventsHandler.OnPickingUpItem;
-            ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicLoad;
         });
     }
 
@@ -125,7 +128,7 @@ public class AdvancedMERTools : Plugin<Config>
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= AMERTEventsHandler.OnSSInput;
         LabApi.Events.Handlers.ServerEvents.MapGenerated -= AMERTEventsHandler.OnMapGenerated;
-        //LabApi.Events.Handlers.PlayerEvents. -= AMERTEventsHandler.OnGrenade;
+        LabApi.Events.Handlers.ServerEvents.ProjectileExploded -= AMERTEventsHandler.OnProjectileExploded;
         LabApi.Events.Handlers.PlayerEvents.Spawned -= AMERTEventsHandler.ApplyCustomSpawnPoint;
         LabApi.Events.Handlers.PlayerEvents.SearchingPickup -= AMERTEventsHandler.OnSearchingPickup;
         LabApi.Events.Handlers.PlayerEvents.PickingUpItem -= AMERTEventsHandler.OnPickingUpItem;

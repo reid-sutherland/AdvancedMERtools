@@ -2,9 +2,9 @@
 using InventorySystem.Items.Armor;
 using InventorySystem.Items.ThrowableProjectiles;
 using LabApi.Features.Wrappers;
+using LabApi.Events.Arguments.ServerEvents;
 using Mirror;
 using PlayerStatsSystem;
-using ProjectMER.Features.Objects;
 using System;
 using System.Reflection;
 using System.Collections.Generic;
@@ -203,26 +203,26 @@ public class HealthObject : AMERTInteractable, IDestructible
         return true;
     }
 
-    //public virtual void OnGrenadeExplode(Exiled.Events.EventArgs.Map.ExplodingGrenadeEventArgs ev)
-    //{
-    //    if (!ev.IsAllowed || !IsAlive || !Active)
-    //    {
-    //        return;
-    //    }
-    //    if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
-    //    {
-    //        return;
-    //    }
+    public virtual void OnProjectileExploded(ProjectileExplodedEventArgs ev)
+    {
+        if (!IsAlive || !Active)
+        {
+            return;
+        }
+        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
+        {
+            return;
+        }
 
-    //    if (ev.Projectile.Type == ItemType.GrenadeHE)
-    //    {
-    //        float distance = Vector3.Distance(this.transform.position, ev.Position);
-    //        FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
-    //        float damage = ((AnimationCurve)info.GetValue(ev.Projectile.Base as ExplosionGrenade)).Evaluate(distance);
-    //        damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient, damage, 50);
-    //        CheckDead(ev.Player, damage);
-    //    }
-    //}
+        if (ev.TimedGrenade.Type == ItemType.GrenadeHE)
+        {
+            float distance = Vector3.Distance(this.transform.position, ev.Position);
+            FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
+            float damage = ((AnimationCurve)info.GetValue(ev.TimedGrenade.Base as ExplosionGrenade)).Evaluate(distance);
+            damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient, damage, 50);
+            CheckDead(ev.Player, damage);
+        }
+    }
 
     public virtual void CheckDead(Player player, float damage)
     {
@@ -230,7 +230,7 @@ public class HealthObject : AMERTInteractable, IDestructible
         Hitmarker.SendHitmarkerDirectly(player.ReferenceHub, damage / 10f);
         if (Health <= 0)
         {
-            HODTO clone = new HODTO
+            HODTO clone = new()
             {
                 Health = this.Base.Health,
                 ArmorEfficient = this.Base.ArmorEfficient,
@@ -238,8 +238,17 @@ public class HealthObject : AMERTInteractable, IDestructible
                 ObjectId = this.Base.ObjectId,
             };
             IsAlive = false;
-            ModuleGeneralArguments args = new ModuleGeneralArguments { Interpolations = Formatter, InterpolationsList = new object[] { player, transform }, Player = player, Schematic = OSchematic, Transform = transform, TargetCalculated = false };
-            //EventHandler.OnHealthObjectDead(new HealthObjectDeadEventArgs(clone, player));
+            ModuleGeneralArguments args = new()
+            {
+                Interpolations = Formatter,
+                InterpolationsList = new object[] { player, transform },
+                Player = player,
+                Schematic = OSchematic,
+                Transform = transform,
+                TargetCalculated = false,
+            };
+            AMERTEvents.OnHealthObjectDead(new HealthObjectDeadEventArgs(clone, player));
+
             MEC.Timing.CallDelayed(Base.DeadActionDelay, () =>
             {
                 var deadTypeExecutors = new Dictionary<DeadType, Action>
@@ -368,27 +377,27 @@ public class FHealthObject : HealthObject
         return true;
     }
 
-    //public override void OnGrenadeExplode(Exiled.Events.EventArgs.Map.ExplodingGrenadeEventArgs ev)
-    //{
-    //    if (!ev.IsAllowed || !IsAlive || !Active)
-    //    {
-    //        return;
-    //    }
-    //    FunctionArgument args = new FunctionArgument(this, ev.Player);
-    //    if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
-    //    {
-    //        return;
-    //    }
+    public override void OnProjectileExploded(ProjectileExplodedEventArgs ev)
+    {
+        if (!IsAlive || !Active)
+        {
+            return;
+        }
+        FunctionArgument args = new(this, ev.Player);
+        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
+        {
+            return;
+        }
 
-    //    if (ev.Projectile.Type == ItemType.GrenadeHE)
-    //    {
-    //        float distance = Vector3.Distance(this.transform.position, ev.Position);
-    //        FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
-    //        float damage = ((AnimationCurve)info.GetValue(ev.Projectile.Base as ExplosionGrenade)).Evaluate(distance);
-    //        damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient.GetValue(args, 0), damage, 50);
-    //        CheckDead(ev.Player, damage);
-    //    }
-    //}
+        if (ev.TimedGrenade.Type == ItemType.GrenadeHE)
+        {
+            float distance = Vector3.Distance(this.transform.position, ev.Position);
+            FieldInfo info = typeof(ExplosionGrenade).GetField("_playerDamageOverDistance", BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance);
+            float damage = ((AnimationCurve)info.GetValue(ev.TimedGrenade.Base as ExplosionGrenade)).Evaluate(distance);
+            damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient.GetValue(args, 0), damage, 50);
+            CheckDead(ev.Player, damage);
+        }
+    }
 
     public override void CheckDead(Player player, float damage)
     {

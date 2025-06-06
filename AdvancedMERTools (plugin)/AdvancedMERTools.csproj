@@ -10,7 +10,7 @@
 
 	<!-- For development: copy output dll directly to LabAPI dependencies path -->
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Copy SourceFiles="$(ProjectDir)bin\Debug\$(ProjectName).dll" DestinationFolder="$(LABAPI_DEPENDENCIES)" SkipUnchangedFiles="false" />
+		<Copy SourceFiles="$(ProjectDir)bin\Debug\$(ProjectName).dll" DestinationFolder="$(LABAPI_PLUGINS)" SkipUnchangedFiles="false" />
 	</Target>
 
 	<Import Project="../Plugin.props" />

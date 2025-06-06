@@ -6,8 +6,9 @@ using Mirror;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 using PlayerRoles;
-using ProjectMER.Features.Serializable;
+using ProjectMER.Events.Arguments;
 using ProjectMER.Features;
+using ProjectMER.Features.Serializable;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,39 +19,73 @@ using UserSettings.ServerSpecific;
 
 namespace AdvancedMERTools;
 
-public class AMERTEventsHandler : CustomEventsHandler
+public class AMERTEventHandlers : CustomEventsHandler
 {
     public Config Config => AdvancedMERTools.Singleton.Config;
 
-    //public void OnGrenade( ev)
-    //{
-    //    foreach (HealthObject health in AdvancedMERTools.Singleton.healthObjects)
-    //    {
-    //        try
-    //        {
-    //            health.OnGrenadeExplode(ev);
-    //        }
-    //        catch (NullReferenceException _)
-    //        {
-    //            continue;
-    //        }
-    //    }
-    //    AdvancedMERTools.Singleton.healthObjects.ForEach(x => x.OnGrenadeExplode(ev));
-    //}
+    public static List<NetworkIdentity> Identities { get; set; } = new();
+
+    public static DataSerializationBinder DSbinder { get; set; } = new();
+
+    public class DataSerializationBinder : ISerializationBinder
+    {
+        public Dictionary<string, Type> Types { get; set; }
+        public DefaultSerializationBinder DefaultBinder { get; set; } = new();
+
+        void ISerializationBinder.BindToName(Type serializedType, out string assemblyName, out string typeName)
+        {
+            DefaultBinder.BindToName(serializedType, out assemblyName, out typeName);
+        }
+
+        Type ISerializationBinder.BindToType(string assemblyName, string typeName)
+        {
+            if (Types == null)
+            {
+                Types = Assembly.GetAssembly(typeof(AdvancedMERTools)).GetTypes().Where(t => t.IsClass && !t.IsAbstract && (typeof(Value).IsAssignableFrom(t) || typeof(Function).IsAssignableFrom(t))).ToDictionary(x => x.Name);
+            }
+            if (Types.ContainsKey(typeName))
+            {
+                return Types[typeName];
+            }
+            else
+            {
+                return DefaultBinder.BindToType(assemblyName, typeName);
+            }
+        }
+    }
+
+    public void OnProjectileExploded(ProjectileExplodedEventArgs ev)
+    {
+        foreach (HealthObject health in AdvancedMERTools.Singleton.HealthObjects)
+        {
+            try
+            {
+                health.OnProjectileExploded(ev);
+            }
+            catch (NullReferenceException ex)
+            {
+                Log.Error($"NullReferenceException when calling HealthObject.OnProjectileExploded");
+                Log.Debug($"Exception: {ex.Message}");
+                continue;
+            }
+        }
+    }
 
     public void OnSearchingPickup(PlayerSearchingPickupEventArgs ev)
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
-        List<Pickup> removeList = new List<Pickup> { };
+        List<Pickup> removeList = new() { };
         Log.Debug($"OnSearchingPickup: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
         foreach (InteractablePickup interactable in list)
         {
             Log.Debug($"- interactable.name: {interactable.name} - interactable.Pickup.GameObject.name: {interactable.Pickup.GameObject.name}");
             if (interactable is FInteractablePickup)
+            {
                 continue;
+            }
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Searching))
             {
-                //Log.Debug($"-- calling RunProcess with ev.Pickup.GameObject.name: {ev.Pickup.GameObject.name} and pickup type: {ev.Pickup.Type}");
+                Log.Debug($"-- calling RunProcess with ev.Pickup.GameObject.name: {ev.Pickup.GameObject.name} and pickup type: {ev.Pickup.Type}");
                 interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
                 if (interactable.Base.CancelActionWhenActive)
                 {
@@ -84,12 +119,14 @@ public class AMERTEventsHandler : CustomEventsHandler
     public void OnPickingUpItem(PlayerPickingUpItemEventArgs ev)
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
-        List<Pickup> removeList = new List<Pickup> { };
+        List<Pickup> removeList = new() { };
         Log.Debug($"OnItemPicked: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
         foreach (InteractablePickup interactable in list)
         {
             if (interactable is FInteractablePickup)
+            {
                 continue;
+            }
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Picked))
             {
                 interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
@@ -121,7 +158,6 @@ public class AMERTEventsHandler : CustomEventsHandler
             KeyCode key = sSKeybind.SuggestedKey;
             if (AdvancedMERTools.Singleton.IOkeys.ContainsKey((int)key) && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
             {
-                //ServerConsole.AddLog(hit.collider.gameObject.name);
                 foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
                 {
                     Log.Debug($"-- found interactable with type: {interactable.GetType()} - name: {interactable.gameObject.name}");
@@ -141,7 +177,7 @@ public class AMERTEventsHandler : CustomEventsHandler
         }
     }
 
-    public void OnSchematicLoad(ProjectMER.Events.Arguments.SchematicSpawnedEventArgs ev)
+    public void OnSchematicLoad(SchematicSpawnedEventArgs ev)
     {
         AdvancedMERTools.Singleton.SchematicVariables.Add(ev.Schematic, new Dictionary<string, object> { });
         AdvancedMERTools.Singleton.AMERTGroup.Add(ev.Schematic, new Dictionary<string, List<AMERTInteractable>> { });
@@ -177,80 +213,6 @@ public class AMERTEventsHandler : CustomEventsHandler
         }
     }
 
-    public void DataLoad<Tdto, Tclass>(string name, ProjectMER.Events.Arguments.SchematicSpawnedEventArgs ev) where Tdto : AMERTDTO where Tclass : AMERTInteractable, new()
-    {
-        string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + $"-{name}.json");
-        if (File.Exists(path))
-        {
-            List<Tdto> ts = JsonConvert.DeserializeObject<List<Tdto>>(File.ReadAllText(path), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = DSbinder });
-            foreach (Tdto dto in ts)
-            {
-                Transform target = FindObjectWithPath(ev.Schematic.transform, dto.ObjectId);
-                Tclass tclass = target.gameObject.AddComponent<Tclass>();
-                tclass.Base = dto;
-                tclass.Active = dto.Active;
-                tclass.OSchematic = ev.Schematic;
-                AdvancedMERTools.Singleton.CodeClassPair[ev.Schematic].Add(dto.Code, tclass);
-                if (!AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic].ContainsKey(dto.ScriptGroup))
-                {
-                    AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic].Add(dto.ScriptGroup, new List<AMERTInteractable> { });
-                }
-                if (dto.ScriptGroup != null && dto.ScriptGroup != "")
-                {
-                    AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic][dto.ScriptGroup].Add(tclass);
-                }
-            }
-        }
-    }
-
-    public static DataSerializationBinder DSbinder { get; set; } = new();
-
-    public class DataSerializationBinder : ISerializationBinder
-    {
-        public Dictionary<string, Type> Types { get; set; }
-        public DefaultSerializationBinder DefaultBinder { get; set; } = new();
-
-        void ISerializationBinder.BindToName(Type serializedType, out string assemblyName, out string typeName)
-        {
-            DefaultBinder.BindToName(serializedType, out assemblyName, out typeName);
-        }
-
-        Type ISerializationBinder.BindToType(string assemblyName, string typeName)
-        {
-            if (Types == null)
-            {
-                Types = Assembly.GetAssembly(typeof(AdvancedMERTools)).GetTypes().Where(t => t.IsClass && !t.IsAbstract && (typeof(Value).IsAssignableFrom(t) || typeof(Function).IsAssignableFrom(t))).ToDictionary(x => x.Name);
-            }
-            if (Types.ContainsKey(typeName))
-            {
-                return Types[typeName];
-            }
-            else
-            {
-                return DefaultBinder.BindToType(assemblyName, typeName);
-            }
-        }
-    }
-
-    public static Transform FindObjectWithPath(Transform target, string pathO)
-    {
-        pathO = pathO.Trim();
-        if (pathO != "")
-        {
-            string[] path = pathO.Split(' ');
-            for (int i = path.Length - 1; i > -1; i--)
-            {
-                if (target.childCount == 0 || target.childCount <= int.Parse(path[i].ToString()))
-                {
-                    ServerLogs.AddLog(ServerLogs.Modules.Administrative, "Advanced MER tools: Could not find appropriate child!", ServerLogs.ServerLogType.RemoteAdminActivity_Misc);
-                    break;
-                }
-                target = target.GetChild(int.Parse(path[i]));
-            }
-        }
-        return target;
-    }
-
     public void OnMapGenerated(MapGeneratedEventArgs ev)
     {
         AdvancedMERTools.Singleton.HealthObjects.Clear();
@@ -265,8 +227,6 @@ public class AMERTEventsHandler : CustomEventsHandler
         AdvancedMERTools.Singleton.SchematicVariables.Clear();
         AdvancedMERTools.Singleton.RoundVariable.Clear();
     }
-
-    public static List<NetworkIdentity> Identities { get; set; } = new();
 
     public void ApplyCustomSpawnPoint(PlayerSpawnedEventArgs ev)
     {
@@ -294,5 +254,50 @@ public class AMERTEventsHandler : CustomEventsHandler
             // TODO: I think serializable.Position is the position within the room. So need to find a new way to transform that position to the global position
             ev.Player.Position = serializable.Position + Vector3.up;
         }
+    }
+
+    public void DataLoad<Tdto, Tclass>(string name, SchematicSpawnedEventArgs ev) where Tdto : AMERTDTO where Tclass : AMERTInteractable, new()
+    {
+        string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + $"-{name}.json");
+        if (File.Exists(path))
+        {
+            List<Tdto> ts = JsonConvert.DeserializeObject<List<Tdto>>(File.ReadAllText(path), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = DSbinder });
+            foreach (Tdto dto in ts)
+            {
+                Transform target = FindObjectWithPath(ev.Schematic.transform, dto.ObjectId);
+                Tclass tclass = target.gameObject.AddComponent<Tclass>();
+                tclass.Base = dto;
+                tclass.Active = dto.Active;
+                tclass.OSchematic = ev.Schematic;
+                AdvancedMERTools.Singleton.CodeClassPair[ev.Schematic].Add(dto.Code, tclass);
+                if (!AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic].ContainsKey(dto.ScriptGroup))
+                {
+                    AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic].Add(dto.ScriptGroup, new List<AMERTInteractable> { });
+                }
+                if (dto.ScriptGroup != null && dto.ScriptGroup != "")
+                {
+                    AdvancedMERTools.Singleton.AMERTGroup[ev.Schematic][dto.ScriptGroup].Add(tclass);
+                }
+            }
+        }
+    }
+
+    public static Transform FindObjectWithPath(Transform target, string pathO)
+    {
+        pathO = pathO.Trim();
+        if (pathO != "")
+        {
+            string[] path = pathO.Split(' ');
+            for (int i = path.Length - 1; i > -1; i--)
+            {
+                if (target.childCount == 0 || target.childCount <= int.Parse(path[i].ToString()))
+                {
+                    ServerLogs.AddLog(ServerLogs.Modules.Administrative, "Advanced MER tools: Could not find appropriate child!", ServerLogs.ServerLogType.RemoteAdminActivity_Misc);
+                    break;
+                }
+                target = target.GetChild(int.Parse(path[i]));
+            }
+        }
+        return target;
     }
 }

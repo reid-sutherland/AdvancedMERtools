@@ -20,7 +20,7 @@ public class CustomDoor : AMERTInteractable
     {
         Base = base.Base as CDDTO;
         AdvancedMERTools.Singleton.CustomDoors.Add(this);
-        Animator = AMERTEventsHandler.FindObjectWithPath(transform, Base.Animator).GetComponent<Animator>();
+        Animator = AMERTEventHandlers.FindObjectWithPath(transform, Base.Animator).GetComponent<Animator>();
 
         SerializableDoor serializableDoor = new()
         {
