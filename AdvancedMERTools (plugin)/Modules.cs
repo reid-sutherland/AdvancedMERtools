@@ -264,50 +264,6 @@ public class FIODTO : AMERTDTO
 }
 
 [Serializable]
-public class CGNModule : RandomExecutionModule
-{
-    public int GroovieNoiseId { get; set; }
-    public string GroovieNoiseGroup { get; set; }
-
-    public override void Execute(ModuleGeneralArguments args)
-    {
-        MEC.Timing.CallDelayed(ActionDelay, () =>
-        {
-            if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId, out AMERTInteractable v))
-            {
-                v.Active = true;
-            }
-            if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup, out List<AMERTInteractable> vs))
-            {
-                vs.ForEach(x => x.Active = true);
-            }
-        });
-    }
-}
-
-[Serializable]
-public class FCGNModule : FRandomExecutionModule
-{
-    public ScriptValue GroovieNoiseId { get; set; }
-    public ScriptValue GroovieNoiseGroup { get; set; }
-
-    public override void Execute(FunctionArgument args)
-    {
-        MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () => 
-        {
-            if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId.GetValue(args, 0), out AMERTInteractable v))
-            {
-                v.Active = true;
-            }
-            if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup.GetValue(args, ""), out List<AMERTInteractable> vs))
-            {
-                vs.ForEach(x => x.Active = true);
-            }
-        });
-    }
-}
-
-[Serializable]
 public class GNDTO : AMERTDTO
 {
     public List<GMDTO> Settings { get; set; }
@@ -473,6 +429,50 @@ public class FRandomExecutionModule
 }
 
 [Serializable]
+public class CGNModule : RandomExecutionModule
+{
+    public int GroovieNoiseId { get; set; }
+    public string GroovieNoiseGroup { get; set; }
+
+    public override void Execute(ModuleGeneralArguments args)
+    {
+        MEC.Timing.CallDelayed(ActionDelay, () =>
+        {
+            if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId, out AMERTInteractable v))
+            {
+                v.Active = true;
+            }
+            if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup, out List<AMERTInteractable> vs))
+            {
+                vs.ForEach(x => x.Active = true);
+            }
+        });
+    }
+}
+
+[Serializable]
+public class FCGNModule : FRandomExecutionModule
+{
+    public ScriptValue GroovieNoiseId { get; set; }
+    public ScriptValue GroovieNoiseGroup { get; set; }
+
+    public override void Execute(FunctionArgument args)
+    {
+        MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
+        {
+            if (AdvancedMERTools.Singleton.CodeClassPair[args.Schematic].TryGetValue(GroovieNoiseId.GetValue(args, 0), out AMERTInteractable v))
+            {
+                v.Active = true;
+            }
+            if (AdvancedMERTools.Singleton.AMERTGroup[args.Schematic].TryGetValue(GroovieNoiseGroup.GetValue(args, ""), out List<AMERTInteractable> vs))
+            {
+                vs.ForEach(x => x.Active = true);
+            }
+        });
+    }
+}
+
+[Serializable]
 public class GMDTO : RandomExecutionModule
 {
     public List<int> Targets { get; set; }
@@ -534,7 +534,8 @@ public class FGMDTO : FRandomExecutionModule
 public class EffectGivingModule : RandomExecutionModule
 {
     public EffectFlagE EffectFlag { get; set; }
-    public string EffectName { get; set; }
+    // TODO: Maybe at some point we could make an enum of all StatusEffectBase names... see EffectType in ValueCollection.cs
+    public string EffectType { get; set; }
     public SendType GivingTo { get; set; }
     public byte Intensity { get; set; }
     public float Duration { get; set; }
@@ -549,26 +550,25 @@ public class EffectGivingModule : RandomExecutionModule
             }
             foreach (Player player in args.Targets)
             {
-                if (EffectFlag.HasFlag(EffectFlagE.Disable))
+                if (player.TryGetEffect(EffectType, out StatusEffectBase effect))
                 {
-                    if (player.TryGetEffect(EffectName, out StatusEffectBase effect))
+                    if (EffectFlag.HasFlag(EffectFlagE.Disable))
                     {
                         player.DisableEffect(effect);
                     }
-                }
-                else if (EffectFlag.HasFlag(EffectFlagE.Enable))
-                {
-                    byte intensity = Intensity;
-                    // TODO: This must be reworked in order to give new Effect
-                    //       Need to serialize StatusEffectBase (T) in some way
-                    if (player.TryGetEffect(EffectName, out StatusEffectBase effect))
+                    else if (EffectFlag.HasFlag(EffectFlagE.Enable))
                     {
+                        byte intensity = Intensity;
                         if (EffectFlag.HasFlag(EffectFlagE.ModifyIntensity))
                         {
                             intensity += effect.Intensity;
                         }
                         player.EnableEffect(effect, intensity, Duration, addDuration: EffectFlag.HasFlag(EffectFlagE.ModifyDuration));
                     }
+                }
+                else
+                {
+                    Log.Warn($"Attempted to modify effect '{EffectType}' on player '{player.Nickname}' but the effect does not exist");
                 }
             }
         });
@@ -578,10 +578,8 @@ public class EffectGivingModule : RandomExecutionModule
 [Serializable]
 public class FEffectGivingModule : FRandomExecutionModule
 {
-    // TODO: StatusEffect?
     public ScriptValue EffectFlag { get; set; }
-    public ScriptValue StatusEffect { get; set; }
-    public ScriptValue EffectName { get; set; }
+    public ScriptValue EffectType { get; set; }
     public ScriptValue GivingTo { get; set; }
     public ScriptValue Intensity { get; set; }
     public ScriptValue Duration { get; set; }
@@ -590,16 +588,10 @@ public class FEffectGivingModule : FRandomExecutionModule
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
-            //StatusEffectBase type = StatusEffect.GetValue<StatusEffectBase>(args, null);
-            //if (type is null)
-            //{
-            //    return;
-            //}
             EffectFlagE flag = EffectFlag.GetValue<EffectFlagE>(args, 0);
-            string effectName = EffectName.GetValue(args, "");
+            string effectName = EffectType.GetValue(args, "");
             foreach (Player player in GivingTo.GetValue(args, new Player[] { }))
             {
-                // TODO: Need to rework so new effect can be added
                 if (player.TryGetEffect(effectName, out StatusEffectBase effect))
                 {
                     if (flag.HasFlag(EffectFlagE.Disable))
@@ -615,6 +607,10 @@ public class FEffectGivingModule : FRandomExecutionModule
                         }
                         player.EnableEffect(effect, intensity, Duration.GetValue(args, 0), addDuration: flag.HasFlag(EffectFlagE.ModifyDuration));
                     }
+                }
+                else
+                {
+                    Log.Warn($"Attempted to modify effect '{effectName}' on player '{player.Nickname}' but the effect does not exist");
                 }
             }
         });

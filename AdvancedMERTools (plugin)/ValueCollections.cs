@@ -952,7 +952,6 @@ public class StrUnaryOp : Value
                 if (Enum.TryParse(str, out ItemType type))
                     return type;
                 return null;
-                
         }
         return str;
     }
@@ -1155,21 +1154,22 @@ public class EffectActionType : Value
     }
 }
 
-// TODO: Can't find a EffectType in LabApi...
-//[Serializable]
-//public class VEffectType : Value
-//{
-//    public EffectType Value;
+[Serializable]
+public class EffectType : Value
+{
+    // TODO: Maybe at some point we could make an enum of all StatusEffectBase names...
+    //       For now it's just a placeholder that's really just a string
+    public string Value;
 
-//    public override void OnValidate()
-//    {
-//    }
+    public override void OnValidate()
+    {
+    }
 
-//    public override object GetValue(FunctionArgument args)
-//    {
-//        return Value;
-//    }
-//}
+    public override object GetValue(FunctionArgument args)
+    {
+        return Value;
+    }
+}
 
 [Serializable]
 public class VTeleportInvokeType : Value
