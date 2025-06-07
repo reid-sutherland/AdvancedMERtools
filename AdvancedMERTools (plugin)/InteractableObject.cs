@@ -115,8 +115,7 @@ public class InteractableObject : AMERTInteractable
             }
         }
 
-        // Invoke the registerable event
-        Log.Debug($"INVOKING EVENT");
+        Log.Debug($"Invoking PlayerIOInteracted event");
         PlayerIOInteracted.InvokeEvent(new PlayerIOInteractedEventArgs(player));
     }
 
@@ -130,11 +129,11 @@ public class InteractableObject : AMERTInteractable
         }
     }
 
+    // From external code, register a handler to this event to trigger when a player interacts with the object
     public event LabEventHandler<PlayerIOInteractedEventArgs> PlayerIOInteracted;
 
     public void OnPlayerIOInteracted(PlayerIOInteractedEventArgs ev)
     {
-        Log.Info($"OnPlayerIOInteracted: player: {ev.Player.Nickname} - object: {gameObject.name}");
         PlayerIOInteracted.InvokeEvent(ev);
     }
 }

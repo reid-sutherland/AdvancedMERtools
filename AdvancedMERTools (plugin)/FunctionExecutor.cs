@@ -14,16 +14,14 @@ public class FunctionExecutor : AMERTInteractable
 
     public void Start()
     {
-        //if (!AdvancedMERTools.Singleton.FunctionExecutors.ContainsKey(OSchematic))
-        //    AdvancedMERTools.Singleton.FunctionExecutors.Add(OSchematic, new Dictionary<string, FunctionExecutor> { });
         if (AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].ContainsKey(Data.FunctionName))
         {
             ServerConsole.AddLog($"WARNING! There's another function named: {Data.FunctionName}. Overlapped Function Name is not allowed!", ConsoleColor.Red);
             Destroy(this);
             return;
         }
+        Data.OSchematic = OSchematic;
         AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].Add(Data.FunctionName, this);
-        //Data.OSchematic = OSchematic;
     }
 }
 
