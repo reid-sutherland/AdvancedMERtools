@@ -1,4 +1,8 @@
-﻿using LabApi.Features.Extensions;
+﻿using Interactables;
+using LabApi.Events;
+using LabApi.Events.Arguments.Interfaces;
+using LabApi.Events.Handlers;
+using LabApi.Features.Extensions;
 using LabApi.Features.Wrappers;
 using System;
 using System.Collections.Generic;
@@ -33,14 +37,13 @@ public class InteractableObject : AMERTInteractable
     {
         this.Base = base.Base as IODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
+        Log.Debug($"Adding interactable object: {gameObject.name}");
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
-            Log.Debug($"IO: IOKeys already contains InputKeyCode: {Base.InputKeyCode}");
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
         }
         else
         {
-            Log.Debug($"IO: Adding IOKey to ServerSpecificSettings with InputKeyCode: {Base.InputKeyCode}");
             ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode, true, "")).ToArray();
             ServerSpecificSettingsSync.SendToAll();
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
@@ -111,6 +114,28 @@ public class InteractableObject : AMERTInteractable
                 execute();
             }
         }
+
+        // Invoke the registerable event
+        Log.Debug($"INVOKING EVENT");
+        PlayerIOInteracted.InvokeEvent(new PlayerIOInteractedEventArgs(player));
+    }
+
+    public class PlayerIOInteractedEventArgs : EventArgs, IPlayerEvent
+    {
+        public Player Player { get; }
+
+        public PlayerIOInteractedEventArgs(Player player)
+        {
+            Player = player;
+        }
+    }
+
+    public event LabEventHandler<PlayerIOInteractedEventArgs> PlayerIOInteracted;
+
+    public void OnPlayerIOInteracted(PlayerIOInteractedEventArgs ev)
+    {
+        Log.Info($"OnPlayerIOInteracted: player: {ev.Player.Nickname} - object: {gameObject.name}");
+        PlayerIOInteracted.InvokeEvent(ev);
     }
 }
 
