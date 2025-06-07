@@ -31,31 +31,35 @@ namespace AdvancedMERTools;
 //    }
 //}
 
-[HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkTargetState), MethodType.Setter)]
-public class DoorVariantPatcher
-{
-    public static void Prefix(DoorVariant instance, bool value)
-    {
-        DummyDoor d = AdvancedMERTools.Singleton.DummyDoors.Find(x => x.RealDoor == Door.Get(instance));
-        if (d != null)
-        {
-            d.OnInteractDoor(value);
-        }
-    }
-}
+//[HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkTargetState), MethodType.Setter)]
+//internal static class DoorVariantPatcher
+//{
+//    public static void Prefix(DoorVariant instance, bool value)
+//    {
+//        Log.Debug($"Patching DoorVariant.NetworkTargetState: {instance} - value: {value}");
+//        if (instance != null)
+//        {
+//            DummyDoor d = AdvancedMERTools.Singleton.DummyDoors.Find(x => x.RealDoor == Door.Get(instance));
+//            if (d != null)
+//            {
+//                d.OnInteractDoor(value);
+//            }
+//        }
+//    }
+//}
 
-[HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkActiveLocks), MethodType.Setter)]
-public class DoorVariantLockPatcher
-{
-    public static void Prefix(DoorVariant instance, ushort value)
-    {
-        CustomDoor d = AdvancedMERTools.Singleton.CustomDoors.Find(x => x.Door == Door.Get(instance));
-        if (d != null)
-        {
-            d.OnLockChange(value);
-        }
-    }
-}
+//[HarmonyPatch(nameof(DoorVariant), nameof(DoorVariant.NetworkActiveLocks), MethodType.Setter)]
+//public class DoorVariantLockPatcher
+//{
+//    public static void Prefix(DoorVariant instance, ushort value)
+//    {
+//        CustomDoor d = AdvancedMERTools.Singleton.CustomDoors.Find(x => x.Door == Door.Get(instance));
+//        if (d != null)
+//        {
+//            d.OnLockChange(value);
+//        }
+//    }
+//}
 
 [HarmonyPatch(typeof(MapUtils), nameof(MapUtils.LoadMap), typeof(string))]
 public class MapLoadingPatcher

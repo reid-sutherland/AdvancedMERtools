@@ -4,7 +4,6 @@ using CommandSystem;
 using HarmonyLib;
 using LabApi.Events.CustomHandlers;
 using LabApi.Loader.Features.Plugins;
-using MEC;
 using ProjectMER.Features.Objects;
 using RemoteAdmin;
 using System;
@@ -12,14 +11,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UserSettings.ServerSpecific;
-
-/// <NOTES>
-/// CURRENT CHANGES FOR ProjectMER REFACTOR
-/// - Generally I think all the doors are scuffed and probably unusable lol.
-/// - Effects: How the hell do CustomEffects (or any effects for that matter) work in LabApi???
-/// - DummyDoor: Idk what the hell it's for so I just completely removed it for now.
-/// - InteractableTeleport: Don't need this so removing for now.
-/// </NOTES>
 
 namespace AdvancedMERTools;
 
@@ -84,16 +75,9 @@ public class AdvancedMERTools : Plugin<Config>
     public override void Enable()
     {
         Singleton = this;
-        // TODO: Instead of manually registering all, can override base OnEvent methods and this call will auto-register them
         CustomHandlersManager.RegisterEventsHandler(AMERTEventsHandler);
-
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += AMERTEventsHandler.OnSSInput;
-        LabApi.Events.Handlers.ServerEvents.MapGenerated += AMERTEventsHandler.OnMapGenerated;
-        LabApi.Events.Handlers.ServerEvents.ProjectileExploded += AMERTEventsHandler.OnProjectileExploded;
-        LabApi.Events.Handlers.PlayerEvents.Spawned += AMERTEventsHandler.ApplyCustomSpawnPoint;
-        LabApi.Events.Handlers.PlayerEvents.SearchingPickup += AMERTEventsHandler.OnSearchingPickup;
-        LabApi.Events.Handlers.PlayerEvents.PickingUpItem += AMERTEventsHandler.OnPickingUpItem;
-        ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicLoad;
+        ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicSpawned;
 
         if (!Directory.Exists(AudioDir))
         {
@@ -107,15 +91,9 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override void Disable()
     {
-        ServerSpecificSettingsSync.ServerOnSettingValueReceived -= AMERTEventsHandler.OnSSInput;
-        LabApi.Events.Handlers.ServerEvents.MapGenerated -= AMERTEventsHandler.OnMapGenerated;
-        LabApi.Events.Handlers.ServerEvents.ProjectileExploded -= AMERTEventsHandler.OnProjectileExploded;
-        LabApi.Events.Handlers.PlayerEvents.Spawned -= AMERTEventsHandler.ApplyCustomSpawnPoint;
-        LabApi.Events.Handlers.PlayerEvents.SearchingPickup -= AMERTEventsHandler.OnSearchingPickup;
-        LabApi.Events.Handlers.PlayerEvents.PickingUpItem -= AMERTEventsHandler.OnPickingUpItem;
-        ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= AMERTEventsHandler.OnSchematicLoad;
-
         CustomHandlersManager.UnregisterEventsHandler(AMERTEventsHandler);
+        ServerSpecificSettingsSync.ServerOnSettingValueReceived -= AMERTEventsHandler.OnSSInput;
+        ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= AMERTEventsHandler.OnSchematicSpawned;
         Singleton = null;
     }
 

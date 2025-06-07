@@ -54,7 +54,91 @@ public class AMERTEventHandlers : CustomEventsHandler
         }
     }
 
-    public void OnProjectileExploded(ProjectileExplodedEventArgs ev)
+    // These must be registered manually as they are not defined in LabApi
+
+    public void OnSSInput(ReferenceHub sender, ServerSpecificSettingBase setting)
+    {
+        SSKeybindSetting sSKeybind = setting.OriginalDefinition as SSKeybindSetting;
+        if (sSKeybind != null && (setting as SSKeybindSetting).SyncIsPressed)
+        {
+            Log.Debug($"Amert: ssKeypress: {sSKeybind.PlayerPrefsKey} - {sSKeybind.SuggestedKey}");
+            KeyCode key = sSKeybind.SuggestedKey;
+            if (AdvancedMERTools.Singleton.IOkeys.ContainsKey((int)key) && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
+            {
+                Log.Debug($"-- IOKeys contains the key, and we got a raycast");
+                foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
+                {
+                    Log.Debug($"-- found interactable with type: {interactable.GetType()} - name: {interactable.gameObject.name} - sender: {sender.nicknameSync.DisplayName}");
+                    if (!(interactable is FInteractableObject) && interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange)
+                    {
+                        interactable.RunProcess(Player.Get(sender));
+                    }
+                }
+                foreach (FInteractableObject interactable in hit.collider.GetComponentsInParent<FInteractableObject>())
+                {
+                    if (interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange.GetValue(new FunctionArgument(interactable), 0f))
+                    {
+                        interactable.RunProcess(Player.Get(sender));
+                    }
+                }
+            }
+        }
+    }
+
+    public void OnSchematicSpawned(SchematicSpawnedEventArgs ev)
+    {
+        AdvancedMERTools.Singleton.SchematicVariables.Add(ev.Schematic, new Dictionary<string, object> { });
+        AdvancedMERTools.Singleton.AMERTGroup.Add(ev.Schematic, new Dictionary<string, List<AMERTInteractable>> { });
+        AdvancedMERTools.Singleton.CodeClassPair.Add(ev.Schematic, new Dictionary<int, AMERTInteractable> { });
+        if (ev.Name.Equals("Gate", StringComparison.InvariantCultureIgnoreCase))
+        {
+            ev.Schematic.gameObject.AddComponent<DummyGate>();
+        }
+        DataLoad<GNDTO, GroovyNoise>("GroovyNoises", ev);
+        DataLoad<HODTO, HealthObject>("HealthObjects", ev);
+        DataLoad<IPDTO, InteractablePickup>("Pickups", ev);
+        DataLoad<CCDTO, CustomCollider>("Colliders", ev);
+        DataLoad<IODTO, InteractableObject>("Objects", ev);
+
+        DataLoad<FGNDTO, FGroovyNoise>("FGroovyNoises", ev);
+        DataLoad<FHODTO, FHealthObject>("FHealthObjects", ev);
+        DataLoad<FIPDTO, FInteractablePickup>("FPickups", ev);
+        DataLoad<FCCDTO, FCustomCollider>("FColliders", ev);
+        DataLoad<FIODTO, FInteractableObject>("FObjects", ev);
+
+        AdvancedMERTools.Singleton.FunctionExecutors.Add(ev.Schematic, new Dictionary<string, FunctionExecutor> { });
+        string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + "-Functions.json");
+        if (File.Exists(path))
+        {
+            List<FEDTO> ts = JsonConvert.DeserializeObject<List<FEDTO>>(File.ReadAllText(path), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = DSbinder });
+            foreach (FEDTO dto in ts)
+            {
+                FunctionExecutor tclass = ev.Schematic.gameObject.AddComponent<FunctionExecutor>();
+                tclass.OSchematic = ev.Schematic;
+                tclass.Data = dto;
+                //AdvancedMERTools.Singleton.FunctionExecutors[ev.Schematic].Add(tclass.name, tclass);
+            }
+        }
+    }
+
+    // The rest can just be overrided from CustomEventsHandler
+
+    public override void OnServerMapGenerated(MapGeneratedEventArgs ev)
+    {
+        AdvancedMERTools.Singleton.HealthObjects.Clear();
+        AdvancedMERTools.Singleton.InteractablePickups.Clear();
+        AdvancedMERTools.Singleton.DummyDoors.Clear();
+        AdvancedMERTools.Singleton.DummyGates.Clear();
+        AdvancedMERTools.Singleton.CustomColliders.Clear();
+        AdvancedMERTools.Singleton.GroovyNoises.Clear();
+        AdvancedMERTools.Singleton.CodeClassPair.Clear();
+        AdvancedMERTools.Singleton.InteractableObjects.Clear();
+        AdvancedMERTools.Singleton.FunctionExecutors.Clear();
+        AdvancedMERTools.Singleton.SchematicVariables.Clear();
+        AdvancedMERTools.Singleton.RoundVariable.Clear();
+    }
+
+    public override void OnServerProjectileExploded(ProjectileExplodedEventArgs ev)
     {
         foreach (HealthObject health in AdvancedMERTools.Singleton.HealthObjects)
         {
@@ -71,11 +155,11 @@ public class AMERTEventHandlers : CustomEventsHandler
         }
     }
 
-    public void OnSearchingPickup(PlayerSearchingPickupEventArgs ev)
+    public override void OnPlayerSearchingPickup(PlayerSearchingPickupEventArgs ev)
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
         List<Pickup> removeList = new() { };
-        Log.Debug($"OnSearchingPickup: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
+        Log.Debug($"OnPlayerSearchingPickup: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
         foreach (InteractablePickup interactable in list)
         {
             Log.Debug($"- interactable.name: {interactable.name} - interactable.Pickup.GameObject.name: {interactable.Pickup.GameObject.name}");
@@ -116,11 +200,11 @@ public class AMERTEventHandlers : CustomEventsHandler
         AdvancedMERTools.Singleton.DummyGates.ForEach(x => x.OnSearchingPickup(ev));
     }
 
-    public void OnPickingUpItem(PlayerPickingUpItemEventArgs ev)
+    public override void OnPlayerPickingUpItem(PlayerPickingUpItemEventArgs ev)
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
         List<Pickup> removeList = new() { };
-        Log.Debug($"OnItemPicked: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
+        Log.Debug($"OnPlayerPickingUpItem: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
         foreach (InteractablePickup interactable in list)
         {
             if (interactable is FInteractablePickup)
@@ -150,87 +234,8 @@ public class AMERTEventHandlers : CustomEventsHandler
         removeList.ForEach(x => x.Destroy());
     }
 
-    public void OnSSInput(ReferenceHub sender, ServerSpecificSettingBase setting)
+    public override void OnPlayerSpawned(PlayerSpawnedEventArgs ev)
     {
-        SSKeybindSetting sSKeybind = setting.OriginalDefinition as SSKeybindSetting;
-        if (sSKeybind != null && (setting as SSKeybindSetting).SyncIsPressed)
-        {
-            KeyCode key = sSKeybind.SuggestedKey;
-            if (AdvancedMERTools.Singleton.IOkeys.ContainsKey((int)key) && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
-            {
-                foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
-                {
-                    Log.Debug($"-- found interactable with type: {interactable.GetType()} - name: {interactable.gameObject.name}");
-                    if (!(interactable is FInteractableObject) && interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange)
-                    {
-                        interactable.RunProcess(Player.Get(sender));
-                    }
-                }
-                foreach (FInteractableObject interactable in hit.collider.GetComponentsInParent<FInteractableObject>())
-                {
-                    if (interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange.GetValue(new FunctionArgument(interactable), 0f))
-                    {
-                        interactable.RunProcess(Player.Get(sender));
-                    }
-                }
-            }
-        }
-    }
-
-    public void OnSchematicLoad(SchematicSpawnedEventArgs ev)
-    {
-        AdvancedMERTools.Singleton.SchematicVariables.Add(ev.Schematic, new Dictionary<string, object> { });
-        AdvancedMERTools.Singleton.AMERTGroup.Add(ev.Schematic, new Dictionary<string, List<AMERTInteractable>> { });
-        AdvancedMERTools.Singleton.CodeClassPair.Add(ev.Schematic, new Dictionary<int, AMERTInteractable> { });
-        if (ev.Name.Equals("Gate", StringComparison.InvariantCultureIgnoreCase))
-        {
-            ev.Schematic.gameObject.AddComponent<DummyGate>();
-        }
-        DataLoad<GNDTO, GroovyNoise>("GroovyNoises", ev);
-        DataLoad<HODTO, HealthObject>("HealthObjects", ev);
-        DataLoad<IPDTO, InteractablePickup>("Pickups", ev);
-        DataLoad<CCDTO, CustomCollider>("Colliders", ev);
-        DataLoad<IODTO, InteractableObject>("Objects", ev);
-
-        DataLoad<FGNDTO, FGroovyNoise>("FGroovyNoises", ev);
-        DataLoad<FHODTO, FHealthObject>("FHealthObjects", ev);
-        DataLoad<FIPDTO, FInteractablePickup>("FPickups", ev);
-        DataLoad<FCCDTO, FCustomCollider>("FColliders", ev);
-        DataLoad<FIODTO, FInteractableObject>("FObjects", ev);
-
-        AdvancedMERTools.Singleton.FunctionExecutors.Add(ev.Schematic, new Dictionary<string, FunctionExecutor> { });
-        string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + "-Functions.json");
-        if (File.Exists(path))
-        {
-            List<FEDTO> ts = JsonConvert.DeserializeObject<List<FEDTO>>(File.ReadAllText(path), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = DSbinder });
-            foreach (FEDTO dto in ts)
-            {
-                FunctionExecutor tclass = ev.Schematic.gameObject.AddComponent<FunctionExecutor>();
-                tclass.OSchematic = ev.Schematic;
-                tclass.Data = dto;
-                //AdvancedMERTools.Singleton.FunctionExecutors[ev.Schematic].Add(t, tclass);
-            }
-        }
-    }
-
-    public void OnMapGenerated(MapGeneratedEventArgs ev)
-    {
-        AdvancedMERTools.Singleton.HealthObjects.Clear();
-        AdvancedMERTools.Singleton.InteractablePickups.Clear();
-        AdvancedMERTools.Singleton.DummyDoors.Clear();
-        AdvancedMERTools.Singleton.DummyGates.Clear();
-        AdvancedMERTools.Singleton.CustomColliders.Clear();
-        AdvancedMERTools.Singleton.GroovyNoises.Clear();
-        AdvancedMERTools.Singleton.CodeClassPair.Clear();
-        AdvancedMERTools.Singleton.InteractableObjects.Clear();
-        AdvancedMERTools.Singleton.FunctionExecutors.Clear();
-        AdvancedMERTools.Singleton.SchematicVariables.Clear();
-        AdvancedMERTools.Singleton.RoundVariable.Clear();
-    }
-
-    public void ApplyCustomSpawnPoint(PlayerSpawnedEventArgs ev)
-    {
-        Log.Debug($"AMERT: Player spawned: {ev.Player.Nickname}");
         if (MapUtils.LoadedMaps.IsEmpty())
         {
             return;
