@@ -131,11 +131,18 @@ public class CustomCollider : AMERTInteractable
             return;
         }
 
-        Pickup pickup = collider.GetComponent<Pickup>();
-        if (pickup is null)
+        Pickup pickup = null;
+        if (collider.gameObject.TryGetComponent(out ItemPickupBase ipb))
         {
-            Log.Debug($"AMERT CustomCollider: Pickup compenent in collider was null");
-            return;
+            pickup = Pickup.Get(ipb);
+            if (pickup is null)
+            {
+                Log.Error($"AMERT CustomCollider: Pickup was not found in collider object's ItemPickupBase: {ipb.name}");
+            }
+            else
+            {
+                Log.Info($"AMERT CustomCollider: Pickup was found in collider - collider obj: {collider.name}||{collider.gameObject.name} - ipb: {ipb.name} - pickup: {pickup.Base.name}");
+            }
         }
 
         bool flag = false;
@@ -160,7 +167,19 @@ public class CustomCollider : AMERTInteractable
             return;
         }
 
-        ModuleGeneralArguments args = new ModuleGeneralArguments { Player = target, TargetCalculated = false, Transform = this.transform, Schematic = OSchematic, Interpolations = Formatter, InterpolationsList = new object[] { target, gameObject } };
+        ModuleGeneralArguments args = new()
+        {
+            Player = target,
+            TargetCalculated = false,
+            Transform = this.transform,
+            Schematic = OSchematic,
+            Interpolations = Formatter,
+            InterpolationsList = new object[]
+            {
+                target,
+                gameObject,
+            },
+        };
         var colliderActionExecutors = new Dictionary<ColliderActionType, Action>
         {
             {
@@ -216,11 +235,18 @@ public class FCustomCollider : CustomCollider
             return;
         }
 
-        Pickup pickup = collider.GetComponent<Pickup>();
-        if (pickup is null)
+        Pickup pickup = null;
+        if (collider.gameObject.TryGetComponent(out ItemPickupBase ipb))
         {
-            Log.Debug($"AMERT FCustomCollider: Pickup compenent in collider was null");
-            return;
+            pickup = Pickup.Get(ipb);
+            if (pickup is null)
+            {
+                Log.Error($"AMERT FCustomCollider: Pickup was not found in collider object's ItemPickupBase: {ipb.name}");
+            }
+            else
+            {
+                Log.Info($"AMERT FCustomCollider: Pickup was found in collider - collider obj: {collider.name}||{collider.gameObject.name} - ipb: {ipb.name} - pickup: {pickup.Base.name}");
+            }
         }
 
         bool flag = false;

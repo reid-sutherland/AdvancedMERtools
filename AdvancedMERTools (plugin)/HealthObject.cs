@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using LabApi.Features.Extensions;
 
 namespace AdvancedMERTools;
 
@@ -144,7 +143,10 @@ public class HealthObject : AMERTInteractable, IDestructible
     protected virtual void Destroy()
     {
         AnimationEnded = true;
-        if (Base.DoNotDestroyAfterDeath) return;
+        if (Base.DoNotDestroyAfterDeath)
+        {
+            return;
+        }
         Destroy(this.gameObject);
     }
 
