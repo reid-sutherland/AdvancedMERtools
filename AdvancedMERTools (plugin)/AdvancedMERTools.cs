@@ -24,7 +24,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override string Author => "Michal78900 + DeadServer Team";
 
-    public override Version Version => new Version(2025, 6, 1, 1);
+    public override Version Version => new Version(2025, 6, 7, 1);
 
     public override Version RequiredApiVersion => new Version(1, 0, 0, 0);
 
