@@ -88,10 +88,10 @@ public class InteractablePickup : AMERTInteractable
             { IPActionType.Disappear, () => r = true },
             { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
             { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
-            { IPActionType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
+            { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
+            { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
             {
                 IPActionType.UpgradeItem, () =>
                 {
@@ -108,7 +108,7 @@ public class InteractablePickup : AMERTInteractable
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
+            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
             { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
             { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
@@ -159,10 +159,10 @@ public class FInteractablePickup : InteractablePickup
             { IPActionType.Disappear, () => r = true },
             { IPActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
             { IPActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => FDropItem.Execute(Base.DropItems, args) },
-            { IPActionType.SendCommand, () => FCommanding.Execute(Base.Commandings, args) },
+            { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
+            { IPActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
             { IPActionType.UpgradeItem, () =>
                 {
                     if (player.GameObject.TryGetComponent<Collider>(out Collider col))
@@ -179,7 +179,7 @@ public class FInteractablePickup : InteractablePickup
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.EffectGivingModules, args) },
+            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
             { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
             { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },

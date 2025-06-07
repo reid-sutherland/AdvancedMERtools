@@ -87,8 +87,38 @@ public class AMERTDTO
     public bool UseScriptValue { get; set; }
 }
 
+// Module DTO with common fields
+public class MDTO : AMERTDTO
+{
+    // TODO: It triggers me, but for backwards compatibility's sake, reverting back to certain camel case names for now
+    public List<AnimationDTO> AnimationModules { get; set; }
+    public WarheadActionType warheadActionType { get; set; }
+    public List<MessageModule> MessageModules { get; set; }
+    public List<DropItem> dropItems { get; set; }
+    public List<Commanding> commandings { get; set; }
+    public List<ExplodeModule> ExplodeModules { get; set; }
+    public List<EffectGivingModule> effectGivingModules { get; set; }
+    public List<AudioModule> AudioModules { get; set; }
+    public List<CGNModule> GroovieNoiseToCall { get; set; }
+    public List<CFEModule> FunctionToCall { get; set; }
+}
+
+public class FMDTO : AMERTDTO
+{
+    public List<FAnimationDTO> AnimationModules { get; set; }
+    public ScriptValue warheadActionType { get; set; }
+    public List<FMessageModule> MessageModules { get; set; }
+    public List<FDropItem> dropItems { get; set; }
+    public List<FCommanding> commandings { get; set; }
+    public List<FExplodeModule> ExplodeModules { get; set; }
+    public List<FEffectGivingModule> effectGivingModules { get; set; }
+    public List<FAudioModule> AudioModules { get; set; }
+    public List<FCGNModule> GroovieNoiseToCall { get; set; }
+    public List<FCFEModule> FunctionToCall { get; set; }
+}
+
 [Serializable]
-public class HODTO : AMERTDTO
+public class HODTO : MDTO
 {
     public float Health { get; set; }
     [Range(0, 100)]
@@ -98,20 +128,10 @@ public class HODTO : AMERTDTO
     public float ResetHPTo { get; set; }
     public bool DoNotDestroyAfterDeath { get; set; }
     public List<WhitelistWeapon> WhitelistWeapons { get; set; }
-    public List<AnimationDTO> AnimationModules { get; set; }
-    public WarheadActionType WarheadActionType { get; set; }
-    public List<MessageModule> MessageModules { get; set; }
-    public List<DropItem> DropItems { get; set; }
-    public List<Commanding> Commandings { get; set; }
-    public List<ExplodeModule> ExplodeModules { get; set; }
-    public List<EffectGivingModule> EffectGivingModules { get; set; }
-    public List<AudioModule> AudioModules { get; set; }
-    public List<CGNModule> GroovieNoiseToCall { get; set; }
-    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
-public class FHODTO : AMERTDTO
+public class FHODTO : FMDTO
 {
     public ScriptValue Health { get; set; }
     [Range(0, 100)]
@@ -121,147 +141,67 @@ public class FHODTO : AMERTDTO
     public ScriptValue ResetHPTo { get; set; }
     public ScriptValue DoNotDestroyAfterDeath { get; set; }
     public List<FWhitelistWeapon> WhitelistWeapons { get; set; }
-    public List<FAnimationDTO> AnimationModules { get; set; }
-    public ScriptValue WarheadActionType { get; set; }
-    public List<FMessageModule> MessageModules { get; set; }
-    public List<FDropItem> DropItems { get; set; }
-    public List<FCommanding> Commandings { get; set; }
-    public List<FExplodeModule> ExplodeModules { get; set; }
-    public List<FEffectGivingModule> EffectGivingModules { get; set; }
-    public List<FAudioModule> AudioModules { get; set; }
-    public List<FCGNModule> GroovieNoiseToCall { get; set; }
-    public List<FCFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
-public class ITDTO : AMERTDTO
+public class ITDTO : MDTO
 {
     public TeleportInvokeType InvokeType { get; set; }
     public IPActionType ActionType { get; set; }
-    public List<AnimationDTO> AnimationModules { get; set; }
-    public WarheadActionType WarheadActionType { get; set; }
-    public List<MessageModule> MessageModules { get; set; }
-    public List<DropItem> DropItems { get; set; }
-    public List<Commanding> Commandings { get; set; }
-    public List<ExplodeModule> ExplodeModules { get; set; }
-    public List<EffectGivingModule> EffectGivingModules { get; set; }
-    public List<AudioModule> AudioModules { get; set; }
-    public List<CGNModule> GroovieNoiseToCall { get; set; }
-    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
-public class IPDTO : AMERTDTO
-{
-    public InvokeType InvokeType { get; set; }
-    public IPActionType ActionType { get; set; }
-    public bool CancelActionWhenActive { get; set; }
-    public List<AnimationDTO> AnimationModules { get; set; }
-    public WarheadActionType WarheadActionType { get; set; }
-    public List<MessageModule> MessageModules { get; set; }
-    public List<DropItem> DropItems { get; set; }
-    public List<Commanding> Commandings { get; set; }
-    public Scp914Mode Scp914Mode { get; set; }
-    public List<ExplodeModule> ExplodeModules { get; set; }
-    public List<EffectGivingModule> EffectGivingModules { get; set; }
-    public List<AudioModule> AudioModules { get; set; }
-    public List<CGNModule> GroovieNoiseToCall { get; set; }
-    public List<CFEModule> FunctionToCall { get; set; }
-}
-
-[Serializable]
-public class FIPDTO : AMERTDTO
-{
-    public InvokeType InvokeType { get; set; }
-    public IPActionType ActionType { get; set; }
-    public ScriptValue CancelActionWhenActive { get; set; }
-    public ScriptValue Scp914Mode { get; set; }
-    public List<FAnimationDTO> AnimationModules { get; set; }
-    public ScriptValue WarheadActionType { get; set; }
-    public List<FMessageModule> MessageModules { get; set; }
-    public List<FDropItem> DropItems { get; set; }
-    public List<FCommanding> Commandings { get; set; }
-    public List<FExplodeModule> ExplodeModules { get; set; }
-    public List<FEffectGivingModule> EffectGivingModules { get; set; }
-    public List<FAudioModule> AudioModules { get; set; }
-    public List<FCGNModule> GroovieNoiseToCall { get; set; }
-    public List<FCFEModule> FunctionToCall { get; set; }
-}
-
-[Serializable]
-public class CCDTO : AMERTDTO
-{
-    public ColliderActionType ColliderActionType { get; set; }
-    public CollisionType CollisionType { get; set; }
-    public DetectType DetectType { get; set; }
-    public float ModifyHealthAmount { get; set; }
-    public List<AnimationDTO> AnimationModules { get; set; }
-    public WarheadActionType WarheadActionType { get; set; }
-    public List<MessageModule> MessageModules { get; set; }
-    public List<DropItem> DropItems { get; set; }
-    public List<Commanding> Commandings { get; set; }
-    public List<ExplodeModule> ExplodeModules { get; set; }
-    public List<EffectGivingModule> EffectGivingModules { get; set; }
-    public List<AudioModule> AudioModules { get; set; }
-    public List<CGNModule> GroovieNoiseToCall { get; set; }
-    public List<CFEModule> FunctionToCall { get; set; }
-}
-
-[Serializable]
-public class FCCDTO : AMERTDTO
-{
-    public ColliderActionType ColliderActionType { get; set; }
-    public ScriptValue CollisionType { get; set; }
-    public ScriptValue DetectType { get; set; }
-    public ScriptValue ModifyHealthAmount { get; set; }
-    public List<FAnimationDTO> AnimationModules { get; set; }
-    public ScriptValue WarheadActionType { get; set; }
-    public List<FMessageModule> MessageModules { get; set; }
-    public List<FDropItem> DropItems { get; set; }
-    public List<FCommanding> Commandings { get; set; }
-    public List<FExplodeModule> ExplodeModules { get; set; }
-    public List<FEffectGivingModule> EffectGivingModules { get; set; }
-    public List<FAudioModule> AudioModules { get; set; }
-    public List<FCGNModule> GroovieNoiseToCall { get; set; }
-    public List<FCFEModule> FunctionToCall { get; set; }
-}
-
-[Serializable]
-public class IODTO : AMERTDTO
+public class IODTO : MDTO
 {
     public int InputKeyCode { get; set; }
     public float InteractionMaxRange { get; set; }
     public IPActionType ActionType { get; set; }
-    public List<AnimationDTO> AnimationModules { get; set; }
-    public WarheadActionType WarheadActionType { get; set; }
-    public List<MessageModule> MessageModules { get; set; }
-    public List<DropItem> DropItems { get; set; }
-    public List<Commanding> Commandings { get; set; }
     public Scp914Mode Scp914Mode { get; set; }
-    public List<ExplodeModule> ExplodeModules { get; set; }
-    public List<EffectGivingModule> EffectGivingModules { get; set; }
-    public List<AudioModule> AudioModules { get; set; }
-    public List<CGNModule> GroovieNoiseToCall { get; set; }
-    public List<CFEModule> FunctionToCall { get; set; }
 }
 
 [Serializable]
-public class FIODTO : AMERTDTO
+public class FIODTO : FMDTO
 {
     public int InputKeyCode { get; set; }
     public ScriptValue InteractionMaxRange { get; set; }
     public IPActionType ActionType { get; set; }
     public ScriptValue Scp914Mode { get; set; }
-    public List<FAnimationDTO> AnimationModules { get; set; }
-    public ScriptValue WarheadActionType { get; set; }
-    public List<FMessageModule> MessageModules { get; set; }
-    public List<FDropItem> DropItems { get; set; }
-    public List<FCommanding> Commandings { get; set; }
-    public List<FExplodeModule> ExplodeModules { get; set; }
-    public List<FEffectGivingModule> EffectGivingModules { get; set; }
-    public List<FAudioModule> AudioModules { get; set; }
-    public List<FCGNModule> GroovieNoiseToCall { get; set; }
-    public List<FCFEModule> FunctionToCall { get; set; }
+}
+
+[Serializable]
+public class IPDTO : MDTO
+{
+    public InvokeType InvokeType { get; set; }
+    public IPActionType ActionType { get; set; }
+    public bool CancelActionWhenActive { get; set; }
+    public Scp914Mode Scp914Mode { get; set; }
+}
+
+[Serializable]
+public class FIPDTO : FMDTO
+{
+    public InvokeType InvokeType { get; set; }
+    public IPActionType ActionType { get; set; }
+    public ScriptValue CancelActionWhenActive { get; set; }
+    public ScriptValue Scp914Mode { get; set; }
+}
+
+[Serializable]
+public class CCDTO : MDTO
+{
+    public ColliderActionType ColliderActionType { get; set; }
+    public CollisionType CollisionType { get; set; }
+    public DetectType DetectType { get; set; }
+    public float ModifyHealthAmount { get; set; }
+}
+
+[Serializable]
+public class FCCDTO : FMDTO
+{
+    public ColliderActionType ColliderActionType { get; set; }
+    public ScriptValue CollisionType { get; set; }
+    public ScriptValue DetectType { get; set; }
+    public ScriptValue ModifyHealthAmount { get; set; }
 }
 
 [Serializable]
