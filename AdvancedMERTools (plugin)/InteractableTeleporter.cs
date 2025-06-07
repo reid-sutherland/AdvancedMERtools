@@ -91,7 +91,6 @@ public class InteractableTeleporter : AMERTInteractable
             { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
             { IPActionType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
             { IPActionType.SendCommand, () => Commanding.Execute(Base.Commandings, args) },
-            // TODO: Not sure if it makes any sense for InteractableTeleport to have an SCP914 Upgrade routine
             { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },

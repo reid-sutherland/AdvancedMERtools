@@ -1371,7 +1371,7 @@ public class VItemType : Value
 [Serializable]
 public class VRoleType : Value
 {
-    public PlayerRoles.RoleTypeId Value;
+    public RoleTypeId Value;
 
     public override void OnValidate()
     {

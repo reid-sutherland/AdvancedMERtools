@@ -75,7 +75,7 @@ public class HealthObject : AMERTInteractable, IDestructible
         },
         { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
         { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.GetRoleBase().ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.ToString() },
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
         {
             "{o_pos}", vs =>

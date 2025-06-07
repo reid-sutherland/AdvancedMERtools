@@ -34,10 +34,9 @@ public class CustomDoor : AMERTInteractable
             Scale = Base.DoorInstallScl,
         };
 
-        // TODO: I have no idea if this in on the right track lol
         Room doorRoom = Room.GetRoomAtPosition(serializableDoor.Position);
         GameObject doorGameObject = serializableDoor.SpawnOrUpdateObject(doorRoom);
-        Door = doorGameObject.GetComponent<Door>();  // this should create a new Exiled Door using the gameObject
+        Door = doorGameObject.GetComponent<Door>();
         Door.Transform.parent = transform;
 
         PlayerEvents.InteractingDoor += OnInteractingDoor;

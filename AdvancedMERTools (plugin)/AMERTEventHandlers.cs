@@ -251,7 +251,6 @@ public class AMERTEventHandlers : CustomEventsHandler
         if (list.Count != 0)
         {
             SerializablePlayerSpawnpoint serializable = list.RandomItem();
-            // TODO: I think serializable.Position is the position within the room. So need to find a new way to transform that position to the global position
             ev.Player.Position = serializable.Position + Vector3.up;
         }
     }

@@ -28,12 +28,12 @@ public class DummyDoor : MonoBehaviour
             Animator = this.transform.GetChild(0).GetComponent<Animator>();
             if (RealDoor == null)
             {
+                // TODO: There's probably a better way to do this
                 // DoorObject doesn't exist anymore so try to find MapEditorObjects that are doors
                 foreach (MapEditorObject mapEditorObject in FindObjectsByType(typeof(MapEditorObject), FindObjectsSortMode.None))
                 {
                     if (SerializableDoor == mapEditorObject.Base)
                     {
-                        // TODO: ????
                         RealDoor = mapEditorObject.GetComponent<Door>();
                         break;
                     }

@@ -25,21 +25,22 @@ public class InteractableObject : AMERTInteractable
         },
         { "{p_room}", vs => (vs[0] as Player).Room.Name.ToString() },
         { "{p_zone}", vs => (vs[0] as Player).Zone.ToString() },
-        { "{p_role}", vs => (vs[0] as Player).Role.GetRoleBase().ToString() },
+        { "{p_role}", vs => (vs[0] as Player).Role.ToString() },
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
     };
 
     protected virtual void Start()
     {
-        // TODO: Definitely need to test this, probably with logs or something
         this.Base = base.Base as IODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
+            Log.Debug($"IO: IOKeys already contains InputKeyCode: {Base.InputKeyCode}");
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
         }
         else
         {
+            Log.Debug($"IO: Adding IOKey to ServerSpecificSettings with InputKeyCode: {Base.InputKeyCode}");
             ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode, true, "")).ToArray();
             ServerSpecificSettingsSync.SendToAll();
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });

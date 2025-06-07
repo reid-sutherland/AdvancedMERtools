@@ -13,6 +13,7 @@ using System.Linq;
 using System.IO;
 using UnityEngine;
 using Utils;
+using ProjectMER.Commands.Modifying.Position;
 
 namespace AdvancedMERTools;
 
@@ -993,14 +994,15 @@ public class DropItem : RandomExecutionModule
     {
         MEC.Timing.CallDelayed(ActionDelay, () =>
         {
-            // TODO: Item.Spawn() - not sure if this is the right LabApi way
-            Vector3 vector3 = args.Transform.TransformPoint(DropLocalPosition);
+            // TODO: Not sure how to do CustomItems in LabAPI yet, for now just use Item
+            Vector3 position = args.Transform.TransformPoint(DropLocalPosition);
             if (CustomItemId != 0 && Item.TryGet((ushort)CustomItemId, out Item customItem))
             {
                 for (int i = 0; i < Count; i++)
                 {
-                    Pickup customPickup = customItem.DropItem();
-                    customPickup.Position = vector3;
+                    Pickup customPickup = Pickup.Create(ItemType, position);
+                    //OnCustomItemCreated(customPickup.Serial);
+                    customPickup.Spawn();
                 }
             }
             else
@@ -1011,7 +1013,7 @@ public class DropItem : RandomExecutionModule
                 }
                 for (int i = 0; i < Count; i++)
                 {
-                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.Transform.rotation);
+                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, position, args.Transform.rotation);
                     itemPickupBase.NetworkInfo = new PickupSyncInfo(ItemType, itemBase.Weight, 0, false);
                     NetworkServer.Spawn(itemPickupBase.gameObject);
                 }
@@ -1032,15 +1034,16 @@ public class FDropItem : FRandomExecutionModule
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
-            Vector3 vector3 = args.Transform.TransformPoint(DropLocalPosition.GetValue(args, Vector3.zero));
+            Vector3 position = args.Transform.TransformPoint(DropLocalPosition.GetValue(args, Vector3.zero));
             int u = CustomItemId.GetValue(args, 0);
             int c = Count.GetValue(args, 1);
             if (u != 0 && Item.TryGet((ushort)u, out Item customItem))
             {
                 for (int i = 0; i < c; i++)
                 {
-                    Pickup customPickup = customItem.DropItem();
-                    customPickup.Position = vector3;
+                    Pickup customPickup = Pickup.Create(ItemType.GetValue(args, global::ItemType.None), position);
+                    //OnCustomItemCreated(customPickup.Serial);
+                    customPickup.Spawn();
                 }
             }
             else
@@ -1052,7 +1055,7 @@ public class FDropItem : FRandomExecutionModule
                 }
                 for (int i = 0; i < c; i++)
                 {
-                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, vector3, args.Transform.rotation);
+                    ItemPickupBase itemPickupBase = UnityEngine.Object.Instantiate<ItemPickupBase>(itemBase.PickupDropModel, position, args.Transform.rotation);
                     itemPickupBase.NetworkInfo = new PickupSyncInfo(value, itemBase.Weight, 0, false);
                     NetworkServer.Spawn(itemPickupBase.gameObject);
                 }
