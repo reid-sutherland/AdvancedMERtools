@@ -63,7 +63,7 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     protected static Dictionary<string, Func<object[], string>> Formatter { get; } = new Dictionary<string, Func<object[], string>>
     {
-        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_i}", vs => (vs[0] as Player).PlayerId.ToString() },
         { "{p_name}", vs => (vs[0] as Player).Nickname },
         {
             "{p_pos}", vs =>

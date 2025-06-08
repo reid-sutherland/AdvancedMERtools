@@ -16,7 +16,7 @@ public class InteractablePickup : AMERTInteractable
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
     {
-        { "{p_i}", vs => (vs[0] as Player).UserId },
+        { "{p_i}", vs => (vs[0] as Player).PlayerId.ToString() },
         { "{p_name}", vs => (vs[0] as Player).Nickname },
         {
             "{p_pos}", vs =>
