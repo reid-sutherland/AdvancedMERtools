@@ -112,7 +112,6 @@ public class InteractableObject : AMERTInteractable
             }
         }
 
-        Log.Debug($"Invoking PlayerIOInteracted event");
         PlayerIOInteracted.InvokeEvent(new PlayerIOInteractedEventArgs(player));
     }
 

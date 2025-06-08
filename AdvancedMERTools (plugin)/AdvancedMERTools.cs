@@ -1,4 +1,4 @@
-﻿global using Log = LabApi.Features.Console.Logger;
+﻿global using Log = AdvancedMERTools.AutoDebugLogger;
 
 using CommandSystem;
 using HarmonyLib;
@@ -22,7 +22,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override string Description => "AdvancedMERTools";
 
-    public override string Author => "Michal78900 + DeadServer Team";
+    public override string Author => "MujisongPlay + DeadServer Team";
 
     public override Version Version => new Version(2025, 6, 7, 1);
 

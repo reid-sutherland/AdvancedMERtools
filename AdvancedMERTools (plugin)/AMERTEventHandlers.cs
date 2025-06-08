@@ -61,16 +61,16 @@ public class AMERTEventHandlers : CustomEventsHandler
         SSKeybindSetting sSKeybind = setting.OriginalDefinition as SSKeybindSetting;
         if (sSKeybind != null && (setting as SSKeybindSetting).SyncIsPressed)
         {
-            Log.Debug($"ssKeypress: {sSKeybind.PlayerPrefsKey} - {sSKeybind.SuggestedKey}");
             KeyCode key = sSKeybind.SuggestedKey;
             if (AdvancedMERTools.Singleton.IOkeys.ContainsKey((int)key) && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
             {
                 foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
                 {
-                    Log.Debug($"-- found interactable with type: {interactable.GetType()} - name: {interactable.gameObject.name} - sender: {sender.nicknameSync.DisplayName}");
                     if (!(interactable is FInteractableObject) && interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange)
                     {
-                        interactable.RunProcess(Player.Get(sender));
+                        Player player = Player.Get(sender);
+                        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {interactable.OSchematic.Name}");
+                        interactable.RunProcess(player);
                     }
                 }
                 foreach (FInteractableObject interactable in hit.collider.GetComponentsInParent<FInteractableObject>())
@@ -163,17 +163,15 @@ public class AMERTEventHandlers : CustomEventsHandler
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
         List<Pickup> removeList = new() { };
-        Log.Debug($"OnPlayerSearchingPickup: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
         foreach (InteractablePickup interactable in list)
         {
-            Log.Debug($"- interactable.name: {interactable.name} - interactable.Pickup.GameObject.name: {interactable.Pickup.GameObject.name}");
             if (interactable is FInteractablePickup)
             {
                 continue;
             }
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Searching))
             {
-                Log.Debug($"-- calling RunProcess with ev.Pickup.GameObject.name: {ev.Pickup.GameObject.name} and pickup type: {ev.Pickup.Type}");
+                Log.Debug($"Player: {ev.Player.Nickname} is searching InteractablePickup: {interactable.OSchematic.Name} with Type: {ev.Pickup.Type}");
                 interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
                 if (interactable.Base.CancelActionWhenActive)
                 {
@@ -208,7 +206,6 @@ public class AMERTEventHandlers : CustomEventsHandler
     {
         List<InteractablePickup> list = AdvancedMERTools.Singleton.InteractablePickups.FindAll(x => x.Pickup == ev.Pickup);
         List<Pickup> removeList = new() { };
-        Log.Debug($"OnPlayerPickingUpItem: found InteractablePickups - total: {AdvancedMERTools.Singleton.InteractablePickups.Count} - count with matching pickup: {list.Count}");
         foreach (InteractablePickup interactable in list)
         {
             if (interactable is FInteractablePickup)
@@ -217,6 +214,7 @@ public class AMERTEventHandlers : CustomEventsHandler
             }
             if (interactable.Base.InvokeType.HasFlag(InvokeType.Picked))
             {
+                Log.Debug($"Player: {ev.Player.Nickname} is picking up InteractablePickup: {interactable.OSchematic.Name} with Type: {ev.Pickup.Type}");
                 interactable.RunProcess(ev.Player, ev.Pickup, out bool remove);
                 if (remove && !removeList.Contains(interactable.Pickup))
                 {
