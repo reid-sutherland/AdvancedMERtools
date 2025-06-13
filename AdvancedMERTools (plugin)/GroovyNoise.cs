@@ -1,4 +1,6 @@
-﻿namespace AdvancedMERTools;
+﻿using System.Linq;
+
+namespace AdvancedMERTools;
 
 public class GroovyNoise : AMERTInteractable
 {
@@ -8,18 +10,20 @@ public class GroovyNoise : AMERTInteractable
     {
         Base = base.Base as GNDTO;
         AdvancedMERTools.Singleton.GroovyNoises.Add(this);
-        //MEC.Timing.CallDelayed(0.1f, () => 
-        //{
-        //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
-        //        Active = true;
-        //});
+        MEC.Timing.CallDelayed(0.1f, () =>
+        {
+            if (AdvancedMERTools.Singleton.GroovyNoises.All(x => x.Base.Settings.Select(y => y.Targets).All(y => !y.Contains(Base.Code))))
+            {
+                Log.Debug($"Added groovy noise: {gameObject.name} ({OSchematic.Name})");
+                Active = true;
+            }
+        });
     }
 
     protected virtual void Update()
     {
         if (Active)
         {
-            //ServerConsole.AddLog("!!!");
             GMDTO.Execute(Base.Settings, new ModuleGeneralArguments { Schematic = OSchematic, Transform = transform });
         }
         Active = false;
@@ -34,18 +38,19 @@ public class FGroovyNoise : GroovyNoise
     {
         Base = ((AMERTInteractable)this).Base as FGNDTO;
         AdvancedMERTools.Singleton.GroovyNoises.Add(this);
-        //MEC.Timing.CallDelayed(0.1f, () => 
-        //{
-        //    if (AdvancedMERTools.Singleton.groovyNoises.All(x => x.Base.GMDTOs.Select(y => y.codes).All(y => !y.Contains(Base.Code))))
-        //        Active = true;
-        //});
+        MEC.Timing.CallDelayed(0.1f, () =>
+        {
+            if (AdvancedMERTools.Singleton.GroovyNoises.All(x => x.Base.Settings.Select(y => y.Targets).All(y => !y.Contains(Base.Code))))
+            {
+                Active = true;
+            }
+        });
     }
 
     protected override void Update()
     {
         if (Active)
         {
-            //ServerConsole.AddLog("!!!");
             FGMDTO.Execute(Base.Settings, new FunctionArgument(this));
         }
         Active = false;

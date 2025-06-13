@@ -34,7 +34,7 @@ public class InteractableObject : AMERTInteractable
     {
         this.Base = base.Base as IODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
-        Log.Debug($"Adding interactable object: {gameObject.name}");
+        Log.Debug($"Adding interactable object: {gameObject.name} ({OSchematic.Name})");
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
@@ -108,6 +108,7 @@ public class InteractableObject : AMERTInteractable
         {
             if (Base.ActionType.HasFlag(type) && actionExecutors.TryGetValue(type, out var execute))
             {
+                Log.Debug($"- IO: executing IOAction: {type}");
                 execute();
             }
         }

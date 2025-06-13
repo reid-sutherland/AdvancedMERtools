@@ -24,9 +24,9 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override string Author => "MujisongPlay + DeadServer Team";
 
-    public override Version Version => new Version(2025, 6, 7, 1);
+    public override Version Version => new Version(2025, 6, 13, 1);
 
-    public override Version RequiredApiVersion => new Version(1, 0, 0, 0);
+    public override Version RequiredApiVersion => new Version(1, 0, 2, 0);
 
     // Plugin objects
 

@@ -42,7 +42,6 @@ public class InteractablePickup : AMERTInteractable
 
     protected virtual void Start()
     {
-        Log.Info($"AMERT: InteractablePickup.Start() has been called: this gameobject: {gameObject.name}");
         this.Base = base.Base as IPDTO;
         if (gameObject.TryGetComponent<ItemPickupBase>(out var pickupBase))
         {
@@ -50,6 +49,7 @@ public class InteractablePickup : AMERTInteractable
         }
         if (Pickup != null)
         {
+            Log.Debug($"Adding interactable pickup: {gameObject.name} ({OSchematic.Name})");
             AdvancedMERTools.Singleton.InteractablePickups.Add(this);
         }
         else
@@ -66,8 +66,6 @@ public class InteractablePickup : AMERTInteractable
 
     public virtual void RunProcess(Player player, Pickup pickup, out bool remove)
     {
-        Log.Info($"AMERT: InteractablePickup.RunProcess() has been called: player: {player.Nickname}  - pickup: {pickup.GameObject.name}");
-
         bool r = false;
         remove = false;
         if (pickup != this.Pickup || !Active)
@@ -117,6 +115,7 @@ public class InteractablePickup : AMERTInteractable
         {
             if (Base.ActionType.HasFlag(type) && ipActionExecutors.TryGetValue(type, out var execute))
             {
+                Log.Debug($"- IP: executing IPAction: {type}");
                 execute();
             }
         }

@@ -113,6 +113,7 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     protected void Register()
     {
+        Log.Debug($"Registering HealthObject: {gameObject.name} ({OSchematic.Name})");
         this.transform.GetComponentsInChildren<AdminToys.PrimitiveObjectToy>().ForEach(x =>
         {
             if (x.gameObject.TryGetComponent<Healther>(out Healther healther))
@@ -223,6 +224,7 @@ public class HealthObject : AMERTInteractable, IDestructible
             float damage = ((AnimationCurve)info.GetValue(ev.TimedGrenade.Base as ExplosionGrenade)).Evaluate(distance);
             damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient, damage, 50);
             CheckDead(ev.Player, damage);
+            Log.Debug($"HO: GrenadeHE hit player: {ev.Player.Nickname} - at distance: {distance} - for damage: {damage}");
         }
     }
 
@@ -286,6 +288,7 @@ public class HealthObject : AMERTInteractable, IDestructible
                 {
                     if (Base.DeadType.HasFlag(type) && deadTypeExecutors.TryGetValue(type, out var execute))
                     {
+                        Log.Debug($"- HO: executing DeadAction: {type}");
                         execute();
                     }
                 }
