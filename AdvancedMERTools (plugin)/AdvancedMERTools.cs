@@ -36,7 +36,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     private AMERTEventHandlers AMERTEventsHandler { get; } = new();
 
-    public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(69, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E, true, "");
+    public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(69, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E);
 
     // Tracked collections
 
