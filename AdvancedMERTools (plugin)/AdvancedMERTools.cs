@@ -3,6 +3,7 @@
 using CommandSystem;
 using HarmonyLib;
 using LabApi.Events.CustomHandlers;
+using LabApi.Loader.Features.Paths;
 using LabApi.Loader.Features.Plugins;
 using ProjectMER.Features.Objects;
 using RemoteAdmin;
@@ -32,9 +33,13 @@ public class AdvancedMERTools : Plugin<Config>
 
     public static AdvancedMERTools Singleton { get; private set; }
 
-    public static string AudioDir => Singleton.Config.AudioFolderPath;
+    public static Config Configs => Singleton.Config;
 
     private AMERTEventHandlers AMERTEventsHandler { get; } = new();
+
+    private Harmony Harmony { get; set; } = new("AMERT");
+
+    public static string AudioDir => Singleton.Config.AudioFolderPath;
 
     public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(69, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E);
 
@@ -79,14 +84,19 @@ public class AdvancedMERTools : Plugin<Config>
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += AMERTEventsHandler.OnSSInput;
         ProjectMER.Events.Handlers.Schematic.SchematicSpawned += AMERTEventsHandler.OnSchematicSpawned;
 
+        if (string.IsNullOrEmpty(AudioDir))
+        {
+            // Directory string can be empty in config, default to LabAPI audio path
+            Singleton.Config.AudioFolderPath = Path.Combine(PathManager.LabApi.FullName, "audio");
+        }
         if (!Directory.Exists(AudioDir))
         {
-            Log.Warn("AMERT Audio directory does not exist. Creating...");
+            Log.Warn($"AMERT audio directory does not exist: {AudioDir}");
+            Log.Info("Creating AMERT audio directory");
             Directory.CreateDirectory(AudioDir);
         }
 
-        Harmony harmony = new Harmony("AMERT");
-        harmony.PatchAll();
+        Harmony.PatchAll();
     }
 
     public override void Disable()

@@ -9,10 +9,12 @@ namespace AdvancedMERTools;
 public class Config
 {
     public bool IsEnabled { get; set; } = true;
+
+    [Description("Whether debug logs are written to the console.")]
     public bool Debug { get; set; } = false;
 
-    [Description("The path to LabAPI audio files")]
-    public string AudioFolderPath { get; set; } = Path.Combine(PathManager.LabApi.FullName, "audio");
+    [Description("The path to AMERT audio files. Defaults to '.../SCP Secret Laboratory/LabAPI/audio'.")]
+    public string AudioFolderPath { get; set; } = "";
 
     //public bool ReplacementMode { get; set; } = true;
     //public List<string> DummyDoorInstallingMaps { get; set; } = new List<string>
