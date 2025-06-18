@@ -1,5 +1,4 @@
-﻿using ProjectMER.Features.Objects;
-using System;
+﻿using System;
 
 namespace AdvancedMERTools;
 
@@ -192,3 +191,65 @@ public enum SendType
 //    public KeycardPermissions KeycardPermissions;
 //    public string ObjectId;
 //}
+
+[Serializable]
+public enum EffectType
+{
+    None = 0,
+    AmnesiaItems,
+    AmnesiaVision,
+    Asphyxiated,
+    Bleeding,
+    Blinded,
+    Burned,
+    Concussed,
+    Corroding,
+    Deafened,
+    Decontaminating = 10,
+    Disabled,
+    Ensnared,
+    Exhausted,
+    Flashed,
+    Hemorrhage,
+    Invigorated,
+    BodyshotReduction,
+    Poisoned,
+    Scp207,
+    Invisible = 20,
+    SinkHole,
+    DamageReduction,
+    MovementBoost,
+    RainbowTaste,
+    SeveredHands,
+    Stained,
+    Vitality,
+    Hypothermia,
+    Scp1853,
+    CardiacArrest = 30,
+    InsufficientLighting,
+    SoundtrackMute,
+    SpawnProtected,
+    Traumatized,
+    AntiScp207,
+    Scanned,
+    PocketCorroding,
+    SilentWalk,
+    [Obsolete("Not functional in-game")]
+    Marshmallow,
+    Strangled = 40,
+    Ghostly,
+    FogControl,
+    Slowness,
+    Scp1344,
+    SeveredEyes,
+    PitDeath,
+    Blurred,
+    [Obsolete("Only availaible for Christmas and AprilFools.")]
+    BecomingFlamingo,
+    [Obsolete("Only availaible for Christmas and AprilFools.")]
+    Scp559,
+    [Obsolete("Only availaible for Christmas and AprilFools.")]
+    Scp956Target = 50,
+    [Obsolete("Only availaible for Christmas and AprilFools.")]
+    Snowed,
+}

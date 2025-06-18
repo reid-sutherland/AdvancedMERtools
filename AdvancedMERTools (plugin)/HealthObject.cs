@@ -167,7 +167,7 @@ public class HealthObject : AMERTInteractable, IDestructible
             ExplosionDamageHandler explosion = handler as ExplosionDamageHandler;
             if (firearm != null)
             {
-                if (Base.WhitelistWeapons.Count == 0 || Base.WhitelistWeapons.Any(x =>
+                if (Base.whitelistWeapons.Count == 0 || Base.whitelistWeapons.Any(x =>
                 {
                     if (Item.TryGet(attacker.CurrentItem.Base, out Item item))
                     {
@@ -189,7 +189,7 @@ public class HealthObject : AMERTInteractable, IDestructible
             }
             if (explosion != null)
             {
-                if (Base.WhitelistWeapons.Count != 0 && !Base.WhitelistWeapons.Any(x =>
+                if (Base.whitelistWeapons.Count != 0 && !Base.whitelistWeapons.Any(x =>
                 {
                     if (ExplosionDic.TryGetValue(explosion.ExplosionType, out ItemType item))
                     {
@@ -212,7 +212,7 @@ public class HealthObject : AMERTInteractable, IDestructible
         {
             return;
         }
-        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
+        if (Base.whitelistWeapons.Count != 0 && Base.whitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
         {
             return;
         }
@@ -224,7 +224,6 @@ public class HealthObject : AMERTInteractable, IDestructible
             float damage = ((AnimationCurve)info.GetValue(ev.TimedGrenade.Base as ExplosionGrenade)).Evaluate(distance);
             damage = BodyArmorUtils.ProcessDamage(Base.ArmorEfficient, damage, 50);
             CheckDead(ev.Player, damage);
-            Log.Debug($"HO: GrenadeHE hit player: {ev.Player.Nickname} - at distance: {distance} - for damage: {damage}");
         }
     }
 
@@ -343,7 +342,7 @@ public class FHealthObject : HealthObject
             ExplosionDamageHandler explosion = handler as ExplosionDamageHandler;
             if (firearm != null)
             {
-                if (Base.WhitelistWeapons.Count == 0 || Base.WhitelistWeapons.Any(x =>
+                if (Base.whitelistWeapons.Count == 0 || Base.whitelistWeapons.Any(x =>
                 {
                     if (Item.TryGet(attacker.CurrentItem.Base, out Item item))
                     {
@@ -365,7 +364,7 @@ public class FHealthObject : HealthObject
             }
             if (explosion != null)
             {
-                if (Base.WhitelistWeapons.Count != 0 && !Base.WhitelistWeapons.Any(x =>
+                if (Base.whitelistWeapons.Count != 0 && !Base.whitelistWeapons.Any(x =>
                 {
                     if (ExplosionDic.TryGetValue(explosion.ExplosionType, out ItemType item))
                     {
@@ -389,7 +388,7 @@ public class FHealthObject : HealthObject
             return;
         }
         FunctionArgument args = new(this, ev.Player);
-        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
+        if (Base.whitelistWeapons.Count != 0 && Base.whitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
         {
             return;
         }

@@ -13,7 +13,6 @@ using System.Linq;
 using System.IO;
 using UnityEngine;
 using Utils;
-using ProjectMER.Commands.Modifying.Position;
 
 namespace AdvancedMERTools;
 
@@ -127,7 +126,7 @@ public class HODTO : MDTO
     public float DeadActionDelay { get; set; }
     public float ResetHPTo { get; set; }
     public bool DoNotDestroyAfterDeath { get; set; }
-    public List<WhitelistWeapon> WhitelistWeapons { get; set; }
+    public List<WhitelistWeapon> whitelistWeapons { get; set; }
 }
 
 [Serializable]
@@ -140,7 +139,7 @@ public class FHODTO : FMDTO
     public ScriptValue DeadActionDelay { get; set; }
     public ScriptValue ResetHPTo { get; set; }
     public ScriptValue DoNotDestroyAfterDeath { get; set; }
-    public List<FWhitelistWeapon> WhitelistWeapons { get; set; }
+    public List<FWhitelistWeapon> whitelistWeapons { get; set; }
 }
 
 [Serializable]
@@ -476,9 +475,10 @@ public class EffectGivingModule : RandomExecutionModule
 {
     public EffectFlagE EffectFlag { get; set; }
     // TODO: Maybe at some point we could make an enum of all StatusEffectBase names... see EffectType in ValueCollection.cs
-    public string EffectType { get; set; }
+    //public string effectType { get; set; }
+    public EffectType effectType { get; set; }
     public SendType GivingTo { get; set; }
-    public byte Intensity { get; set; }
+    public byte Inensity { get; set; }
     public float Duration { get; set; }
 
     public override void Execute(ModuleGeneralArguments args)
@@ -489,9 +489,12 @@ public class EffectGivingModule : RandomExecutionModule
             {
                 args.Targets = GetTargets(GivingTo, args);
             }
+            // read the effect type as a string for LabAPI
+            string effectName = effectType.ToString();
+            Log.Debug($"Giving effect: {effectName} (intensity={Inensity}, duration={Duration}, effectFlag={EffectFlag})");
             foreach (Player player in args.Targets)
             {
-                if (player.TryGetEffect(EffectType, out StatusEffectBase effect))
+                if (player.TryGetEffect(effectName, out StatusEffectBase effect))
                 {
                     if (EffectFlag.HasFlag(EffectFlagE.Disable))
                     {
@@ -499,7 +502,7 @@ public class EffectGivingModule : RandomExecutionModule
                     }
                     else if (EffectFlag.HasFlag(EffectFlagE.Enable))
                     {
-                        byte intensity = Intensity;
+                        byte intensity = Inensity;
                         if (EffectFlag.HasFlag(EffectFlagE.ModifyIntensity))
                         {
                             intensity += effect.Intensity;
@@ -509,7 +512,7 @@ public class EffectGivingModule : RandomExecutionModule
                 }
                 else
                 {
-                    Log.Warn($"Attempted to modify effect '{EffectType}' on player '{player.Nickname}' but the effect does not exist");
+                    Log.Warn($"Attempted to modify effect '{effectName}' on player '{player.Nickname}' but the effect does not exist");
                 }
             }
         });
@@ -520,33 +523,36 @@ public class EffectGivingModule : RandomExecutionModule
 public class FEffectGivingModule : FRandomExecutionModule
 {
     public ScriptValue EffectFlag { get; set; }
-    public ScriptValue EffectType { get; set; }
+    public ScriptValue effectType { get; set; }
     public ScriptValue GivingTo { get; set; }
-    public ScriptValue Intensity { get; set; }
+    public ScriptValue Inensity { get; set; }
     public ScriptValue Duration { get; set; }
 
     public override void Execute(FunctionArgument args)
     {
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
-            EffectFlagE flag = EffectFlag.GetValue<EffectFlagE>(args, 0);
-            string effectName = EffectType.GetValue(args, "");
+            EffectFlagE effectFlag = EffectFlag.GetValue<EffectFlagE>(args, 0);
+            EffectType effectValue = effectType.GetValue<EffectType>(args, 0);
+            string effectName = effectValue.ToString();
+            byte intensity = (byte)Inensity.GetValue(args, 0);
+            float duration = Duration.GetValue(args, 0);
+            Log.Debug($"Giving effect: {effectName} (intensity={intensity}, duration={duration}, effectFlag={effectFlag})");
             foreach (Player player in GivingTo.GetValue(args, new Player[] { }))
             {
                 if (player.TryGetEffect(effectName, out StatusEffectBase effect))
                 {
-                    if (flag.HasFlag(EffectFlagE.Disable))
+                    if (effectFlag.HasFlag(EffectFlagE.Disable))
                     {
                         player.DisableEffect(effect);
                     }
-                    else if (flag.HasFlag(EffectFlagE.Enable))
+                    else if (effectFlag.HasFlag(EffectFlagE.Enable))
                     {
-                        byte intensity = (byte)Intensity.GetValue(args, 0);
-                        if (flag.HasFlag(EffectFlagE.ModifyIntensity))
+                        if (effectFlag.HasFlag(EffectFlagE.ModifyIntensity))
                         {
                             intensity += effect.Intensity;
                         }
-                        player.EnableEffect(effect, intensity, Duration.GetValue(args, 0), addDuration: flag.HasFlag(EffectFlagE.ModifyDuration));
+                        player.EnableEffect(effect, intensity, duration, addDuration: effectFlag.HasFlag(EffectFlagE.ModifyDuration));
                     }
                 }
                 else

@@ -1155,11 +1155,12 @@ public class EffectActionType : Value
 }
 
 [Serializable]
-public class EffectType : Value
+public class VEffectType : Value
 {
     // TODO: Maybe at some point we could make an enum of all StatusEffectBase names...
     //       For now it's just a placeholder that's really just a string
-    public string Value;
+    //public string Value;
+    public EffectType Value;
 
     public override void OnValidate()
     {

@@ -148,19 +148,16 @@ public class CustomCollider : AMERTInteractable
         {
             flag = true;
             target = pickup.LastOwner;
-            Log.Debug($"CC: pickup was detected: {pickup.Type} - target/lastOwner={target}");
         }
         if (Base.DetectType.HasFlag(DetectType.Player) && Player.TryGet(collider.gameObject, out target))
         {
             flag = target.Role.GetRoleBase().ActiveTime > 0.25f;
-            Log.Debug($"CC: player was detected: {target.Nickname} - activeTime={target.Role.GetRoleBase().ActiveTime}");
         }
         ThrownProjectile projectile = collider.GetComponentInParent<ThrownProjectile>();
         if (Base.DetectType.HasFlag(DetectType.Projectile) && projectile != null)
         {
             flag = true;
             target = Player.Get(projectile.PreviousOwner.Hub);
-            Log.Debug($"CC: projectile was detected: {projectile.name} ({projectile.GetType()} - target/prevOwner={target.Nickname}");
         }
         if (!flag)
         {
@@ -212,7 +209,7 @@ public class CustomCollider : AMERTInteractable
         {
             if (Base.ColliderActionType.HasFlag(type) && colliderActionExecutors.TryGetValue(type, out var execute))
             {
-                Log.Debug($"- CC: executing ColliderAction: {type}");
+                Log.Debug($"- CC: detected one of [{Base.DetectType.GetActiveFlagNames()}] - executing ColliderAction: {type}");
                 execute();
             }
         }
@@ -240,10 +237,6 @@ public class FCustomCollider : CustomCollider
         if (collider.gameObject.TryGetComponent(out ItemPickupBase ipb))
         {
             pickup = Pickup.Get(ipb);
-            if (pickup is null)
-            {
-                Log.Debug($"FCustomCollider: Pickup was not found in collider object's ItemPickupBase: {ipb.name}");
-            }
         }
 
         bool flag = false;

@@ -1,5 +1,4 @@
 ﻿using InventorySystem.Items.Pickups;
-using LabApi.Features.Extensions;
 using LabApi.Features.Wrappers;
 using System;
 using System.Collections.Generic;

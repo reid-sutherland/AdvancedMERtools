@@ -326,7 +326,7 @@ public class ScriptValue
         { ValueType.CollisionType, typeof(VCollisionType) },
         { ValueType.CollisionDetectTarget, typeof(CollisionDetectTarget) },
         { ValueType.EffectActionType, typeof(EffectActionType) },
-        { ValueType.EffectType, typeof(EffectType) },
+        { ValueType.EffectType, typeof(VEffectType) },
         { ValueType.TeleportInvokeType, typeof(VTeleportInvokeType) },
         { ValueType.WarheadActionType, typeof(VWarheadActionType) },
         { ValueType.AnimationActionType, typeof(AnimationActionType) },
