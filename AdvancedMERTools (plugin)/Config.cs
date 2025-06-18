@@ -1,15 +1,11 @@
-﻿using LabApi.Loader.Features.Paths;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 
 namespace AdvancedMERTools;
 
 public class Config
 {
-    public bool IsEnabled { get; set; } = true;
-
     [Description("Whether debug logs are written to the console.")]
     public bool Debug { get; set; } = false;
 

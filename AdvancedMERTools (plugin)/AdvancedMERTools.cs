@@ -23,9 +23,9 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override string Description => "AdvancedMERTools";
 
-    public override string Author => "MujisongPlay + DeadServer Team";
+    public override string Author => "DeadServer Team";
 
-    public override Version Version => new Version(2025, 6, 13, 1);
+    public override Version Version => new Version(0, 1, 0);
 
     public override Version RequiredApiVersion => new Version(1, 0, 2, 0);
 
@@ -41,7 +41,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public static string AudioDir => Singleton.Config.AudioFolderPath;
 
-    public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(69, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E);
+    public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(null, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E);
 
     // Tracked collections
 

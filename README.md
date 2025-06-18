@@ -1,6 +1,6 @@
-# How to Install AdvancedMERtools (AMERT)
+# AdvancedMERTools (AMERT)
 
-![image](https://github.com/Maciupek/AdvancedMERtools/blob/main/AMERT.png?raw=true)
+**Note: If you want to use schematics that were created with the old version of AMERT, prior to this LabAPI port, see the note about legacy releases at the bottom.**
 
 ## Installation Instructions
 
@@ -10,20 +10,46 @@ This version of the project now depends on the following:
 - [LabAPI](https://github.com/northwood-studios/LabAPI)
 - [AudioPlayerApi](https://github.com/Killers0992/AudioPlayerApi)
 
-### Main Plugin
+### Extra AMERT Tools (UnityEditor)
+![image](https://github.com/Maciupek/AdvancedMERtools/blob/main/AMERT.png?raw=true)
+1. Download the necessary files from the specified folder above.
+2. Drag and drop the files into the 'Project' tab in the Unity Editor. Preferably to `DONT TOUCH/Scripts`
+3. (LabAPI work in progress) In the release tab, you will find a plugin that facilitates the execution of functions and modeling for LCZ, HCZ, and EZ doors.
+
+### Main Plugin (Server)
 To add AMERT to your server:
 1. Download the AMERT .dll and the `dependencies.zip` from the [Releases](https://github.com/reid-sutherland/AdvancedMERtools/releases) page
 2. Place `AdvancedMERTools.dll` and `ProjectMER.dll` in `%APPDATA%\Roaming\SCP Secret Laboratory\LabAPI\plugins\global`
 3. Place `AudioPlayerApi.dll` and `Newtonsoft.Json.dll` in `%APPDATA%\Roaming\SCP Secret Laboratory\LabAPI\dependencies\global`
 4. If you are using any AMERT audio tools in the next section, place `AMERTAudioModule.dll` in `%APPDATA%\Roaming\SCP Secret Laboratory\LabAPI\dependencies\global`
 
-### Extra AMERT Tools
-1. Download the necessary files from the specified folder above.
-2. Drag and drop the files into the 'Project' tab in the Unity Editor. Preferably to `DONT TOUCH/Scripts`
-3. In the release tab, you will find a plugin that facilitates the execution of functions and modeling for LCZ, HCZ, and EZ doors.
+### Schematics
+This project uses schematics and other assets in the same way that ProjectMER does.
+1. Place schematic folders in `%APPDATA%\Roaming\SCP Secret Laboratory\LabAPI\configs\ProjectMER\Schematics` by default. This can be changed via PMER config.
+2. Place audio files (for GroovyNoises or other AMERT audio) in `%APPDATA%\Roaming\SCP Secret Laboratory\LabAPI\audio` by default. This can be changed via AMERT config.
+
+### Permissions
+If you are new to ProjectMER, see their github for documentation. In order to spawn schematics in-game, you need to set permissions for the desired roles. 
+The file for permissions can be found at `%APPDATA%\Roaming\SCP Secret Laboratory\LabAPI\configs\permissions.yml` by default.
+
+This example `permissions.yml` file grants the ability to use all PMER `mp` commands to admins and the server owner:
+```
+default:
+  inherited_groups: []
+  permissions: []
+admin:
+  inherited_groups: []
+  permissions:
+  - mpr.*
+owner:
+  inherited_groups: []
+  permissions:
+  - mpr.*
+```
 
 ## AdvancedMERtools Description
-AdvancedMERtools offers advanced tools for the SCP: SL plugin called MapEditorReborn (MER). Please download the tools from the folder mentioned above and integrate them into your project. We plan to add more features in the future.
+
+AdvancedMERtools offers advanced tools for the SCP: SL plugin called MapEditorReborn (formerly MER, now ProjectMER). We plan to add more features in the future.
 
 ### Features
 - **AutoScaler**: Scales grouped objects up or down automatically.
@@ -58,3 +84,13 @@ To build the project, you just need to define the following environment variable
 - "SL_REFERENCES" => "<SCPSL server path>\SCPSL_Data\Managed"
 
 Where <SCPSL server path> is the path to your SCPSL server folder. This is the same as "EXILED_REFERENCES" if you have developed EXILED plugins.
+
+## Note about legacy version (6/18/2025)
+To use schematics that were created with the old AMERT version, please use the legacy release. There are some limitations to this release that may not be compatible or function properly with 
+SCP: SL v14.1 and LabAPI >= v1.0.0. I do not plan on supporting the legacy version very much in the future. Schematics created with future versions will likely not be compatible with the legacy plugin in future versions, and 
+schematics created with the legacy version will likely not be compatible with the future plugin versions. More information about converting legacy schematics to the future versions will come soon. 
+
+Legacy release:
+Known limitations:
+- HealthObjects do not detect shooting events
+- Probably others :)
