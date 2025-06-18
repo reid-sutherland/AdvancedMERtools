@@ -86,11 +86,17 @@ To build the project, you just need to define the following environment variable
 Where <SCPSL server path> is the path to your SCPSL server folder. This is the same as "EXILED_REFERENCES" if you have developed EXILED plugins.
 
 ## Note about legacy version (6/18/2025)
-To use schematics that were created with the old AMERT version, please use the legacy release. There are some limitations to this release that may not be compatible or function properly with 
-SCP: SL v14.1 and LabAPI >= v1.0.0. I do not plan on supporting the legacy version very much in the future. Schematics created with future versions will likely not be compatible with the legacy plugin in future versions, and 
-schematics created with the legacy version will likely not be compatible with the future plugin versions. More information about converting legacy schematics to the future versions will come soon. 
+[Legacy release](https://github.com/reid-sutherland/AdvancedMERtools/releases/tag/v0.1.0)
 
-Legacy release:
+To use schematics that were created with the old AMERT version, please use the legacy release. This version should support older schematics that were created prior to this LabAPI port, and they should work
+on SCPSL v14.1 and LabAPI v1.0.2, aside from some limitations and bugs that exist in the port at the time of legacy release.
+
+There are some limitations to this release that may not be compatible or function properly with the current version of SCPSL. 
+I do not plan on supporting the legacy version very much in the future. Schematics created with future versions will likely not be compatible with the legacy plugin in future versions, and 
+schematics created with the legacy version will likely not be compatible with the future plugin versions. 
+
+More information about converting legacy schematics to the future versions will come soon. Hopefully soon I can create a PowerShell script that will update schematics to be compatible with future versions.
+
 Known limitations:
 - HealthObjects do not detect shooting events
 - Probably others :)
