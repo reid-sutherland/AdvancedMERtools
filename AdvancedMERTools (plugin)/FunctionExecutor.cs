@@ -1,5 +1,4 @@
-﻿using CustomPlayerEffects;
-using LabApi.Features.Wrappers;
+﻿using LabApi.Features.Wrappers;
 using ProjectMER.Features.Objects;
 using System;
 using System.Collections.Generic;
@@ -16,7 +15,7 @@ public class FunctionExecutor : AMERTInteractable
     {
         if (AdvancedMERTools.Singleton.FunctionExecutors[OSchematic].ContainsKey(Data.FunctionName))
         {
-            ServerConsole.AddLog($"WARNING! There's another function named: {Data.FunctionName}. Overlapped Function Name is not allowed!", ConsoleColor.Red);
+            Log.Error($"WARNING! There's another function named: {Data.FunctionName}. Overlapped Function Name is not allowed!");
             Destroy(this);
             return;
         }
@@ -43,7 +42,7 @@ public class FunctionArgument
     {
         Schematic = interactable.OSchematic;
         Transform = interactable.transform;
-        this.Player = player;
+        Player = player;
     }
 }
 
@@ -78,7 +77,9 @@ public class FEDTO : ActionsFunctioner
     {
         args.Function = this;
         if (!ConditionCheck(args, Conditions))
+        {
             return new FunctionReturn();
+        }
         return ExecuteActions(args, FunctionResult.Return);
     }
 }
@@ -92,17 +93,17 @@ public class ScriptAction
     public FunctionReturn Execute(FunctionArgument args)
     {
         if (Function == null)
+        {
             return null;
+        }
         if (!EnumToFunc.TryGetValue(ActionType, out _))
         {
-            switch (ActionType)
+            return ActionType switch
             {
-                case FunctionType.Break:
-                    return new FunctionReturn { Result = FunctionResult.Break };
-                case FunctionType.Continue:
-                    return new FunctionReturn { Result = FunctionResult.Continue };
-            }
-            return new FunctionReturn { Result = FunctionResult.FunctionCheck };
+                FunctionType.Break => new FunctionReturn { Result = FunctionResult.Break },
+                FunctionType.Continue => new FunctionReturn { Result = FunctionResult.Continue },
+                _ => new FunctionReturn { Result = FunctionResult.FunctionCheck },
+            };
         }
         return Function.Execute(args);
     }
@@ -111,7 +112,7 @@ public class ScriptAction
     {
     }
 
-    public static readonly Dictionary<FunctionType, Type> EnumToFunc = new Dictionary<FunctionType, Type>
+    public static readonly Dictionary<FunctionType, Type> EnumToFunc = new()
     {
         { FunctionType.If, typeof(If) },
         { FunctionType.ElseIf, typeof(ElseIf) },
@@ -195,21 +196,23 @@ public class ActionsFunctioner : Function
         Actions.ForEach(x => x.OnValidate());
     }
 
-    protected bool ConditionCheck(FunctionArgument args, object obj)
+    protected bool ConditionCheck(FunctionArgument args, object obj_)
     {
-        if (obj is ScriptValue)
+        if (obj_ is ScriptValue value)
         {
-            object obj2 = ((ScriptValue)obj).GetValue(args);
-            return obj2 != null && obj2 is bool && Convert.ToBoolean(obj2);
+            object obj = value.GetValue(args);
+            return obj != null && obj is bool && Convert.ToBoolean(obj);
         }
-        else if (obj is List<ScriptValue>)
+        else if (obj_ is List<ScriptValue> list)
         {
-            return ((List<ScriptValue>)obj).TrueForAll(x =>
+            return list.TrueForAll(x =>
             {
-                object obj2 = x.GetValue(args);
-                if (obj2 == null || !(obj2 is bool))
+                object obj = x.GetValue(args);
+                if (obj == null || obj is not bool)
+                {
                     return false;
-                return Convert.ToBoolean(obj2);
+                }
+                return Convert.ToBoolean(obj);
             });
         }
         return false;
@@ -223,7 +226,9 @@ public class ActionsFunctioner : Function
             if (Actions[i].ActionType == FunctionType.ElseIf || Actions[i].ActionType == FunctionType.Else)
             {
                 if (ifActed)
+                {
                     continue;
+                }
             }
             else
             {
@@ -237,6 +242,7 @@ public class ActionsFunctioner : Function
                 case FunctionResult.Return:
                     return v;
                 case FunctionResult.Wait:
+                    // TODO: Wait function is a no-op :)
                     //await Task.Delay(Mathf.RoundToInt(Convert.ToSingle(v.value) * 1000f));
                     break;
             }
@@ -264,7 +270,9 @@ public class ScriptValue
     public object GetValue(FunctionArgument args)
     {
         if (Value == null)
+        {
             return null;
+        }
         if (!EnumToV.TryGetValue(ValueType, out _))
         {
             switch (ValueType)
@@ -277,21 +285,29 @@ public class ScriptValue
         }
         return Value.GetValue(args);
     }
+
     public T GetValue<T>(FunctionArgument args, T def)
     {
         object obj = GetValue(args);
         if (obj == null)
+        {
             return def;
-
+        }
         if ((typeof(int) == typeof(T) || typeof(float) == typeof(T)) && (obj is int || obj is float))
         {
             if (typeof(int) == typeof(T))
+            {
                 return (T)(object)(obj is int ? Convert.ToInt32(obj) : Mathf.RoundToInt(Convert.ToSingle(obj)));
+            }
             else
+            {
                 return (T)(object)Convert.ToSingle(obj);
+            }
         }
-        if (obj is T)
-            return (T)obj;
+        if (obj is T t)
+        {
+            return t;
+        }
         return def;
     }
 
@@ -299,7 +315,7 @@ public class ScriptValue
     {
     }
 
-    public static readonly Dictionary<ValueType, Type> EnumToV = new Dictionary<ValueType, Type>
+    public static readonly Dictionary<ValueType, Type> EnumToV = new()
     {
         { ValueType.Integer, typeof(Integer) },
         { ValueType.Real, typeof(Real) },

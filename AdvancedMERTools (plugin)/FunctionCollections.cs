@@ -1,5 +1,4 @@
-﻿using LabApi.Features.Extensions;
-using LabApi.Features.Wrappers;
+﻿using LabApi.Features.Wrappers;
 using PlayerRoles;
 using System;
 using System.Collections.Generic;
@@ -138,7 +137,7 @@ public class ForEach : ActionsFunctioner
     public override FunctionReturn Execute(FunctionArgument args)
     {
         object obj = Array.GetValue(args);
-        if (obj == null || !(obj is object[]))
+        if (obj == null || obj is not object[])
         {
             return new FunctionReturn();
         }
@@ -243,12 +242,11 @@ public class CallFunction : Function
 
     public override void OnValidate()
     {
-        //FunctionModules.ForEach(x => x.OnValidate());
     }
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCFEModule.Execute(FunctionModules, args);
+        FRandomExecutionModule.Execute(FunctionModules, args);
         return new FunctionReturn();
     }
 }
@@ -265,7 +263,7 @@ public class CallGroovyNoise : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(Modules, args);
+        FRandomExecutionModule.Execute(Modules, args);
         return new FunctionReturn();
     }
 }
@@ -281,7 +279,7 @@ public class PlayAnimation : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(AnimationModules, args);
+        FRandomExecutionModule.Execute(AnimationModules, args);
         return new FunctionReturn();
     }
 }
@@ -297,7 +295,7 @@ public class SendMessage : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(MessageModules, args);
+        FRandomExecutionModule.Execute(MessageModules, args);
         return new FunctionReturn();
     }
 }
@@ -313,7 +311,7 @@ public class SendCommand : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(CommandModules, args);
+        FRandomExecutionModule.Execute(CommandModules, args);
         return new FunctionReturn();
     }
 }
@@ -329,7 +327,7 @@ public class DropItems : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(DropItemsModules, args);
+        FRandomExecutionModule.Execute(DropItemsModules, args);
         return new FunctionReturn();
     }
 }
@@ -345,7 +343,7 @@ public class Explode : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(ExplodeModules, args);
+        FRandomExecutionModule.Execute(ExplodeModules, args);
         return new FunctionReturn();
     }
 }
@@ -361,7 +359,7 @@ public class GiveEffect : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(EffectModules, args);
+        FRandomExecutionModule.Execute(EffectModules, args);
         return new FunctionReturn();
     }
 }
@@ -377,7 +375,7 @@ public class PlayAudio : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        FCGNModule.Execute(AudioModules, args);
+        FRandomExecutionModule.Execute(AudioModules, args);
         return new FunctionReturn();
     }
 }
@@ -414,7 +412,7 @@ public class ChangePlayerValue : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        Player p = this.Player.GetValue<Player>(args, null);
+        Player p = Player.GetValue<Player>(args, null);
         if (p == null)
         {
             return new FunctionReturn();
@@ -431,13 +429,15 @@ public class ChangePlayerValue : Function
         Vector3 vector = obj is Vector3 ? (Vector3)obj : Vector3.zero;
         ItemType it = obj is ItemType ? (ItemType)obj : ItemType.None;
         RoleTypeId roleType = obj is RoleTypeId ? (RoleTypeId)obj : RoleTypeId.ClassD;
+
+        // TODO: Address these issues
         switch (ValueType)
         {
             case PlayerUnaryOp.PlayerUnaryOpType.AHP:
                 p.ArtificialHealth = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Cuffer:
-                // TODO: Maybe set cuffer by invoking cuffing event
+                // Maybe set cuffer by invoking cuffing event
                 //p.Cuffer = player;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.CurrentItem:
@@ -447,7 +447,7 @@ public class ChangePlayerValue : Function
                 p.CustomInfo = str;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.CustomName:
-                // TODO: CustomName in player?
+                // CustomName in player?
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.DisplayNickname:
                 p.DisplayName = str;
@@ -483,7 +483,7 @@ public class ChangePlayerValue : Function
                 p.StaminaRemaining = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.UniqueRole:
-                // TODO: UniqueRole? from str
+                // UniqueRole? from str
                 //p.Role = str;
                 break;
         }
@@ -514,7 +514,7 @@ public class PlayerAction : Function
 
     public override FunctionReturn Execute(FunctionArgument args)
     {
-        Player p = this.Player.GetValue<Player>(args, null);
+        Player p = Player.GetValue<Player>(args, null);
         if (p == null)
         {
             return new FunctionReturn();
@@ -531,6 +531,7 @@ public class PlayerAction : Function
         Vector3 vector = obj is Vector3 ? (Vector3)obj : Vector3.zero;
         ItemType it = obj is ItemType ? (ItemType)obj : ItemType.None;
         RoleTypeId roleType = obj is RoleTypeId ? (RoleTypeId)obj : RoleTypeId.ClassD;
+
         switch (ActionType)
         {
             case PlayerActionType.DropItem:
@@ -591,6 +592,7 @@ public class ChangeEntityValue : Function
         Vector3 vector = obj is Vector3 ? (Vector3)obj : Vector3.zero;
         ItemType it = obj is ItemType ? (ItemType)obj : ItemType.None;
         RoleTypeId roleType = obj is RoleTypeId ? (RoleTypeId)obj : RoleTypeId.ClassD;
+
         switch (ValueType)
         {
             case EntityUnaryOp.EntityUnaryOpType.IsActive:

@@ -72,12 +72,12 @@ public class InteractableObject : AMERTInteractable
         var actionExecutors = new Dictionary<IPActionType, Action>
         {
             { IPActionType.Disappear, () => Destroy(this.gameObject, 0.1f) },
-            { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
-            { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
+            { IPActionType.Explode, () => RandomExecutionModule.Execute(Base.ExplodeModules, args) },
+            { IPActionType.PlayAnimation, () => RandomExecutionModule.Execute(Base.AnimationModules, args) },
             { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
-            { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
+            { IPActionType.SendMessage, () => RandomExecutionModule.Execute(Base.MessageModules, args) },
             { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
+            { IPActionType.SendCommand, () => RandomExecutionModule.Execute(Base.commandings, args) },
             {
                 IPActionType.UpgradeItem, () =>
                 {
@@ -99,10 +99,10 @@ public class InteractableObject : AMERTInteractable
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
-            { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
-            { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
+            { IPActionType.GiveEffect, () => RandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.PlayAudio, () => RandomExecutionModule.Execute(Base.AudioModules, args) },
+            { IPActionType.CallGroovieNoise, () => RandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+            { IPActionType.CallFunction, () => RandomExecutionModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {
@@ -191,17 +191,18 @@ public class FInteractableObject : InteractableObject
         var actionExecutors = new Dictionary<IPActionType, Action>
         {
             { IPActionType.Disappear, () => Destroy(this.gameObject, 0.1f) },
-            { IPActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
-            { IPActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
+            { IPActionType.Explode, () => FRandomExecutionModule.Execute(Base.ExplodeModules, args) },
+            { IPActionType.PlayAnimation, () => FRandomExecutionModule.Execute(Base.AnimationModules, args) },
             { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
-            { IPActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
+            { IPActionType.SendMessage, () => FRandomExecutionModule.Execute(Base.MessageModules, args) },
             { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
-            { IPActionType.UpgradeItem, () =>
+            { IPActionType.SendCommand, () => FRandomExecutionModule.Execute(Base.commandings, args) },
+            {
+                IPActionType.UpgradeItem, () =>
                 {
                     if (player.GameObject.TryGetComponent<Collider>(out Collider col))
                     {
-                        List<int> vs = new List<int>();
+                        List<int> vs = new();
                         Scp914Mode mode = Base.Scp914Mode.GetValue<Scp914Mode>(args, 0);
                         for (int j = 0; j < 5; j++)
                         {
@@ -218,10 +219,10 @@ public class FInteractableObject : InteractableObject
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
-            { IPActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
-            { IPActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { IPActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },
+            { IPActionType.GiveEffect, () => FRandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.PlayAudio, () => FRandomExecutionModule.Execute(Base.AudioModules, args) },
+            { IPActionType.CallGroovieNoise, () => FRandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+            { IPActionType.CallFunction, () => FRandomExecutionModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {

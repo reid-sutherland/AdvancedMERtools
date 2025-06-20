@@ -268,7 +268,7 @@ public class RandomExecutionModule
     {
         float chance = list.Sum(x => x.ChanceWeight);
         chance = UnityEngine.Random.Range(0f, chance);
-        List<T> output = new List<T> { };
+        List<T> output = new();
         foreach (T element in list)
         {
             if (element.ForceExecute)
@@ -299,7 +299,7 @@ public class RandomExecutionModule
 
     public static Player[] GetTargets(SendType type, ModuleGeneralArguments args)
     {
-        List<Player> targets = new List<Player> { };
+        List<Player> targets = new();
         if (type.HasFlag(SendType.AllExceptAboveOne))
         {
             targets.AddRange(Player.List.Where(x => x != args.Player));
@@ -336,7 +336,7 @@ public class FRandomExecutionModule
     {
         float chance = list.Sum(x => x.calcedWeight = x.ChanceWeight.GetValue(args, 0f));
         chance = UnityEngine.Random.Range(0f, chance);
-        List<T> output = new List<T> { };
+        List<T> output = new();
         foreach (T element in list)
         {
             if (element.ForceExecute.GetValue(args, false))
@@ -737,13 +737,13 @@ public class MessageModule : RandomExecutionModule
                 {
                     content = content.Replace(v, args.Interpolations[v](args.InterpolationsList));
                 }
-                catch (Exception _) { }
+                catch (Exception) { }
             }
             try
             {
                 content = ServerConsole.Singleton.NameFormatter.ProcessExpression(content);
             }
-            catch (Exception e) { }
+            catch (Exception) { }
             if (!args.TargetCalculated)
             {
                 args.Targets = GetTargets(SendType, args);
@@ -1084,15 +1084,17 @@ public class FCommanding : FRandomExecutionModule
 }
 
 ////////////////////////////////////////////////
-// Misc. Utility Classes
+// Miscellaneous Utility Classes
 ////////////////////////////////////////////////
 
 [Serializable]
 public class SVector3
 {
-    public float x;
-    public float y;
-    public float z;
+#pragma warning disable SA1300  // Element should begin with upper-case letter
+    public float x { get; set; }
+    public float y { get; set; }
+    public float z { get; set; }
+#pragma warning restore SA1300  // Element should begin with upper-case letter
 
     public static implicit operator Vector3(SVector3 sVector) => new(sVector.x, sVector.y, sVector.z);
 }

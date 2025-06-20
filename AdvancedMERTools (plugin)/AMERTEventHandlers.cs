@@ -262,7 +262,9 @@ public class AMERTEventHandlers : CustomEventsHandler
         }
     }
 
-    public void DataLoad<Tdto, Tclass>(string name, SchematicSpawnedEventArgs ev) where Tdto : AMERTDTO where Tclass : AMERTInteractable, new()
+    public void DataLoad<Tdto, Tclass>(string name, SchematicSpawnedEventArgs ev)
+        where Tdto : AMERTDTO
+        where Tclass : AMERTInteractable, new()
     {
         string path = Path.Combine(ev.Schematic.DirectoryPath, ev.Schematic.Name + $"-{name}.json");
         if (File.Exists(path))

@@ -85,16 +85,16 @@ public class InteractableTeleporter : AMERTInteractable
         var actionExecutors = new Dictionary<IPActionType, Action>
         {
             { IPActionType.Disappear, () => Destroy(gameObject, 0.1f) },
-            { IPActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
-            { IPActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
+            { IPActionType.Explode, () => RandomExecutionModule.Execute(Base.ExplodeModules, args) },
+            { IPActionType.PlayAnimation, () => RandomExecutionModule.Execute(Base.AnimationModules, args) },
             { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
-            { IPActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
+            { IPActionType.SendMessage, () => RandomExecutionModule.Execute(Base.MessageModules, args) },
             { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-            { IPActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
-            { IPActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
-            { IPActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { IPActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
+            { IPActionType.SendCommand, () => RandomExecutionModule.Execute(Base.commandings, args) },
+            { IPActionType.GiveEffect, () => RandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.PlayAudio, () => RandomExecutionModule.Execute(Base.AudioModules, args) },
+            { IPActionType.CallGroovieNoise, () => RandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+            { IPActionType.CallFunction, () => RandomExecutionModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (IPActionType type in Enum.GetValues(typeof(IPActionType)))
         {

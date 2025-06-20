@@ -195,15 +195,15 @@ public class CustomCollider : AMERTInteractable
                     }
                 }
             },
-            { ColliderActionType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
-            { ColliderActionType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
+            { ColliderActionType.Explode, () => RandomExecutionModule.Execute(Base.ExplodeModules, args) },
+            { ColliderActionType.PlayAnimation, () => RandomExecutionModule.Execute(Base.AnimationModules, args) },
             { ColliderActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
-            { ColliderActionType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
-            { ColliderActionType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-            { ColliderActionType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
-            { ColliderActionType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
-            { ColliderActionType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { ColliderActionType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
+            { ColliderActionType.SendMessage, () => RandomExecutionModule.Execute(Base.MessageModules, args) },
+            { ColliderActionType.SendCommand, () => RandomExecutionModule.Execute(Base.commandings, args) },
+            { ColliderActionType.GiveEffect, () => RandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { ColliderActionType.PlayAudio, () => RandomExecutionModule.Execute(Base.AudioModules, args) },
+            { ColliderActionType.CallGroovieNoise, () => RandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+            { ColliderActionType.CallFunction, () => RandomExecutionModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (ColliderActionType type in Enum.GetValues(typeof(ColliderActionType)))
         {
@@ -282,15 +282,15 @@ public class FCustomCollider : CustomCollider
                     }
                 }
             },
-            { ColliderActionType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
-            { ColliderActionType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
+            { ColliderActionType.Explode, () => FRandomExecutionModule.Execute(Base.ExplodeModules, args) },
+            { ColliderActionType.PlayAnimation, () => FRandomExecutionModule.Execute(Base.AnimationModules, args) },
             { ColliderActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
-            { ColliderActionType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
-            { ColliderActionType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
-            { ColliderActionType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
-            { ColliderActionType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
-            { ColliderActionType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
-            { ColliderActionType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },
+            { ColliderActionType.SendMessage, () => FRandomExecutionModule.Execute(Base.MessageModules, args) },
+            { ColliderActionType.SendCommand, () => FRandomExecutionModule.Execute(Base.commandings, args) },
+            { ColliderActionType.GiveEffect, () => FRandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { ColliderActionType.PlayAudio, () => FRandomExecutionModule.Execute(Base.AudioModules, args) },
+            { ColliderActionType.CallGroovieNoise, () => FRandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+            { ColliderActionType.CallFunction, () => FRandomExecutionModule.Execute(Base.FunctionToCall, args) },
         };
         foreach (ColliderActionType type in Enum.GetValues(typeof(ColliderActionType)))
         {

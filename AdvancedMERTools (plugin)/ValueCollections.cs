@@ -1,5 +1,4 @@
 ﻿using InventorySystem.Items.Pickups;
-using LabApi.Features.Extensions;
 using LabApi.Features.Wrappers;
 using MapGeneration;
 using PlayerRoles;
@@ -9,6 +8,8 @@ using System.Linq;
 using UnityEngine;
 
 namespace AdvancedMERTools;
+
+#pragma warning disable SA1401 // Field should be private
 
 [Serializable]
 public class Integer : Value
@@ -83,7 +84,7 @@ public class Compare : Value
         And,
         Or,
         Xor,
-        Not
+        Not,
     }
 
     public ScriptValue Value1;
@@ -98,60 +99,55 @@ public class Compare : Value
 
     public override object GetValue(FunctionArgument args)
     {
-        object v1 = Value1.GetValue(args);
-        object v2 = Value2.GetValue(args);
-        if (v1 == null || v2 == null)
-            return false;
-        if (Operator == CompareType.TypeEqual)
-            return v1.GetType() == v2.GetType();
-        if ((v1 is int || v1 is float) && (v2 is int || v2 is float))
+        object obj1 = Value1.GetValue(args);
+        object obj2 = Value2.GetValue(args);
+        if (obj1 == null || obj2 == null)
         {
-            float V1 = Convert.ToSingle(v1);
-            float V2 = Convert.ToSingle(v2);
-            switch (Operator)
-            {
-                case CompareType.Equal:
-                    return V1 == V2;
-                case CompareType.NotEqual:
-                    return V1 != V2;
-                case CompareType.Bigger:
-                    return V1 > V2;
-                case CompareType.BigOrEqual:
-                    return V1 >= V2;
-                case CompareType.Less:
-                    return V1 < V2;
-                case CompareType.LessOrEqual:
-                    return V1 <= V2;
-            }
             return false;
         }
-        if (v1 is bool && Operator == CompareType.Not)
-            return !Convert.ToBoolean(v1);
-        if (v1 is bool && v2 is bool)
+        if (Operator == CompareType.TypeEqual)
         {
-            bool V1 = Convert.ToBoolean(v1);
-            bool V2 = Convert.ToBoolean(v2);
-            switch (Operator)
+            return obj1.GetType() == obj2.GetType();
+        }
+
+        if ((obj1 is int || obj1 is float) && (obj2 is int || obj2 is float))
+        {
+            float v1 = Convert.ToSingle(obj1);
+            float v2 = Convert.ToSingle(obj2);
+            return Operator switch
             {
-                case CompareType.Equal:
-                case CompareType.BigOrEqual:
-                case CompareType.LessOrEqual:
-                    return V1 == V2;
-                case CompareType.NotEqual:
-                case CompareType.Xor:
-                    return V1 != V2;
-                case CompareType.And:
-                    return V1 && V2;
-                case CompareType.Or:
-                    return V1 || V2;
-            }
-            return false;
+                CompareType.Equal => v1 == v2,
+                CompareType.NotEqual => v1 != v2,
+                CompareType.Bigger => v1 > v2,
+                CompareType.BigOrEqual => v1 >= v2,
+                CompareType.Less => v1 < v2,
+                CompareType.LessOrEqual => v1 <= v2,
+                _ => (object)false,
+            };
+        }
+        if (obj1 is bool && Operator == CompareType.Not)
+        {
+            return !Convert.ToBoolean(obj1);
+        }
+
+        if (obj1 is bool && obj2 is bool)
+        {
+            bool v1 = Convert.ToBoolean(obj1);
+            bool v2 = Convert.ToBoolean(obj2);
+            return Operator switch
+            {
+                CompareType.Equal or CompareType.BigOrEqual or CompareType.LessOrEqual => v1 == v2,
+                CompareType.NotEqual or CompareType.Xor => v1 != v2,
+                CompareType.And => v1 && v2,
+                CompareType.Or => v1 || v2,
+                _ => (object)false,
+            };
         }
         if (Operator == CompareType.Equal || Operator == CompareType.NotEqual)
         {
-            if (v1.GetType() == v2.GetType())
+            if (obj1.GetType() == obj2.GetType())
             {
-                bool flag = v1.Equals(v2);
+                bool flag = obj1.Equals(obj2);
                 return Operator == CompareType.Equal ? flag : !flag;
             }
         }
@@ -185,7 +181,9 @@ public class Array : Value
     public override void OnValidate()
     {
         for (int i = 0; Values != null && i < Values.Length; i++)
+        {
             Values[i].OnValidate();
+        }
     }
 
     public override object GetValue(FunctionArgument args)
@@ -209,19 +207,18 @@ public class Variable : Value
     {
         string str = VariableName.GetValue<string>(args, null);
         if (str == null)
-            return null;
-        switch (Math.Min(3, Math.Max(0, AccessLevel.GetValue(args, 0))))
         {
-            case 0:
-                return args.FunctionVariables.TryGetValue(str, out object value) ? value : null;
-            case 1:
-                return args.Function.ScriptVariables.TryGetValue(str, out value) ? value : null;
-            case 2:
-                return AdvancedMERTools.Singleton.SchematicVariables[args.Function.OSchematic].TryGetValue(str, out value) ? value : null;
-            case 3:
-                return AdvancedMERTools.Singleton.RoundVariable.TryGetValue(str, out value) ? value : null;
+            return null;
         }
-        return null;
+
+        return Math.Min(3, Math.Max(0, AccessLevel.GetValue(args, 0))) switch
+        {
+            0 => args.FunctionVariables.TryGetValue(str, out object value) ? value : null,
+            1 => args.Function.ScriptVariables.TryGetValue(str, out object value) ? value : null,
+            2 => AdvancedMERTools.Singleton.SchematicVariables[args.Function.OSchematic].TryGetValue(str, out object value) ? value : null,
+            3 => AdvancedMERTools.Singleton.RoundVariable.TryGetValue(str, out object value) ? value : null,
+            _ => null,
+        };
     }
 }
 
@@ -255,7 +252,9 @@ public class VFunction : Value
     public override object GetValue(FunctionArgument args)
     {
         if (AdvancedMERTools.Singleton.FunctionExecutors[args.Function.OSchematic].TryGetValue(FunctionName.GetValue(args, ""), out FunctionExecutor function))
+        {
             return function.Data.Execute(new FunctionArgument { Arguments = this.Arguments.Select(x => x.GetValue(args)).ToList(), Player = args.Player }).Value;
+        }
         return null;
     }
 }
@@ -303,7 +302,7 @@ public class NumUnaryOp : Value
         Arccosine,
         Arctangent,
         Sigmoid,
-        IsPrimeNumber
+        IsPrimeNumber,
     }
 
     public NumUnaryOpType Operator;
@@ -318,57 +317,68 @@ public class NumUnaryOp : Value
     {
         object v = Value.GetValue(args);
         if (v == null)
+        {
             return 0;
+        }
+
         if (v is int || v is float)
         {
-            float V = Convert.ToSingle(v);
+            float f = Convert.ToSingle(v);
             switch (Operator)
             {
                 case NumUnaryOpType.Absolute:
-                    return Mathf.Abs(V);
+                    return Mathf.Abs(f);
                 case NumUnaryOpType.Arccosine:
-                    return Mathf.Acos(V);
+                    return Mathf.Acos(f);
                 case NumUnaryOpType.Arcsine:
-                    return Mathf.Asin(V);
+                    return Mathf.Asin(f);
                 case NumUnaryOpType.Arctangent:
-                    return Mathf.Atan(V);
+                    return Mathf.Atan(f);
                 case NumUnaryOpType.BinaryLog:
-                    return Mathf.Log(V, 2);
+                    return Mathf.Log(f, 2);
                 case NumUnaryOpType.Ceiling:
-                    return Mathf.Ceil(V);
+                    return Mathf.Ceil(f);
                 case NumUnaryOpType.CommonLog:
-                    return Mathf.Log10(V);
+                    return Mathf.Log10(f);
                 case NumUnaryOpType.Cosine:
-                    return Mathf.Cos(V);
+                    return Mathf.Cos(f);
                 case NumUnaryOpType.Exponential:
-                    return Mathf.Exp(V);
+                    return Mathf.Exp(f);
                 case NumUnaryOpType.Factorial:
-                    return CalcHelper.Fact(V);
+                    return CalcHelper.Fact(f);
                 case NumUnaryOpType.Floor:
-                    return Mathf.Floor(V);
+                    return Mathf.Floor(f);
                 case NumUnaryOpType.Inverse:
-                    return -V;
+                    return -f;
                 case NumUnaryOpType.IsPrimeNumber:
-                    if (Mathf.Round(V) != V)
+                    if (Mathf.Round(f) != f)
+                    {
                         return false;
-                    for (int i = 2; i * i <= V; i++)
-                        if (V % i == 0)
+                    }
+                    for (int i = 2; i * i <= f; i++)
+                    {
+                        if (f % i == 0)
+                        {
                             return false;
+                        }
+                    }
                     return true;
                 case NumUnaryOpType.NaturalLog:
-                    return Mathf.Log(V, Mathf.Exp(1));
+                    return Mathf.Log(f, Mathf.Exp(1));
                 case NumUnaryOpType.Reciprocal:
-                    if (V == 0)
+                    if (f == 0)
+                    {
                         return 0;
-                    return 1f / V;
+                    }
+                    return 1f / f;
                 case NumUnaryOpType.Round:
-                    return Mathf.Round(V);
+                    return Mathf.Round(f);
                 case NumUnaryOpType.Sigmoid:
-                    return 1f / (1f + Mathf.Exp(-V));
+                    return 1f / (1f + Mathf.Exp(-f));
                 case NumUnaryOpType.Sine:
-                    return Mathf.Sin(V);
+                    return Mathf.Sin(f);
                 case NumUnaryOpType.Tangent:
-                    return Mathf.Tan(V);
+                    return Mathf.Tan(f);
             }
         }
         return 0;
@@ -412,7 +422,10 @@ public class NumBinomialOp : Value
         object v1 = Value1.GetValue(args);
         object v2 = Value2.GetValue(args);
         if (v1 == null || v2 == null)
+        {
             return 0;
+        }
+
         if ((v1 is int || v1 is float) && (v2 is int || v2 is float))
         {
             float i = Convert.ToSingle(v1);
@@ -425,9 +438,13 @@ public class NumBinomialOp : Value
                     return CalcHelper.Fact(i) / Mathf.Max(CalcHelper.Fact(i - j) * CalcHelper.Fact(j), 1);
                 case NumBiOpType.Divide:
                     if (j == 0)
+                    {
                         return 0;
+                    }
                     if (v1 is int && v2 is int)
+                    {
                         return (int)i / (int)j;
+                    }
                     return i / j;
                 case NumBiOpType.GCD:
                     return CalcHelper.GCD(i, j);
@@ -441,7 +458,9 @@ public class NumBinomialOp : Value
                     return Mathf.Min(i, j);
                 case NumBiOpType.Modulo:
                     if (j == 0)
+                    {
                         return 0;
+                    }
                     return i % j;
                 case NumBiOpType.Multiply:
                     return i * j;
@@ -451,7 +470,9 @@ public class NumBinomialOp : Value
                     return Mathf.Pow(i, j);
                 case NumBiOpType.Random:
                     if (v1 is int && v2 is int)
+                    {
                         return UnityEngine.Random.Range((int)i, (int)j);
+                    }
                     return UnityEngine.Random.Range(i, j);
                 case NumBiOpType.Subtract:
                     return i - j;
@@ -459,29 +480,34 @@ public class NumBinomialOp : Value
         }
         return 0;
     }
-
 }
 
 public static class CalcHelper
 {
-    public static int Fact(float V)
+    public static int Fact(float v)
     {
-        V = Mathf.Round(V);
+        v = Mathf.Round(v);
         int pow = 1;
-        for (int i = 2; i <= V; i++)
+        for (int i = 2; i <= v; i++)
+        {
             pow *= i;
+        }
         return pow;
     }
 
-    public static int GCD(float a, float b)
+    public static int GCD(float a_, float b_)
     {
-        int A = Mathf.RoundToInt(a);
-        int B = Mathf.RoundToInt(b);
-        if (B == 0)
+        int a = Mathf.RoundToInt(a_);
+        int b = Mathf.RoundToInt(b_);
+        if (b == 0)
+        {
             return 0;
-        if (A % B == 0)
-            return B;
-        return GCD(B, A % B);
+        }
+        if (a % b == 0)
+        {
+            return b;
+        }
+        return GCD(b, a % b);
     }
 }
 
@@ -573,7 +599,7 @@ public class ArrBinomialOp : Value
         EvaluationRule.OnValidate();
     }
 
-    ArrBiOpType[] Prevaluate = new ArrBiOpType[] 
+    private readonly ArrBiOpType[] prevaluate = new ArrBiOpType[]
     {
         ArrBiOpType.AppendToArray,
         ArrBiOpType.Contains,
@@ -586,7 +612,7 @@ public class ArrBinomialOp : Value
         ArrBiOpType.Repeat,
         ArrBiOpType.Skip,
         ArrBiOpType.SkipLast,
-        ArrBiOpType.Union
+        ArrBiOpType.Union,
     };
 
     public override object GetValue(FunctionArgument args)
@@ -595,11 +621,14 @@ public class ArrBinomialOp : Value
         if (v != null && v is object[])
         {
             object[] a = v as object[];
-            if (Prevaluate.Contains(Operator))
+            if (prevaluate.Contains(Operator))
             {
                 object s = EvaluationRule.GetValue(args);
                 if (s == null)
+                {
                     return a;
+                }
+
                 switch (Operator)
                 {
                     case ArrBiOpType.AppendToArray:
@@ -607,12 +636,16 @@ public class ArrBinomialOp : Value
                     case ArrBiOpType.Contains:
                         return a.Contains(s);
                     case ArrBiOpType.DifferenceOfSets:
-                        if (!(s is object[]))
+                        if (s is not object[])
+                        {
                             return a;
+                        }
                         return a.Except(s as object[]).ToArray();
                     case ArrBiOpType.Disjoint:
-                        if (!(s is object[]))
+                        if (s is not object[])
+                        {
                             return a;
+                        }
                         return a.Union(s as object[]).Except(a.Intersect(s as object[])).ToArray();
                     case ArrBiOpType.ElementAt:
                         if (s is int || s is float)
@@ -625,8 +658,10 @@ public class ArrBinomialOp : Value
                     case ArrBiOpType.IndexOfElement:
                         return a.IndexOf(s);
                     case ArrBiOpType.Intersect:
-                        if (!(s is object[]))
+                        if (s is not object[])
+                        {
                             return a;
+                        }
                         return a.Intersect(s as object[]).ToArray();
                     case ArrBiOpType.RemoveFromArray:
                         return a.Except(new object[] { s }).ToArray();
@@ -636,13 +671,17 @@ public class ArrBinomialOp : Value
                             int r = Mathf.RoundToInt(Convert.ToSingle(s));
                             List<object> list = new List<object> { };
                             for (int i = 0; i < r; i++)
+                            {
                                 list.AddRange(a);
+                            }
                             return list.ToArray();
                         }
                         return a;
                     case ArrBiOpType.Skip:
                         if (s is int || s is float)
+                        {
                             return a.Skip(Mathf.RoundToInt(Convert.ToSingle(s))).ToArray();
+                        }
                         return a;
                     case ArrBiOpType.SkipLast:
                         if (s is int || s is float)
@@ -654,8 +693,10 @@ public class ArrBinomialOp : Value
                         }
                         return a;
                     case ArrBiOpType.Union:
-                        if (!(s is object[]))
+                        if (s is not object[])
+                        {
                             return a;
+                        }
                         return a.Union(s as object[]).ToArray();
                 }
             }
@@ -665,9 +706,13 @@ public class ArrBinomialOp : Value
                 for (int i = 0; i < a.Length; i++)
                 {
                     if (i == 0)
+                    {
                         args.Levels.Add((a[i], i));
+                    }
                     else
+                    {
                         args.Levels[args.Levels.Count - 1] = (a[i], i);
+                    }
                     evaluated[i] = EvaluationRule.GetValue(args);
                 }
                 args.Levels.RemoveAt(args.Levels.Count - 1);
@@ -681,34 +726,34 @@ public class ArrBinomialOp : Value
                         return evaluated;
                     case ArrBiOpType.Max:
                         int index = 0;
-                        float Max = float.MinValue;
+                        float max = float.MinValue;
                         for (int i = 0; i < a.Length; i++)
                         {
                             object ob = evaluated[i];
                             if (ob is int || ob is float)
                             {
                                 float ev = Convert.ToSingle(ob);
-                                if (ev > Max)
+                                if (ev > max)
                                 {
                                     index = i;
-                                    Max = ev;
+                                    max = ev;
                                 }
                             }
                         }
                         return a[index];
                     case ArrBiOpType.Min:
                         index = 0;
-                        Max = float.MaxValue;
+                        max = float.MaxValue;
                         for (int i = 0; i < a.Length; i++)
                         {
                             object ob = evaluated[i];
                             if (ob is int || ob is float)
                             {
                                 float ev = Convert.ToSingle(ob);
-                                if (ev < Max)
+                                if (ev < max)
                                 {
                                     index = i;
-                                    Max = ev;
+                                    max = ev;
                                 }
                             }
                         }
@@ -719,7 +764,9 @@ public class ArrBinomialOp : Value
                         {
                             object ob = evaluated[i];
                             if (ob is int || ob is float)
+                            {
                                 prod *= Convert.ToSingle(ob);
+                            }
                         }
                         return prod;
                     case ArrBiOpType.SortedArray:
@@ -731,7 +778,9 @@ public class ArrBinomialOp : Value
                         {
                             object ob = evaluated[i];
                             if (ob is int || ob is float)
+                            {
                                 prod += Convert.ToSingle(ob);
+                            }
                         }
                         return prod;
                     case ArrBiOpType.TrueForAll:
@@ -758,7 +807,7 @@ public class VecUnaryOp : Value
         Magnitude,
         Inverse,
         DirectionFromAngles,
-        AnglesFromDirection
+        AnglesFromDirection,
     }
 
     public VecUnaryOpType Operator;
@@ -773,26 +822,18 @@ public class VecUnaryOp : Value
     {
         object var = Vector.GetValue(args);
         Vector3 v = var == null || !(var is Vector3) ? Vector3.zero : (Vector3)var;
-        switch (Operator)
+        return Operator switch
         {
-            case VecUnaryOpType.X:
-                return v.x;
-            case VecUnaryOpType.Y:
-                return v.y;
-            case VecUnaryOpType.Z:
-                return v.z;
-            case VecUnaryOpType.Normalized:
-                return v == Vector3.zero ? Vector3.zero : v.normalized;
-            case VecUnaryOpType.Magnitude:
-                return v.magnitude;
-            case VecUnaryOpType.Inverse:
-                return new Vector3(-v.x, -v.y, -v.z);
-            case VecUnaryOpType.DirectionFromAngles:
-                return Quaternion.Euler(v) * Vector3.forward;
-            case VecUnaryOpType.AnglesFromDirection:
-                return v == Vector3.zero ? Vector3.zero : Quaternion.LookRotation(v, Vector3.up).eulerAngles;
-        }
-        return Vector3.zero;
+            VecUnaryOpType.X => v.x,
+            VecUnaryOpType.Y => v.y,
+            VecUnaryOpType.Z => v.z,
+            VecUnaryOpType.Normalized => v == Vector3.zero ? Vector3.zero : v.normalized,
+            VecUnaryOpType.Magnitude => v.magnitude,
+            VecUnaryOpType.Inverse => new Vector3(-v.x, -v.y, -v.z),
+            VecUnaryOpType.DirectionFromAngles => Quaternion.Euler(v) * Vector3.forward,
+            VecUnaryOpType.AnglesFromDirection => v == Vector3.zero ? Vector3.zero : Quaternion.LookRotation(v, Vector3.up).eulerAngles,
+            _ => Vector3.zero,
+        };
     }
 }
 
@@ -829,11 +870,12 @@ public class VecBinomialOp : Value
         object var1 = Value1.GetValue(args);
         object var2 = Value2.GetValue(args);
         if (var1 == null || var2 == null)
-            return null;
-        if (var1 is Vector3 && var2 is Vector3)
         {
-            Vector3 v1 = (Vector3)var1;
-            Vector3 v2 = (Vector3)var2;
+            return null;
+        }
+
+        if (var1 is Vector3 v1 && var2 is Vector3 v2)
+        {
             switch (Operator)
             {
                 case VecBiOpType.Add:
@@ -858,26 +900,24 @@ public class VecBinomialOp : Value
                     return v1 - v2;
             }
         }
-        else if ((var1 is int || var2 is float) && var2 is Vector3)
+        else if ((var1 is int || var1 is float) && var2 is Vector3 v3)
         {
-            Vector3 v1 = (Vector3)var2;
             float val = Convert.ToSingle(var1);
             switch (Operator)
             {
                 case VecBiOpType.Multiply:
-                    return v1 * val;
+                    return val * v3;
             }
         }
-        else if ((var2 is int || var2 is float) && var1 is Vector3)
+        else if ((var2 is int || var2 is float) && var1 is Vector3 v4)
         {
-            Vector3 v1 = (Vector3)var1;
             float val = Convert.ToSingle(var2);
             switch (Operator)
             {
                 case VecBiOpType.Multiply:
-                    return v1 * val;
+                    return v4 * val;
                 case VecBiOpType.Divide:
-                    return v1 / val;
+                    return v4 / val;
             }
         }
         return null;
@@ -900,7 +940,7 @@ public class StrUnaryOp : Value
         ToReal,
         ToCharArray,
         ToPlayerAsName,
-        ToItemAsName
+        ToItemAsName,
     }
 
     public StrUnaryOpType Operator;
@@ -925,9 +965,9 @@ public class StrUnaryOp : Value
             case StrUnaryOpType.ToCharArray:
                 return str.ToCharArray();
             case StrUnaryOpType.ToInteger:
-                return int.TryParse(str, out int Vi) ? Vi : 0;
+                return int.TryParse(str, out int v_i) ? v_i : 0;
             case StrUnaryOpType.ToReal:
-                return float.TryParse(str, out float Vf) ? Vf : 0f;
+                return float.TryParse(str, out float v_f) ? v_f : 0f;
             case StrUnaryOpType.Trim:
                 return str.Trim();
             case StrUnaryOpType.Upper:
@@ -936,10 +976,14 @@ public class StrUnaryOp : Value
                 char[] vs = str.ToCharArray();
                 for (int i = 0; i < vs.Length; i++)
                 {
-                    if ('A' <= vs[i] && vs[i] <= 'Z')
+                    if (vs[i] >= 'A' && vs[i] <= 'Z')
+                    {
                         vs[i] = (char)(vs[i] - 'A' + 'a');
-                    else if ('a' <= vs[i] && vs[i] <= 'z')
+                    }
+                    else if (vs[i] >= 'a' && vs[i] <= 'z')
+                    {
                         vs[i] = (char)(vs[i] - 'a' + 'A');
+                    }
                 }
                 return new string(vs);
             case StrUnaryOpType.ToPlayerAsName:
@@ -950,7 +994,9 @@ public class StrUnaryOp : Value
                 return null;
             case StrUnaryOpType.ToItemAsName:
                 if (Enum.TryParse(str, out ItemType type))
+                {
                     return type;
+                }
                 return null;
         }
         return str;
@@ -985,8 +1031,11 @@ public class StrBinomialOp : Value
     {
         object v1 = String.GetValue(args);
         object v2 = EvaluationRule.GetValue(args);
-        if (v1 == null || !(v1 is string))
+        if (v1 == null || v1 is not string)
+        {
             return null;
+        }
+
         string str = Convert.ToString(v1);
         if (v2 is int || v2 is float)
         {
@@ -996,7 +1045,9 @@ public class StrBinomialOp : Value
                 case StrBinomialOpType.Repeat:
                     System.Text.StringBuilder sb = new System.Text.StringBuilder();
                     for (int i = 0; i < f; i++)
+                    {
                         sb.Append(str);
+                    }
                     return sb.ToString();
                 case StrBinomialOpType.Skip:
                     return new string(str.Skip(Mathf.RoundToInt(f)).ToArray());
@@ -1028,7 +1079,7 @@ public class ArrayEvaluateHelper : Value
     public enum AEVHelperType
     {
         CurrentEvaluateElement,
-        CurrentEvaluateIndex
+        CurrentEvaluateIndex,
     }
 
     public AEVHelperType Value;
@@ -1059,7 +1110,7 @@ public class ConstValue : Value
         E,
         GoldenRatio,
         C,
-        TheAnswerToLifeTheUniverseAndEverything
+        TheAnswerToLifeTheUniverseAndEverything,
     }
 
     public ConstValueType Value;
@@ -1070,20 +1121,14 @@ public class ConstValue : Value
 
     public override object GetValue(FunctionArgument args)
     {
-        switch (Value)
+        return Value switch
         {
-            case ConstValueType.C:
-                return 299792458;
-            case ConstValueType.E:
-                return Mathf.Exp(1);
-            case ConstValueType.GoldenRatio:
-                return (1f + (float)Math.Pow(5, 0.5)) / 2f;
-            case ConstValueType.PI:
-                return Mathf.PI;
-            case ConstValueType.TheAnswerToLifeTheUniverseAndEverything:
-            default:
-                return 42;
-        }
+            ConstValueType.C => 299792458,
+            ConstValueType.E => Mathf.Exp(1),
+            ConstValueType.GoldenRatio => (1f + (float)Math.Pow(5, 0.5)) / 2f,
+            ConstValueType.PI => Mathf.PI,
+            _ => (object)42,
+        };
     }
 }
 
@@ -1091,6 +1136,8 @@ public class ConstValue : Value
 public class EvaluateOnce : Value
 {
     public ScriptValue Value;
+    private bool flag = false;
+    private object valued = null;
 
     public override void OnValidate()
     {
@@ -1100,13 +1147,13 @@ public class EvaluateOnce : Value
     public override object GetValue(FunctionArgument args)
     {
         if (flag)
+        {
             return valued;
+        }
+
         flag = true;
         return valued = Value.GetValue(args);
     }
-
-    bool flag = false;
-    object valued = null;
 }
 
 [Serializable]
@@ -1275,36 +1322,23 @@ public class PlayerArray : Value
 
     public override object GetValue(FunctionArgument args)
     {
-        switch (ArrayType)
+        return ArrayType switch
         {
-            case PlayerArrayType.AlivePlayers:
-                return Player.List.Where(x => x.IsAlive).ToArray();
-            case PlayerArrayType.AllPlayers:
-                return Player.List.ToArray();
-            case PlayerArrayType.AntiFoundationSide:
-                return Player.List.Where(x => x.Team.GetFaction() == Faction.FoundationEnemy).ToArray();
-            case PlayerArrayType.Chaos:
-                return Player.List.Where(x => x.Team == Team.ChaosInsurgency).ToArray();
-            case PlayerArrayType.Dclass:
-                return Player.List.Where(x => x.Team == Team.ClassD).ToArray();
-            case PlayerArrayType.FoundationSide:
-                return Player.List.Where(x => x.Team.GetFaction() == Faction.FoundationStaff).ToArray();
-            case PlayerArrayType.Guards:
-                return Player.List.Where(x => x.Role == RoleTypeId.FacilityGuard).ToArray();
-            case PlayerArrayType.Humans:
-                return Player.List.Where(x => x.IsHuman).ToArray();
-            case PlayerArrayType.Mtfs:
-                return Player.List.Where(x => x.Team == Team.FoundationForces && x.Role != RoleTypeId.FacilityGuard).ToArray();
-            case PlayerArrayType.Scientist:
-                return Player.List.Where(x => x.Team == Team.Scientists).ToArray();
-            case PlayerArrayType.Scps:
-                return Player.List.Where(x => x.Team == Team.SCPs).ToArray();
-            case PlayerArrayType.ScpsExcludeScp0492:
-                return Player.List.Where(x => x.Team == Team.SCPs && x.Role != RoleTypeId.Scp0492).ToArray();
-            case PlayerArrayType.Spectators:
-                return Player.List.Where(x => x.Role == RoleTypeId.Spectator).ToArray();
-        }
-        return null;
+            PlayerArrayType.AlivePlayers => Player.List.Where(x => x.IsAlive).ToArray(),
+            PlayerArrayType.AllPlayers => Player.List.ToArray(),
+            PlayerArrayType.AntiFoundationSide => Player.List.Where(x => x.Team.GetFaction() == Faction.FoundationEnemy).ToArray(),
+            PlayerArrayType.Chaos => Player.List.Where(x => x.Team == Team.ChaosInsurgency).ToArray(),
+            PlayerArrayType.Dclass => Player.List.Where(x => x.Team == Team.ClassD).ToArray(),
+            PlayerArrayType.FoundationSide => Player.List.Where(x => x.Team.GetFaction() == Faction.FoundationStaff).ToArray(),
+            PlayerArrayType.Guards => Player.List.Where(x => x.Role == RoleTypeId.FacilityGuard).ToArray(),
+            PlayerArrayType.Humans => Player.List.Where(x => x.IsHuman).ToArray(),
+            PlayerArrayType.Mtfs => Player.List.Where(x => x.Team == Team.FoundationForces && x.Role != RoleTypeId.FacilityGuard).ToArray(),
+            PlayerArrayType.Scientist => Player.List.Where(x => x.Team == Team.Scientists).ToArray(),
+            PlayerArrayType.Scps => Player.List.Where(x => x.Team == Team.SCPs).ToArray(),
+            PlayerArrayType.ScpsExcludeScp0492 => Player.List.Where(x => x.Team == Team.SCPs && x.Role != RoleTypeId.Scp0492).ToArray(),
+            PlayerArrayType.Spectators => Player.List.Where(x => x.Role == RoleTypeId.Spectator).ToArray(),
+            _ => null,
+        };
     }
 }
 
@@ -1316,7 +1350,7 @@ public class SingleTarget : Value
         EventPlayer,
         SchematicEntity,
         ScriptEntity,
-    };
+    }
 
     public SingleTargetType TargetType;
 
@@ -1326,16 +1360,13 @@ public class SingleTarget : Value
 
     public override object GetValue(FunctionArgument args)
     {
-        switch (TargetType)
+        return TargetType switch
         {
-            case SingleTargetType.EventPlayer:
-                return args.Player;
-            case SingleTargetType.SchematicEntity:
-                return args.Schematic.gameObject;
-            case SingleTargetType.ScriptEntity:
-                return args.Transform.gameObject;
-        }
-        return null;
+            SingleTargetType.EventPlayer => args.Player,
+            SingleTargetType.SchematicEntity => args.Schematic.gameObject,
+            SingleTargetType.ScriptEntity => args.Transform.gameObject,
+            _ => null,
+        };
     }
 }
 
@@ -1409,26 +1440,22 @@ public class ItemUnaryOp : Value
         Item item = ItemOrPickup.GetValue<Item>(args, null);
         if (item != null)
         {
-            switch (Operator)
+            return Operator switch
             {
-                case ItemUnaryOpType.ItemType:
-                    return item.Type;
-                case ItemUnaryOpType.Owner:
-                    return item.CurrentOwner;
-            }
-            return null;
+                ItemUnaryOpType.ItemType => item.Type,
+                ItemUnaryOpType.Owner => item.CurrentOwner,
+                _ => null,
+            };
         }
         ItemPickupBase pickup = ItemOrPickup.GetValue<ItemPickupBase>(args, null);
         if (pickup != null)
         {
-            switch (Operator)
+            return Operator switch
             {
-                case ItemUnaryOpType.ItemType:
-                    return pickup.Info.ItemId;
-                case ItemUnaryOpType.PrevOwner:
-                    return pickup.PreviousOwner;
-            }
-            return null;
+                ItemUnaryOpType.ItemType => pickup.Info.ItemId,
+                ItemUnaryOpType.PrevOwner => pickup.PreviousOwner,
+                _ => null,
+            };
         }
         return null;
     }
@@ -1495,104 +1522,59 @@ public class PlayerUnaryOp : Value
     {
         Player p = Player.GetValue<Player>(args, null);
         if (p == null)
-            return null;
-        switch (Operator)
         {
-            case PlayerUnaryOpType.AHP:
-                return p.ArtificialHealth;
-            case PlayerUnaryOpType.Cuffer:
-                // TODO: LabAPI has cuffing events but no cuffed/cuffer status on player
-                //return p.Cuffer;
-                return null;
-            case PlayerUnaryOpType.CurrentItem:
-                return p.CurrentItem;
-            case PlayerUnaryOpType.CurrentSpectatingPlayers:
-                return LabApi.Features.Wrappers.Player.List.Where(x => x.Role == RoleTypeId.Spectator).ToArray();
-            case PlayerUnaryOpType.CustomInfo:
-                return p.CustomInfo;
-            case PlayerUnaryOpType.CustomName:
-                // TODO: Not 100% sure if this is what's intended by CustomName
-                return p.ReferenceHub.nicknameSync.CombinedName;
-            case PlayerUnaryOpType.DisplayNickname:
-                return p.Nickname;
-            case PlayerUnaryOpType.EntityObject:
-                return p.GameObject;
-            case PlayerUnaryOpType.FacingDirection:
-                return p.Camera.forward;
-            case PlayerUnaryOpType.GroupName:
-                return p.GroupName;
-            case PlayerUnaryOpType.HP:
-                return p.Health;
-            case PlayerUnaryOpType.HumeShield:
-                return p.HumeShield;
-            case PlayerUnaryOpType.Id:
-                return p.PlayerId;
-            case PlayerUnaryOpType.IsAlive:
-                return p.IsAlive;
-            case PlayerUnaryOpType.IsCHI:
-                // No idea what CHI is
-                return false;
-            case PlayerUnaryOpType.IsCuffed:
-                // TODO: See cuff not above
-                return false;
-            case PlayerUnaryOpType.IsDead:
-                return !p.IsAlive;
-            case PlayerUnaryOpType.IsFFon:
-                return Server.FriendlyFire;
-            case PlayerUnaryOpType.IsFoundationSide:
-                return p.Team.GetFaction() == Faction.FoundationStaff;
-            case PlayerUnaryOpType.IsHuman:
-                return p.IsHuman;
-            case PlayerUnaryOpType.IsInPocketDimension:
-                return p.Room.Name == RoomName.Pocket;
-            case PlayerUnaryOpType.IsInventoryEmpty:
-                return p.IsWithoutItems;
-            case PlayerUnaryOpType.IsInventoryFull:
-                return p.IsInventoryFull;
-            case PlayerUnaryOpType.IsJumping:
-                // TODO: Has events but no player flag
-                return false;
-            case PlayerUnaryOpType.IsNPC:
-                return p.IsNpc;
-            case PlayerUnaryOpType.IsNTF:
-                return p.IsNTF;
-            case PlayerUnaryOpType.IsReloading:
-                // TODO: Has events but no player flag
-                //return p.CurrentItem != null && p.CurrentItem.Category == ItemCategory.Firearm && (p.CurrentItem as FirearmItem).IsReloading;
-                return false;
-            case PlayerUnaryOpType.IsScp:
-                return p.IsSCP;
-            case PlayerUnaryOpType.IsSpeaking:
-                return p.IsSpeaking;
-            case PlayerUnaryOpType.IsTutorial:
-                return p.IsTutorial;
-            case PlayerUnaryOpType.IsUsingStamina:
-                // TODO: No events or player flag, must be somewhere in builtin game code
-                return false;
-            case PlayerUnaryOpType.Items:
-                return p.Items.ToArray();
-            case PlayerUnaryOpType.MaxAHP:
-                return p.MaxArtificialHealth;
-            case PlayerUnaryOpType.MaxHP:
-                return p.MaxHealth;
-            case PlayerUnaryOpType.MaxHumeShield:
-                return p.MaxHumeShield;
-            case PlayerUnaryOpType.Position:
-                return p.Position;
-            case PlayerUnaryOpType.Role:
-                return p.Role;
-            case PlayerUnaryOpType.Scale:
-                return p.GameObject.transform.localScale;
-            case PlayerUnaryOpType.Stamina:
-                return p.StaminaRemaining;
-            case PlayerUnaryOpType.UniqueRole:
-                // TODO: UniqueRole?
-                //return p.Role.GetRoleBase().RoleName;
-                return p.Role;
-            case PlayerUnaryOpType.Velocity:
-                return p.Velocity;
+            return null;
         }
-        return p;
+
+        // TODO: Some of these definitely need to be addressed
+        return Operator switch
+        {
+            PlayerUnaryOpType.AHP => p.ArtificialHealth,
+            PlayerUnaryOpType.Cuffer => null,                                                   // LabAPI has cuffing events but no cuffed/cuffer status on player
+                                                                                                //return p.Cuffer;
+            PlayerUnaryOpType.CurrentItem => p.CurrentItem,
+            PlayerUnaryOpType.CurrentSpectatingPlayers => LabApi.Features.Wrappers.Player.List.Where(x => x.Role == RoleTypeId.Spectator).ToArray(),
+            PlayerUnaryOpType.CustomInfo => p.CustomInfo,
+            PlayerUnaryOpType.CustomName => p.ReferenceHub.nicknameSync.CombinedName,           // Not 100% sure if this is what's intended by CustomName
+            PlayerUnaryOpType.DisplayNickname => p.Nickname,
+            PlayerUnaryOpType.EntityObject => p.GameObject,
+            PlayerUnaryOpType.FacingDirection => p.Camera.forward,
+            PlayerUnaryOpType.GroupName => p.GroupName,
+            PlayerUnaryOpType.HP => p.Health,
+            PlayerUnaryOpType.HumeShield => p.HumeShield,
+            PlayerUnaryOpType.Id => p.PlayerId,
+            PlayerUnaryOpType.IsAlive => p.IsAlive,
+            PlayerUnaryOpType.IsCHI => false,                                                   // No idea what CHI is
+            PlayerUnaryOpType.IsCuffed => false,                                                // See cuff above
+            PlayerUnaryOpType.IsDead => !p.IsAlive,
+            PlayerUnaryOpType.IsFFon => Server.FriendlyFire,
+            PlayerUnaryOpType.IsFoundationSide => p.Team.GetFaction() == Faction.FoundationStaff,
+            PlayerUnaryOpType.IsHuman => p.IsHuman,
+            PlayerUnaryOpType.IsInPocketDimension => p.Room.Name == RoomName.Pocket,
+            PlayerUnaryOpType.IsInventoryEmpty => p.IsWithoutItems,
+            PlayerUnaryOpType.IsInventoryFull => p.IsInventoryFull,
+            PlayerUnaryOpType.IsJumping => false,                                               // Has events but no player flag
+            PlayerUnaryOpType.IsNPC => p.IsNpc,
+            PlayerUnaryOpType.IsNTF => p.IsNTF,
+            PlayerUnaryOpType.IsReloading => false,                                             // Has events but no player flag
+                                                                                                //return p.CurrentItem != null && p.CurrentItem.Category == ItemCategory.Firearm && (p.CurrentItem as FirearmItem).IsReloading;
+            PlayerUnaryOpType.IsScp => p.IsSCP,
+            PlayerUnaryOpType.IsSpeaking => p.IsSpeaking,
+            PlayerUnaryOpType.IsTutorial => p.IsTutorial,
+            PlayerUnaryOpType.IsUsingStamina => false,                                          // No events or player flag, must be somewhere in builtin game code
+            PlayerUnaryOpType.Items => p.Items.ToArray(),
+            PlayerUnaryOpType.MaxAHP => p.MaxArtificialHealth,
+            PlayerUnaryOpType.MaxHP => p.MaxHealth,
+            PlayerUnaryOpType.MaxHumeShield => p.MaxHumeShield,
+            PlayerUnaryOpType.Position => p.Position,
+            PlayerUnaryOpType.Role => p.Role,
+            PlayerUnaryOpType.Scale => p.GameObject.transform.localScale,
+            PlayerUnaryOpType.Stamina => p.StaminaRemaining,
+            PlayerUnaryOpType.UniqueRole => p.Role,                                             // UniqueRole?
+                                                                                                //return p.Role.GetRoleBase().RoleName;
+            PlayerUnaryOpType.Velocity => p.Velocity,
+            _ => p,
+        };
     }
 }
 
@@ -1624,28 +1606,19 @@ public class EntityUnaryOp : Value
     public override object GetValue(FunctionArgument args)
     {
         GameObject game = Entity.GetValue<GameObject>(args, null);
-        switch (Operator)
+        return Operator switch
         {
-            case EntityUnaryOpType.ChildCount:
-                return game.transform.childCount;
-            case EntityUnaryOpType.IsActive:
-                return game.activeInHierarchy;
-            case EntityUnaryOpType.Name:
-                return game.name;
-            case EntityUnaryOpType.Parent:
-                return game.transform.parent;
-            case EntityUnaryOpType.Position:
-                return game.transform.position;
-            case EntityUnaryOpType.Rotation:
-                return game.transform.rotation.eulerAngles;
-            case EntityUnaryOpType.Scale:
-                return game.transform.localScale;
-            case EntityUnaryOpType.ToItemPickup:
-                return game.GetComponent<Pickup>();
-            case EntityUnaryOpType.ToPlayer:
-                return Player.Get(game);
-        }
-        return game;
+            EntityUnaryOpType.ChildCount => game.transform.childCount,
+            EntityUnaryOpType.IsActive => game.activeInHierarchy,
+            EntityUnaryOpType.Name => game.name,
+            EntityUnaryOpType.Parent => game.transform.parent,
+            EntityUnaryOpType.Position => game.transform.position,
+            EntityUnaryOpType.Rotation => game.transform.rotation.eulerAngles,
+            EntityUnaryOpType.Scale => game.transform.localScale,
+            EntityUnaryOpType.ToItemPickup => game.GetComponent<Pickup>(),
+            EntityUnaryOpType.ToPlayer => Player.Get(game),
+            _ => game,
+        };
     }
 }
 
@@ -1657,7 +1630,7 @@ public class EntityBinomialOp : Value
     {
         GetChildAt,
         WorldToLocal,
-        LocalToWorld
+        LocalToWorld,
     }
 
     public EntityBinomialOpType Operator;
@@ -1674,12 +1647,15 @@ public class EntityBinomialOp : Value
     {
         GameObject game = Entity.GetValue<GameObject>(args, null);
         if (game == null)
+        {
             return null;
+        }
+
         switch (Operator)
         {
             case EntityBinomialOpType.GetChildAt:
-                int T = Value.GetValue(args, 0);
-                return game.transform.GetChild(T);
+                int t = Value.GetValue(args, 0);
+                return game.transform.GetChild(t);
             case EntityBinomialOpType.LocalToWorld:
                 Vector3 vec = Value.GetValue(args, Vector3.zero);
                 return game.transform.TransformPoint(vec);
@@ -1690,3 +1666,5 @@ public class EntityBinomialOp : Value
         return null;
     }
 }
+
+#pragma warning restore SA1401 // Field should be private

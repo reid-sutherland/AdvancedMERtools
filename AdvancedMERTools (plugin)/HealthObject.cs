@@ -21,7 +21,7 @@ public class Healther : NetworkBehaviour, IDestructible
     {
         get
         {
-            return base.netId;
+            return netId;
         }
     }
 
@@ -92,7 +92,7 @@ public class HealthObject : AMERTInteractable, IDestructible
     {
         get
         {
-            return base.netId;
+            return netId;
         }
     }
 
@@ -265,7 +265,7 @@ public class HealthObject : AMERTInteractable, IDestructible
                         }
                     },
                     { DeadType.DynamicDisappearing, () => MakeNonStatic(gameObject) },
-                    { DeadType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
+                    { DeadType.Explode, () => RandomExecutionModule.Execute(Base.ExplodeModules, args) },
                     {
                         DeadType.ResetHP, () =>
                         {
@@ -273,15 +273,15 @@ public class HealthObject : AMERTInteractable, IDestructible
                             IsAlive = true;
                         }
                     },
-                    { DeadType.PlayAnimation, () => AnimationDTO.Execute(Base.AnimationModules, args) },
+                    { DeadType.PlayAnimation, () => RandomExecutionModule.Execute(Base.AnimationModules, args) },
                     { DeadType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
-                    { DeadType.SendMessage, () => MessageModule.Execute(Base.MessageModules, args) },
+                    { DeadType.SendMessage, () => RandomExecutionModule.Execute(Base.MessageModules, args) },
                     { DeadType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-                    { DeadType.SendCommand, () => Commanding.Execute(Base.commandings, args) },
-                    { DeadType.GiveEffect, () => EffectGivingModule.Execute(Base.effectGivingModules, args) },
-                    { DeadType.PlayAudio, () => AudioModule.Execute(Base.AudioModules, args) },
-                    { DeadType.CallGroovieNoise, () => CGNModule.Execute(Base.GroovieNoiseToCall, args) },
-                    { DeadType.CallFunction, () => CFEModule.Execute(Base.FunctionToCall, args) },
+                    { DeadType.SendCommand, () => RandomExecutionModule.Execute(Base.commandings, args) },
+                    { DeadType.GiveEffect, () => RandomExecutionModule.Execute(Base.effectGivingModules, args) },
+                    { DeadType.PlayAudio, () => RandomExecutionModule.Execute(Base.AudioModules, args) },
+                    { DeadType.CallGroovieNoise, () => RandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+                    { DeadType.CallFunction, () => RandomExecutionModule.Execute(Base.FunctionToCall, args) },
                 };
                 foreach (DeadType type in Enum.GetValues(typeof(DeadType)))
                 {
@@ -424,7 +424,7 @@ public class FHealthObject : HealthObject
                         }
                     },
                     { DeadType.DynamicDisappearing, () => MakeNonStatic(gameObject) },
-                    { DeadType.Explode, () => FExplodeModule.Execute(Base.ExplodeModules, args) },
+                    { DeadType.Explode, () => FRandomExecutionModule.Execute(Base.ExplodeModules, args) },
                     {
                         DeadType.ResetHP, () =>
                         {
@@ -433,15 +433,15 @@ public class FHealthObject : HealthObject
                             IsAlive = true;
                         }
                     },
-                    { DeadType.PlayAnimation, () => FAnimationDTO.Execute(Base.AnimationModules, args) },
+                    { DeadType.PlayAnimation, () => FRandomExecutionModule.Execute(Base.AnimationModules, args) },
                     { DeadType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
-                    { DeadType.SendMessage, () => FMessageModule.Execute(Base.MessageModules, args) },
+                    { DeadType.SendMessage, () => FRandomExecutionModule.Execute(Base.MessageModules, args) },
                     { DeadType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-                    { DeadType.SendCommand, () => FCommanding.Execute(Base.commandings, args) },
-                    { DeadType.GiveEffect, () => FEffectGivingModule.Execute(Base.effectGivingModules, args) },
-                    { DeadType.PlayAudio, () => FAudioModule.Execute(Base.AudioModules, args) },
-                    { DeadType.CallGroovieNoise, () => FCGNModule.Execute(Base.GroovieNoiseToCall, args) },
-                    { DeadType.CallFunction, () => FCFEModule.Execute(Base.FunctionToCall, args) },
+                    { DeadType.SendCommand, () => FRandomExecutionModule.Execute(Base.commandings, args) },
+                    { DeadType.GiveEffect, () => FRandomExecutionModule.Execute(Base.effectGivingModules, args) },
+                    { DeadType.PlayAudio, () => FRandomExecutionModule.Execute(Base.AudioModules, args) },
+                    { DeadType.CallGroovieNoise, () => FRandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
+                    { DeadType.CallFunction, () => FRandomExecutionModule.Execute(Base.FunctionToCall, args) },
                 };
                 foreach (DeadType type in Enum.GetValues(typeof(DeadType)))
                 {
