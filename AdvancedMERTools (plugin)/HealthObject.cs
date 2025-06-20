@@ -167,7 +167,7 @@ public class HealthObject : AMERTInteractable, IDestructible
             ExplosionDamageHandler explosion = handler as ExplosionDamageHandler;
             if (firearm != null)
             {
-                if (Base.whitelistWeapons.Count == 0 || Base.whitelistWeapons.Any(x =>
+                if (Base.WhitelistWeapons.Count == 0 || Base.WhitelistWeapons.Any(x =>
                 {
                     if (Item.TryGet(attacker.CurrentItem.Base, out Item item))
                     {
@@ -189,7 +189,7 @@ public class HealthObject : AMERTInteractable, IDestructible
             }
             if (explosion != null)
             {
-                if (Base.whitelistWeapons.Count != 0 && !Base.whitelistWeapons.Any(x =>
+                if (Base.WhitelistWeapons.Count != 0 && !Base.WhitelistWeapons.Any(x =>
                 {
                     if (ExplosionDic.TryGetValue(explosion.ExplosionType, out ItemType item))
                     {
@@ -212,7 +212,7 @@ public class HealthObject : AMERTInteractable, IDestructible
         {
             return;
         }
-        if (Base.whitelistWeapons.Count != 0 && Base.whitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
+        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId == 0 && x.ItemType == ItemType.GrenadeHE) == null)
         {
             return;
         }
@@ -274,11 +274,11 @@ public class HealthObject : AMERTInteractable, IDestructible
                         }
                     },
                     { DeadType.PlayAnimation, () => RandomExecutionModule.Execute(Base.AnimationModules, args) },
-                    { DeadType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
+                    { DeadType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
                     { DeadType.SendMessage, () => RandomExecutionModule.Execute(Base.MessageModules, args) },
-                    { DeadType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-                    { DeadType.SendCommand, () => RandomExecutionModule.Execute(Base.commandings, args) },
-                    { DeadType.GiveEffect, () => RandomExecutionModule.Execute(Base.effectGivingModules, args) },
+                    { DeadType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
+                    { DeadType.SendCommand, () => RandomExecutionModule.Execute(Base.Commandings, args) },
+                    { DeadType.GiveEffect, () => RandomExecutionModule.Execute(Base.EffectGivingModules, args) },
                     { DeadType.PlayAudio, () => RandomExecutionModule.Execute(Base.AudioModules, args) },
                     { DeadType.CallGroovieNoise, () => RandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
                     { DeadType.CallFunction, () => RandomExecutionModule.Execute(Base.FunctionToCall, args) },
@@ -342,7 +342,7 @@ public class FHealthObject : HealthObject
             ExplosionDamageHandler explosion = handler as ExplosionDamageHandler;
             if (firearm != null)
             {
-                if (Base.whitelistWeapons.Count == 0 || Base.whitelistWeapons.Any(x =>
+                if (Base.WhitelistWeapons.Count == 0 || Base.WhitelistWeapons.Any(x =>
                 {
                     if (Item.TryGet(attacker.CurrentItem.Base, out Item item))
                     {
@@ -364,7 +364,7 @@ public class FHealthObject : HealthObject
             }
             if (explosion != null)
             {
-                if (Base.whitelistWeapons.Count != 0 && !Base.whitelistWeapons.Any(x =>
+                if (Base.WhitelistWeapons.Count != 0 && !Base.WhitelistWeapons.Any(x =>
                 {
                     if (ExplosionDic.TryGetValue(explosion.ExplosionType, out ItemType item))
                     {
@@ -388,7 +388,7 @@ public class FHealthObject : HealthObject
             return;
         }
         FunctionArgument args = new(this, ev.Player);
-        if (Base.whitelistWeapons.Count != 0 && Base.whitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
+        if (Base.WhitelistWeapons.Count != 0 && Base.WhitelistWeapons.Find(x => x.CustomItemId.GetValue(args, 0) == 0 && x.ItemType.GetValue(args, ItemType.None) == ItemType.GrenadeHE) == null)
         {
             return;
         }
@@ -434,11 +434,11 @@ public class FHealthObject : HealthObject
                         }
                     },
                     { DeadType.PlayAnimation, () => FRandomExecutionModule.Execute(Base.AnimationModules, args) },
-                    { DeadType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+                    { DeadType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
                     { DeadType.SendMessage, () => FRandomExecutionModule.Execute(Base.MessageModules, args) },
-                    { DeadType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-                    { DeadType.SendCommand, () => FRandomExecutionModule.Execute(Base.commandings, args) },
-                    { DeadType.GiveEffect, () => FRandomExecutionModule.Execute(Base.effectGivingModules, args) },
+                    { DeadType.DropItems, () => FDropItem.Execute(Base.DropItems, args) },
+                    { DeadType.SendCommand, () => FRandomExecutionModule.Execute(Base.Commandings, args) },
+                    { DeadType.GiveEffect, () => FRandomExecutionModule.Execute(Base.EffectGivingModules, args) },
                     { DeadType.PlayAudio, () => FRandomExecutionModule.Execute(Base.AudioModules, args) },
                     { DeadType.CallGroovieNoise, () => FRandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
                     { DeadType.CallFunction, () => FRandomExecutionModule.Execute(Base.FunctionToCall, args) },

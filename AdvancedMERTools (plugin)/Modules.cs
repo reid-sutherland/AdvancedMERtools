@@ -89,14 +89,13 @@ public class AMERTDTO
 // Module DTO with common fields
 public class MDTO : AMERTDTO
 {
-    // TODO: It triggers me, but for backwards compatibility's sake, reverting back to certain camel case names for now
     public List<AnimationDTO> AnimationModules { get; set; }
-    public WarheadActionType warheadActionType { get; set; }
+    public WarheadActionType WarheadActionType { get; set; }
     public List<MessageModule> MessageModules { get; set; }
-    public List<DropItem> dropItems { get; set; }
-    public List<Commanding> commandings { get; set; }
+    public List<DropItem> DropItems { get; set; }
+    public List<Commanding> Commandings { get; set; }
     public List<ExplodeModule> ExplodeModules { get; set; }
-    public List<EffectGivingModule> effectGivingModules { get; set; }
+    public List<EffectGivingModule> EffectGivingModules { get; set; }
     public List<AudioModule> AudioModules { get; set; }
     public List<CGNModule> GroovieNoiseToCall { get; set; }
     public List<CFEModule> FunctionToCall { get; set; }
@@ -105,12 +104,12 @@ public class MDTO : AMERTDTO
 public class FMDTO : AMERTDTO
 {
     public List<FAnimationDTO> AnimationModules { get; set; }
-    public ScriptValue warheadActionType { get; set; }
+    public ScriptValue WarheadActionType { get; set; }
     public List<FMessageModule> MessageModules { get; set; }
-    public List<FDropItem> dropItems { get; set; }
-    public List<FCommanding> commandings { get; set; }
+    public List<FDropItem> DropItems { get; set; }
+    public List<FCommanding> Commandings { get; set; }
     public List<FExplodeModule> ExplodeModules { get; set; }
-    public List<FEffectGivingModule> effectGivingModules { get; set; }
+    public List<FEffectGivingModule> EffectGivingModules { get; set; }
     public List<FAudioModule> AudioModules { get; set; }
     public List<FCGNModule> GroovieNoiseToCall { get; set; }
     public List<FCFEModule> FunctionToCall { get; set; }
@@ -126,7 +125,7 @@ public class HODTO : MDTO
     public float DeadActionDelay { get; set; }
     public float ResetHPTo { get; set; }
     public bool DoNotDestroyAfterDeath { get; set; }
-    public List<WhitelistWeapon> whitelistWeapons { get; set; }
+    public List<WhitelistWeapon> WhitelistWeapons { get; set; }
 }
 
 [Serializable]
@@ -139,7 +138,7 @@ public class FHODTO : FMDTO
     public ScriptValue DeadActionDelay { get; set; }
     public ScriptValue ResetHPTo { get; set; }
     public ScriptValue DoNotDestroyAfterDeath { get; set; }
-    public List<FWhitelistWeapon> whitelistWeapons { get; set; }
+    public List<FWhitelistWeapon> WhitelistWeapons { get; set; }
 }
 
 [Serializable]

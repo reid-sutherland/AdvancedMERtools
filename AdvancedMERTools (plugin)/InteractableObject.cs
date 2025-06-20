@@ -74,10 +74,10 @@ public class InteractableObject : AMERTInteractable
             { IPActionType.Disappear, () => Destroy(this.gameObject, 0.1f) },
             { IPActionType.Explode, () => RandomExecutionModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => RandomExecutionModule.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType) },
             { IPActionType.SendMessage, () => RandomExecutionModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => DropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => RandomExecutionModule.Execute(Base.commandings, args) },
+            { IPActionType.DropItems, () => DropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => RandomExecutionModule.Execute(Base.Commandings, args) },
             {
                 IPActionType.UpgradeItem, () =>
                 {
@@ -99,7 +99,7 @@ public class InteractableObject : AMERTInteractable
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => RandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.GiveEffect, () => RandomExecutionModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => RandomExecutionModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => RandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
             { IPActionType.CallFunction, () => RandomExecutionModule.Execute(Base.FunctionToCall, args) },
@@ -193,10 +193,10 @@ public class FInteractableObject : InteractableObject
             { IPActionType.Disappear, () => Destroy(this.gameObject, 0.1f) },
             { IPActionType.Explode, () => FRandomExecutionModule.Execute(Base.ExplodeModules, args) },
             { IPActionType.PlayAnimation, () => FRandomExecutionModule.Execute(Base.AnimationModules, args) },
-            { IPActionType.Warhead, () => AlphaWarhead(Base.warheadActionType.GetValue<WarheadActionType>(args, 0)) },
+            { IPActionType.Warhead, () => AlphaWarhead(Base.WarheadActionType.GetValue<WarheadActionType>(args, 0)) },
             { IPActionType.SendMessage, () => FRandomExecutionModule.Execute(Base.MessageModules, args) },
-            { IPActionType.DropItems, () => FDropItem.Execute(Base.dropItems, args) },
-            { IPActionType.SendCommand, () => FRandomExecutionModule.Execute(Base.commandings, args) },
+            { IPActionType.DropItems, () => FDropItem.Execute(Base.DropItems, args) },
+            { IPActionType.SendCommand, () => FRandomExecutionModule.Execute(Base.Commandings, args) },
             {
                 IPActionType.UpgradeItem, () =>
                 {
@@ -219,7 +219,7 @@ public class FInteractableObject : InteractableObject
                     }
                 }
             },
-            { IPActionType.GiveEffect, () => FRandomExecutionModule.Execute(Base.effectGivingModules, args) },
+            { IPActionType.GiveEffect, () => FRandomExecutionModule.Execute(Base.EffectGivingModules, args) },
             { IPActionType.PlayAudio, () => FRandomExecutionModule.Execute(Base.AudioModules, args) },
             { IPActionType.CallGroovieNoise, () => FRandomExecutionModule.Execute(Base.GroovieNoiseToCall, args) },
             { IPActionType.CallFunction, () => FRandomExecutionModule.Execute(Base.FunctionToCall, args) },
