@@ -10,6 +10,7 @@ using RemoteAdmin;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 
@@ -113,6 +114,7 @@ public class AdvancedMERTools : Plugin<Config>
         ICommand command1;
         if (CommandProcessor.RemoteAdminCommandHandler.TryGetCommand(array[0], out command1))
         {
+            Log.Debug($"Executing command: $ {command1.Command} {string.Join(" ", array.Segment(1).ToArray())}");
             command1.Execute(array.Segment(1), ServerConsole.Scs, out _);
         }
     }
