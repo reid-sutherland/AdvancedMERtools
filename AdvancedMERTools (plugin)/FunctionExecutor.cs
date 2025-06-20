@@ -342,7 +342,7 @@ public class ScriptValue
         { ValueType.CollisionType, typeof(VCollisionType) },
         { ValueType.CollisionDetectTarget, typeof(CollisionDetectTarget) },
         { ValueType.EffectActionType, typeof(EffectActionType) },
-        { ValueType.EffectType, typeof(VEffectType) },
+        { ValueType.EffectName, typeof(EffectName) },
         { ValueType.TeleportInvokeType, typeof(VTeleportInvokeType) },
         { ValueType.WarheadActionType, typeof(VWarheadActionType) },
         { ValueType.AnimationActionType, typeof(AnimationActionType) },
@@ -391,7 +391,8 @@ public enum ValueType
     CollisionType,
     CollisionDetectTarget,
     EffectActionType,
-    EffectType,
+    // TODO: Does EffectType -> EffectName affect existing jsons?
+    EffectName,
     TeleportInvokeType,
     WarheadActionType,
     AnimationActionType,

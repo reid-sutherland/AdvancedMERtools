@@ -473,9 +473,7 @@ public class FGMDTO : FRandomExecutionModule
 public class EffectGivingModule : RandomExecutionModule
 {
     public EffectFlagE EffectFlag { get; set; }
-    // TODO: Maybe at some point we could make an enum of all StatusEffectBase names... see EffectType in ValueCollection.cs
-    //public string effectType { get; set; }
-    public EffectType effectType { get; set; }
+    public string EffectName { get; set; }
     public SendType GivingTo { get; set; }
     public byte Inensity { get; set; }
     public float Duration { get; set; }
@@ -488,12 +486,10 @@ public class EffectGivingModule : RandomExecutionModule
             {
                 args.Targets = GetTargets(GivingTo, args);
             }
-            // read the effect type as a string for LabAPI
-            string effectName = effectType.ToString();
-            Log.Debug($"Giving effect: {effectName} (intensity={Inensity}, duration={Duration}, effectFlag={EffectFlag})");
+            Log.Debug($"Giving effect: {EffectName} (intensity={Inensity}, duration={Duration}, effectFlag={EffectFlag})");
             foreach (Player player in args.Targets)
             {
-                if (player.TryGetEffect(effectName, out StatusEffectBase effect))
+                if (player.TryGetEffect(EffectName, out StatusEffectBase effect))
                 {
                     if (EffectFlag.HasFlag(EffectFlagE.Disable))
                     {
@@ -511,7 +507,7 @@ public class EffectGivingModule : RandomExecutionModule
                 }
                 else
                 {
-                    Log.Warn($"Attempted to modify effect '{effectName}' on player '{player.Nickname}' but the effect does not exist");
+                    Log.Warn($"Attempted to modify effect '{EffectName}' on player '{player.Nickname}' but the effect does not exist");
                 }
             }
         });
@@ -522,7 +518,7 @@ public class EffectGivingModule : RandomExecutionModule
 public class FEffectGivingModule : FRandomExecutionModule
 {
     public ScriptValue EffectFlag { get; set; }
-    public ScriptValue effectType { get; set; }
+    public ScriptValue EffectName { get; set; }
     public ScriptValue GivingTo { get; set; }
     public ScriptValue Inensity { get; set; }
     public ScriptValue Duration { get; set; }
@@ -532,8 +528,7 @@ public class FEffectGivingModule : FRandomExecutionModule
         MEC.Timing.CallDelayed(ActionDelay.GetValue(args, 0f), () =>
         {
             EffectFlagE effectFlag = EffectFlag.GetValue<EffectFlagE>(args, 0);
-            EffectType effectValue = effectType.GetValue<EffectType>(args, 0);
-            string effectName = effectValue.ToString();
+            string effectName = EffectName.GetValue(args, "");
             byte intensity = (byte)Inensity.GetValue(args, 0);
             float duration = Duration.GetValue(args, 0);
             Log.Debug($"Giving effect: {effectName} (intensity={intensity}, duration={duration}, effectFlag={effectFlag})");
