@@ -41,6 +41,7 @@ public class InteractableObject : AMERTInteractable
         }
         else
         {
+            ServerSpecificSettingsSync.DefinedSettings ??= new ServerSpecificSettingBase[0];
             ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode)).ToArray();
             ServerSpecificSettingsSync.SendToAll();
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
