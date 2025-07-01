@@ -34,17 +34,20 @@ public class InteractableObject : AMERTInteractable
     {
         this.Base = base.Base as IODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
-        Log.Debug($"Adding interactable object: {gameObject.name} ({OSchematic.Name})");
+        Log.Debug($"Adding InteractableObject: {gameObject.name} ({OSchematic.Name})");
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
         }
         else
         {
-            ServerSpecificSettingsSync.DefinedSettings ??= new ServerSpecificSettingBase[0];
-            ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode)).ToArray();
-            ServerSpecificSettingsSync.SendToAll();
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
+            if (Base.InputKeyCode != (int)ServerSettings.IODefaultKeySetting.SuggestedKey)
+            {
+                Log.Debug($"-- adding new IOKeybind setting for key: {(KeyCode)Base.InputKeyCode}");
+                ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode)).ToArray();
+                ServerSpecificSettingsSync.SendToAll();
+            }
         }
     }
 
@@ -144,40 +147,20 @@ public class FInteractableObject : InteractableObject
     {
         this.Base = ((AMERTInteractable)this).Base as FIODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
+        Log.Debug($"Adding FInteractableObject: {gameObject.name} ({OSchematic.Name})");
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
         }
         else
         {
-            List<ServerSpecificSettingBase> original = ServerSpecificSettingsSync.DefinedSettings.ToList();
-            int index = original.FindIndex(x => x is SSGroupHeader && x.Label.Equals("AMERT Keybinds"));
-            bool flag = false;
-            SSKeybindSetting key = new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode);
-            if (index == -1)
-            {
-                original.Add(new SSGroupHeader("AMERT Keybinds"));
-            }
-            else
-            {
-                for (index++; index < original.Count; index++)
-                {
-                    if (original[index].Label == null || !original[index].Label.StartsWith("AMERT"))
-                    {
-                        flag = true;
-                        original.Insert(index, key);
-                        break;
-                    }
-                }
-            }
-            if (!flag)
-            {
-                original.Add(key);
-            }
-
-            ServerSpecificSettingsSync.DefinedSettings = original.ToArray();
-            ServerSpecificSettingsSync.SendToAll();
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
+            if (Base.InputKeyCode != (int)ServerSettings.IODefaultKeySetting.SuggestedKey)
+            {
+                Log.Debug($"-- adding new FIOKeybind setting for key: {(KeyCode)Base.InputKeyCode}");
+                ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode)).ToArray();
+                ServerSpecificSettingsSync.SendToAll();
+            }
         }
     }
 

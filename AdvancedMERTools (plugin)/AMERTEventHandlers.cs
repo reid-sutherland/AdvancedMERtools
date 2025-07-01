@@ -127,6 +127,11 @@ public class AMERTEventHandlers : CustomEventsHandler
 
     // The rest can just be overrided from CustomEventsHandler
 
+    public override void OnServerRoundStarted()
+    {
+        ServerSettings.RegisterSettings();
+    }
+
     public override void OnServerMapGenerated(MapGeneratedEventArgs ev)
     {
         AdvancedMERTools.Singleton.HealthObjects.Clear();
