@@ -437,8 +437,7 @@ public class ChangePlayerValue : Function
                 p.ArtificialHealth = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.Cuffer:
-                // TODO: Maybe set cuffer by invoking cuffing event
-                //p.Cuffer = player;
+                p.DisarmedBy = player;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.CurrentItem:
                 p.CurrentItem = item;
@@ -447,7 +446,7 @@ public class ChangePlayerValue : Function
                 p.CustomInfo = str;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.CustomName:
-                // TODO: CustomName in player?
+                p.DisplayName = str;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.DisplayNickname:
                 p.DisplayName = str;
@@ -483,9 +482,10 @@ public class ChangePlayerValue : Function
                 p.StaminaRemaining = real;
                 break;
             case PlayerUnaryOp.PlayerUnaryOpType.UniqueRole:
+                throw new NotImplementedException($"UniqueRole for ChangePlayerValue is not yet supported");
                 // TODO: UniqueRole? from str
                 //p.Role = str;
-                break;
+                //break;
         }
         return new FunctionReturn();
     }
