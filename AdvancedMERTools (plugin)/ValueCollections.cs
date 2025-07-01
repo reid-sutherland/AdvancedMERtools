@@ -1,5 +1,4 @@
 ﻿using InventorySystem.Items.Pickups;
-using LabApi.Features.Extensions;
 using LabApi.Features.Wrappers;
 using MapGeneration;
 using PlayerRoles;
@@ -1501,9 +1500,7 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.AHP:
                 return p.ArtificialHealth;
             case PlayerUnaryOpType.Cuffer:
-                // TODO: LabAPI has cuffing events but no cuffed/cuffer status on player
-                //return p.Cuffer;
-                return null;
+                return p.DisarmedBy;
             case PlayerUnaryOpType.CurrentItem:
                 return p.CurrentItem;
             case PlayerUnaryOpType.CurrentSpectatingPlayers:
@@ -1511,10 +1508,9 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.CustomInfo:
                 return p.CustomInfo;
             case PlayerUnaryOpType.CustomName:
-                // TODO: Not 100% sure if this is what's intended by CustomName
-                return p.ReferenceHub.nicknameSync.CombinedName;
+                return p.DisplayName;       // if they have a custom name, this will be it
             case PlayerUnaryOpType.DisplayNickname:
-                return p.Nickname;
+                return p.Nickname;          // this is the default/fallback name
             case PlayerUnaryOpType.EntityObject:
                 return p.GameObject;
             case PlayerUnaryOpType.FacingDirection:
@@ -1530,11 +1526,9 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.IsAlive:
                 return p.IsAlive;
             case PlayerUnaryOpType.IsCHI:
-                // No idea what CHI is
-                return false;
+                return false;               // TODO: No idea what CHI is
             case PlayerUnaryOpType.IsCuffed:
-                // TODO: See cuff not above
-                return false;
+                return p.IsDisarmed;
             case PlayerUnaryOpType.IsDead:
                 return !p.IsAlive;
             case PlayerUnaryOpType.IsFFon:
@@ -1550,16 +1544,13 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.IsInventoryFull:
                 return p.IsInventoryFull;
             case PlayerUnaryOpType.IsJumping:
-                // TODO: Has events but no player flag
-                return false;
+                return p.IsJumping();       // extension
             case PlayerUnaryOpType.IsNPC:
                 return p.IsNpc;
             case PlayerUnaryOpType.IsNTF:
                 return p.IsNTF;
             case PlayerUnaryOpType.IsReloading:
-                // TODO: Has events but no player flag
-                //return p.CurrentItem != null && p.CurrentItem.Category == ItemCategory.Firearm && (p.CurrentItem as FirearmItem).IsReloading;
-                return false;
+                return p.IsReloading();     // extension
             case PlayerUnaryOpType.IsScp:
                 return p.IsSCP;
             case PlayerUnaryOpType.IsSpeaking:
@@ -1567,8 +1558,7 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.IsTutorial:
                 return p.IsTutorial;
             case PlayerUnaryOpType.IsUsingStamina:
-                // TODO: No events or player flag, must be somewhere in builtin game code
-                return false;
+                return p.IsUsingStamina();  // extension
             case PlayerUnaryOpType.Items:
                 return p.Items.ToArray();
             case PlayerUnaryOpType.MaxAHP:
@@ -1586,9 +1576,7 @@ public class PlayerUnaryOp : Value
             case PlayerUnaryOpType.Stamina:
                 return p.StaminaRemaining;
             case PlayerUnaryOpType.UniqueRole:
-                // TODO: UniqueRole?
-                //return p.Role.GetRoleBase().RoleName;
-                return p.Role;
+                return p.GetUniqueRole();   // extension
             case PlayerUnaryOpType.Velocity:
                 return p.Velocity;
         }
