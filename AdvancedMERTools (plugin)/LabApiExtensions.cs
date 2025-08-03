@@ -14,7 +14,7 @@ public static class LabApiExtensions
 
     public static bool IsJumping(this Player player)
     {
-        return player.RoleBase is IFpcRole fpc && fpc.FpcModule.Motor.IsJumping;
+        return player.RoleBase is IFpcRole fpc && fpc.FpcModule.Motor.JumpController.IsJumping;
     }
 
     public static bool IsReloading(this Player player)

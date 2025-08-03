@@ -58,10 +58,10 @@ public class AMERTEventHandlers : CustomEventsHandler
 
     public void OnSSInput(ReferenceHub sender, ServerSpecificSettingBase setting)
     {
-        SSKeybindSetting sSKeybind = setting.OriginalDefinition as SSKeybindSetting;
-        if (sSKeybind != null && (setting as SSKeybindSetting).SyncIsPressed)
+        if (setting is SSKeybindSetting ssKeybind && ssKeybind.SyncIsPressed)
         {
-            KeyCode key = sSKeybind.SuggestedKey;
+            // for some reason only the OriginalDefinition contains the suggested key - probably need to change to get the actual pressed key, but AssignedKeyCode is None for both ssKeybind and OriginalDefinition...
+            KeyCode key = (setting.OriginalDefinition as SSKeybindSetting).SuggestedKey;
             if (AdvancedMERTools.Singleton.IOkeys.ContainsKey((int)key) && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
             {
                 foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
