@@ -15,6 +15,7 @@ namespace AdvancedMERTools;
 
 public class InteractableObject : AMERTInteractable
 {
+    public const KeyCode InteractableToyKeycode = KeyCode.None;
     public new IODTO Base { get; set; }
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
@@ -34,7 +35,7 @@ public class InteractableObject : AMERTInteractable
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
     };
 
-    private void SpawnInteractableToy(AdminToys.PrimitiveObjectToy primitiveObjectToy)
+    protected void SpawnInteractableToy(AdminToys.PrimitiveObjectToy primitiveObjectToy)
     {
         if (!primitiveObjectToy.PrimitiveFlags.HasFlag(PrimitiveFlags.Collidable))
         {
@@ -85,7 +86,7 @@ public class InteractableObject : AMERTInteractable
         this.Base = base.Base as IODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         Log.Debug($"Adding InteractableObject: {gameObject.name} ({OSchematic.Name})");
-        if (Base.InputKeyCode == (int)KeyCode.E)
+        if (Base.InputKeyCode == (int)InteractableToyKeycode)
         {
             if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
             {
@@ -212,6 +213,20 @@ public class FInteractableObject : InteractableObject
         this.Base = ((AMERTInteractable)this).Base as FIODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         Log.Debug($"Adding FInteractableObject: {gameObject.name} ({OSchematic.Name})");
+        if (Base.InputKeyCode == (int)InteractableToyKeycode)
+        {
+            if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
+            {
+                SpawnInteractableToy(component);
+            }
+
+            foreach (AdminToys.PrimitiveObjectToy primitiveObjectToy in GetComponentsInChildren<AdminToys.PrimitiveObjectToy>())
+            {
+                Timing.CallDelayed(1f, () => SpawnInteractableToy(primitiveObjectToy));
+            }
+
+            return;
+        }
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
