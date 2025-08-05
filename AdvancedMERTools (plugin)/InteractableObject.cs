@@ -15,7 +15,7 @@ namespace AdvancedMERTools;
 
 public class InteractableObject : AMERTInteractable
 {
-    public const KeyCode InteractableToyKeycode = KeyCode.None;
+    public const KeyCode InteractableToyKeycode = KeyCode.E;
     public new IODTO Base { get; set; }
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
@@ -37,10 +37,6 @@ public class InteractableObject : AMERTInteractable
 
     protected void SpawnInteractableToy(AdminToys.PrimitiveObjectToy primitiveObjectToy)
     {
-        if (!primitiveObjectToy.PrimitiveFlags.HasFlag(PrimitiveFlags.Collidable))
-        {
-            return;
-        }
         InteractableToy interactableToy = InteractableToy.Create(primitiveObjectToy.transform, false);
         switch (primitiveObjectToy.PrimitiveType)
         {
@@ -70,7 +66,7 @@ public class InteractableObject : AMERTInteractable
         interactableToy.OnInteracted += p => RunProcess(p);
         interactableToy.Spawn();
 
-        if (AdvancedMERTools.Singleton.Config.Debug)
+        if (AdvancedMERTools.Singleton.Config.InteractableObjectDebug)
         {
             LabApi.Features.Wrappers.PrimitiveObjectToy indicator = LabApi.Features.Wrappers.PrimitiveObjectToy.Create(transform, false);
             indicator.Type = primitiveObjectToy.PrimitiveType;
