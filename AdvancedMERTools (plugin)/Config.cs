@@ -12,6 +12,8 @@ public class Config
     [Description("The path to AMERT audio files. Defaults to '.../SCP Secret Laboratory/LabAPI/audio'.")]
     public string AudioFolderPath { get; set; } = "";
 
+    [Description("Gets or sets a value indicating whether interactable toys spawned by the plugin spawn a primitive to represent it.")]
+    public bool InteractableObjectDebug { get; set; } = false;
     //public bool ReplacementMode { get; set; } = true;
     //public List<string> DummyDoorInstallingMaps { get; set; } = new List<string>
     //{

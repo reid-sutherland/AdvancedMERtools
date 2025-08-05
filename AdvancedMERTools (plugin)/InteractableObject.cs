@@ -1,8 +1,12 @@
-﻿using LabApi.Events;
+﻿using AdminToys;
+using LabApi.Events;
 using LabApi.Events.Arguments.Interfaces;
 using LabApi.Features.Wrappers;
+using MEC;
+using ProjectMER.Commands.Utility;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
 using UserSettings.ServerSpecific;
@@ -11,6 +15,7 @@ namespace AdvancedMERTools;
 
 public class InteractableObject : AMERTInteractable
 {
+    public const KeyCode InteractableToyKeycode = KeyCode.E;
     public new IODTO Base { get; set; }
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
@@ -30,11 +35,67 @@ public class InteractableObject : AMERTInteractable
         { "{p_item}", vs => (vs[0] as Player).CurrentItem.Type.ToString() },
     };
 
+    protected void SpawnInteractableToy(AdminToys.PrimitiveObjectToy primitiveObjectToy)
+    {
+        InteractableToy interactableToy = InteractableToy.Create(primitiveObjectToy.transform, false);
+        switch (primitiveObjectToy.PrimitiveType)
+        {
+            case PrimitiveType.Plane:
+                interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
+                interactableToy.Transform.localScale = new Vector3(interactableToy.Transform.localScale.x * 10, 0.01f, interactableToy.Transform.localScale.z * 10);
+                break;
+            case PrimitiveType.Quad:
+                interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
+                interactableToy.Transform.localScale = new Vector3(interactableToy.Transform.localScale.x, interactableToy.Transform.localScale.y, 0.01f);
+                break;
+            case PrimitiveType.Cube:
+                interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
+                break;
+            case PrimitiveType.Sphere:
+                interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Sphere;
+                break;
+            case PrimitiveType.Capsule:
+                interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Capsule;
+                break;
+            default:
+                interactableToy.Destroy();
+                return;
+        }
+
+        interactableToy.Transform.localScale = Vector3.one * 1.1f;
+        interactableToy.OnInteracted += p => RunProcess(p);
+        interactableToy.Spawn();
+
+        if (AdvancedMERTools.Singleton.Config.InteractableObjectDebug)
+        {
+            LabApi.Features.Wrappers.PrimitiveObjectToy indicator = LabApi.Features.Wrappers.PrimitiveObjectToy.Create(transform, false);
+            indicator.Type = primitiveObjectToy.PrimitiveType;
+            indicator.Transform.localScale = Vector3.one * 1.1f;
+            indicator.Flags = PrimitiveFlags.Visible;
+            indicator.Color = new Color(1, 1, 1, 0.2f);
+            indicator.Spawn();
+        }
+    }
+
     protected virtual void Start()
     {
         this.Base = base.Base as IODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         Log.Debug($"Adding InteractableObject: {gameObject.name} ({OSchematic.Name})");
+        if (Base.InputKeyCode == (int)InteractableToyKeycode)
+        {
+            if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
+            {
+                SpawnInteractableToy(component);
+            }
+
+            foreach (AdminToys.PrimitiveObjectToy primitiveObjectToy in GetComponentsInChildren<AdminToys.PrimitiveObjectToy>())
+            {
+                Timing.CallDelayed(1f, () => SpawnInteractableToy(primitiveObjectToy));
+            }
+
+            return;
+        }
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
@@ -148,6 +209,20 @@ public class FInteractableObject : InteractableObject
         this.Base = ((AMERTInteractable)this).Base as FIODTO;
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         Log.Debug($"Adding FInteractableObject: {gameObject.name} ({OSchematic.Name})");
+        if (Base.InputKeyCode == (int)InteractableToyKeycode)
+        {
+            if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
+            {
+                SpawnInteractableToy(component);
+            }
+
+            foreach (AdminToys.PrimitiveObjectToy primitiveObjectToy in GetComponentsInChildren<AdminToys.PrimitiveObjectToy>())
+            {
+                Timing.CallDelayed(1f, () => SpawnInteractableToy(primitiveObjectToy));
+            }
+
+            return;
+        }
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
