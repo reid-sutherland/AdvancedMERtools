@@ -3,10 +3,8 @@ using LabApi.Events;
 using LabApi.Events.Arguments.Interfaces;
 using LabApi.Features.Wrappers;
 using MEC;
-using ProjectMER.Commands.Utility;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
 using UserSettings.ServerSpecific;
@@ -79,9 +77,15 @@ public class InteractableObject : AMERTInteractable
 
     protected virtual void Start()
     {
-        this.Base = base.Base as IODTO;
-        AdvancedMERTools.Singleton.InteractableObjects.Add(this);
+        Base = base.Base as IODTO;
         Log.Debug($"Adding InteractableObject: {gameObject.name} ({OSchematic.Name})");
+
+        Register();
+    }
+
+    protected virtual void Register()
+    {
+        AdvancedMERTools.Singleton.InteractableObjects.Add(this);
         if (Base.InputKeyCode == (int)InteractableToyKeycode)
         {
             if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
@@ -206,37 +210,10 @@ public class FInteractableObject : InteractableObject
 
     protected override void Start()
     {
-        this.Base = ((AMERTInteractable)this).Base as FIODTO;
-        AdvancedMERTools.Singleton.InteractableObjects.Add(this);
+        Base = ((AMERTInteractable)this).Base as FIODTO;
         Log.Debug($"Adding FInteractableObject: {gameObject.name} ({OSchematic.Name})");
-        if (Base.InputKeyCode == (int)InteractableToyKeycode)
-        {
-            if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
-            {
-                SpawnInteractableToy(component);
-            }
 
-            foreach (AdminToys.PrimitiveObjectToy primitiveObjectToy in GetComponentsInChildren<AdminToys.PrimitiveObjectToy>())
-            {
-                Timing.CallDelayed(1f, () => SpawnInteractableToy(primitiveObjectToy));
-            }
-
-            return;
-        }
-        if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
-        {
-            AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
-        }
-        else
-        {
-            AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
-            if (Base.InputKeyCode != (int)ServerSettings.IODefaultKeySetting.SuggestedKey)
-            {
-                Log.Debug($"-- adding new FIOKeybind setting for key: {(KeyCode)Base.InputKeyCode}");
-                ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode)).ToArray();
-                ServerSpecificSettingsSync.SendToAll();
-            }
-        }
+        Register();
     }
 
     public override void RunProcess(Player player)
