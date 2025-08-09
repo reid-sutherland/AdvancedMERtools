@@ -9,7 +9,9 @@ public static class ServerSettings
 {
     public static SSGroupHeader Header { get; set; } = new SSGroupHeader("AMERT Keybinds");
 
-    public static SSKeybindSetting IODefaultKeySetting { get; set; } = new SSKeybindSetting(null, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E, allowSpectatorTrigger: false);
+    public static SSKeybindSetting CreateIOSettingForKeycode(KeyCode keycode) => new(null, $"{IOLabelPreamble} - {keycode}", keycode, allowSpectatorTrigger: false);
+
+    public static string IOLabelPreamble { get; set; } = "AMERT - Interactable Object";
 
     public static void RegisterSettings()
     {
@@ -20,11 +22,6 @@ public static class ServerSettings
         {
             Log.Debug($"AMERTKeybindHeader did not exist - adding");
             original.Add(Header);
-        }
-        if (original.FindIndex(x => x is SSKeybindSetting && x.Label.Equals(IODefaultKeySetting.Label)) == -1)
-        {
-            Log.Debug($"AMERTIOKeybind did not exist - adding");
-            original.Add(IODefaultKeySetting);
         }
 
         ServerSpecificSettingsSync.DefinedSettings = original.ToArray();

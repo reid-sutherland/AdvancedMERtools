@@ -1,6 +1,8 @@
-﻿using System;
+﻿using LabApi.Loader.Features.Paths;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 
 namespace AdvancedMERTools;
 
@@ -10,10 +12,19 @@ public class Config
     public bool Debug { get; set; } = false;
 
     [Description("The path to AMERT audio files. Defaults to '.../SCP Secret Laboratory/LabAPI/audio'.")]
-    public string AudioFolderPath { get; set; } = "";
+    public string AudioFolderPath { get; set; } = Path.Combine(PathManager.LabApi.FullName, "audio");
 
-    [Description("Gets or sets a value indicating whether interactable toys spawned by the plugin spawn a primitive to represent it.")]
-    public bool InteractableObjectDebug { get; set; } = false;
+    [Description("When enabled, InteractableObjects that use the keycodes in the list below will be created as InteractableToys." +
+        "\n# This means that a player will simply need to press their base-game Interact button to interact with them, and SS keybinds will not be needed.")]
+    public bool EnableIoToys { get; set; } = true;
+
+    [Description("With IOToys enabled, IO schematics that use an InputKeyCode value from this list will be spawned as InteractableToys instead." +
+        "\n# Note that the number is the ASCII value of the keyboard character, for example 101 => the 'E' key. If a schematic does not have an InputKeyCode, it will be treated as a 0.")]
+    public List<int> IoToysKeycodes { get; set; } = new() { 0, 101 };
+
+    [Description("If enabled, IOs using InteractableToys will spawn a visible primitive to represent the toy.")]
+    public bool IoToysDebug { get; set; } = false;
+
     //public bool ReplacementMode { get; set; } = true;
     //public List<string> DummyDoorInstallingMaps { get; set; } = new List<string>
     //{

@@ -13,8 +13,9 @@ namespace AdvancedMERTools;
 
 public class InteractableObject : AMERTInteractable
 {
-    public const KeyCode InteractableToyKeycode = KeyCode.E;
     public new IODTO Base { get; set; }
+
+    public Config Configs => AdvancedMERTools.Singleton.Config;
 
     public static readonly Dictionary<string, Func<object[], string>> Formatter = new()
     {
@@ -64,7 +65,7 @@ public class InteractableObject : AMERTInteractable
         interactableToy.OnInteracted += p => RunProcess(p);
         interactableToy.Spawn();
 
-        if (AdvancedMERTools.Singleton.Config.InteractableObjectDebug)
+        if (AdvancedMERTools.Singleton.Config.IoToysDebug)
         {
             LabApi.Features.Wrappers.PrimitiveObjectToy indicator = LabApi.Features.Wrappers.PrimitiveObjectToy.Create(transform, false);
             indicator.Type = primitiveObjectToy.PrimitiveType;
@@ -86,7 +87,7 @@ public class InteractableObject : AMERTInteractable
     protected virtual void Register()
     {
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
-        if (Base.InputKeyCode == (int)InteractableToyKeycode)
+        if (Configs.IoToysKeycodes.Contains(Base.InputKeyCode))
         {
             if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
             {
@@ -107,12 +108,12 @@ public class InteractableObject : AMERTInteractable
         else
         {
             AdvancedMERTools.Singleton.IOkeys.Add(Base.InputKeyCode, new List<InteractableObject> { this });
-            if (Base.InputKeyCode != (int)ServerSettings.IODefaultKeySetting.SuggestedKey)
-            {
-                Log.Debug($"-- adding new IOKeybind setting for key: {(KeyCode)Base.InputKeyCode}");
-                ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(new SSKeybindSetting(null, $"AMERT - Interactable Object - {(KeyCode)Base.InputKeyCode}", (KeyCode)Base.InputKeyCode)).ToArray();
-                ServerSpecificSettingsSync.SendToAll();
-            }
+            KeyCode ioKeyCode = (KeyCode)Base.InputKeyCode;
+
+            Log.Debug($"-- adding new IO SSKeybind setting for schematic with key: {ioKeyCode}");
+            SSKeybindSetting newSetting = ServerSettings.CreateIOSettingForKeycode(ioKeyCode);
+            ServerSpecificSettingsSync.DefinedSettings = ServerSpecificSettingsSync.DefinedSettings.Append(newSetting).ToArray();
+            ServerSpecificSettingsSync.SendToAll();
         }
     }
 
@@ -128,6 +129,7 @@ public class InteractableObject : AMERTInteractable
         {
             return;
         }
+        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {gameObject.name} ({OSchematic.Name})");
 
         ModuleGeneralArguments args = new()
         {

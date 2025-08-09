@@ -61,23 +61,26 @@ public class AMERTEventHandlers : CustomEventsHandler
         if (setting is SSKeybindSetting ssKeybind && ssKeybind.SyncIsPressed)
         {
             // for some reason only the OriginalDefinition contains the suggested key - probably need to change to get the actual pressed key, but AssignedKeyCode is None for both ssKeybind and OriginalDefinition...
-            KeyCode key = (setting.OriginalDefinition as SSKeybindSetting).SuggestedKey;
-            if (AdvancedMERTools.Singleton.IOkeys.ContainsKey((int)key) && Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
+            SSKeybindSetting originalDefinition = setting.OriginalDefinition as SSKeybindSetting;
+            int key = (int)originalDefinition.SuggestedKey;
+            if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(key) && originalDefinition.Label.StartsWith(ServerSettings.IOLabelPreamble))
             {
-                foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
+                if (Physics.Raycast(sender.PlayerCameraReference.position, sender.PlayerCameraReference.forward, out RaycastHit hit, 1000f, 1))
                 {
-                    if (!(interactable is FInteractableObject) && interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange)
+                    Player player = Player.Get(sender);
+                    foreach (InteractableObject interactable in hit.collider.GetComponentsInParent<InteractableObject>())
                     {
-                        Player player = Player.Get(sender);
-                        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {interactable.OSchematic.Name}");
-                        interactable.RunProcess(player);
+                        if (interactable is not FInteractableObject && interactable.Base.InputKeyCode == key && hit.distance <= interactable.Base.InteractionMaxRange)
+                        {
+                            interactable.RunProcess(player);
+                        }
                     }
-                }
-                foreach (FInteractableObject interactable in hit.collider.GetComponentsInParent<FInteractableObject>())
-                {
-                    if (interactable.Base.InputKeyCode == (int)key && hit.distance <= interactable.Base.InteractionMaxRange.GetValue(new FunctionArgument(interactable), 0f))
+                    foreach (FInteractableObject interactable in hit.collider.GetComponentsInParent<FInteractableObject>())
                     {
-                        interactable.RunProcess(Player.Get(sender));
+                        if (interactable.Base.InputKeyCode == key && hit.distance <= interactable.Base.InteractionMaxRange.GetValue(new FunctionArgument(interactable), 0f))
+                        {
+                            interactable.RunProcess(player);
+                        }
                     }
                 }
             }
