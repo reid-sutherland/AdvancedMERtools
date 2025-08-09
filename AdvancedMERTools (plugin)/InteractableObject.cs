@@ -6,6 +6,7 @@ using MEC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 
@@ -62,15 +63,16 @@ public class InteractableObject : AMERTInteractable
         }
 
         interactableToy.Transform.localScale = Vector3.one * 1.1f;
-        interactableToy.OnInteracted += p => RunProcess(p);
+        interactableToy.OnInteracted += p => RunProcess(p, toyId: primitiveObjectToy.name);
         interactableToy.Spawn();
+        Log.Debug($"-- spawned IoToy for PrimitiveObjectToy: {primitiveObjectToy.name}");
 
         if (AdvancedMERTools.Singleton.Config.IoToysDebug)
         {
             LabApi.Features.Wrappers.PrimitiveObjectToy indicator = LabApi.Features.Wrappers.PrimitiveObjectToy.Create(transform, false);
-            indicator.Type = primitiveObjectToy.PrimitiveType;
-            indicator.Transform.localScale = Vector3.one * 1.1f;
             indicator.Flags = PrimitiveFlags.Visible;
+            indicator.Type = primitiveObjectToy.PrimitiveType;
+            indicator.Transform.localScale = Vector3.one * 1.05f;
             indicator.Color = new Color(1, 1, 1, 0.2f);
             indicator.Spawn();
         }
@@ -91,16 +93,26 @@ public class InteractableObject : AMERTInteractable
         {
             if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
             {
-                SpawnInteractableToy(component);
+                if (!Configs.IoToysNoRoot)
+                {
+                    SpawnInteractableToy(component);
+                }
             }
-
             foreach (AdminToys.PrimitiveObjectToy primitiveObjectToy in GetComponentsInChildren<AdminToys.PrimitiveObjectToy>())
             {
+                if (Configs.IoToysNoRoot)
+                {
+                    if (primitiveObjectToy.name == component.name || primitiveObjectToy.name.Contains("Clone"))
+                    {
+                        Log.Debug($"-- skipping duplicate/clone toy: {primitiveObjectToy.name}");
+                        continue;
+                    }
+                }
                 Timing.CallDelayed(1f, () => SpawnInteractableToy(primitiveObjectToy));
             }
-
             return;
         }
+
         if (AdvancedMERTools.Singleton.IOkeys.ContainsKey(Base.InputKeyCode))
         {
             AdvancedMERTools.Singleton.IOkeys[Base.InputKeyCode].Add(this);
@@ -123,13 +135,13 @@ public class InteractableObject : AMERTInteractable
         AdvancedMERTools.Singleton.InteractableObjects.Remove(this);
     }
 
-    public virtual void RunProcess(Player player)
+    public virtual void RunProcess(Player player, string toyId = "Unknown")
     {
         if (!Active)
         {
             return;
         }
-        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {gameObject.name} ({OSchematic.Name})");
+        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {gameObject.name} ({OSchematic.Name}) -- toy id: {toyId}");
 
         ModuleGeneralArguments args = new()
         {
@@ -218,12 +230,13 @@ public class FInteractableObject : InteractableObject
         Register();
     }
 
-    public override void RunProcess(Player player)
+    public override void RunProcess(Player player, string toyId = "Unknown")
     {
         if (!Active)
         {
             return;
         }
+        Log.Debug($"Player: {player.Nickname} interacted with FInteractableObject: {gameObject.name} ({OSchematic.Name}) -- toy id: {toyId}");
 
         FunctionArgument args = new FunctionArgument(this, player);
         var actionExecutors = new Dictionary<IPActionType, Action>

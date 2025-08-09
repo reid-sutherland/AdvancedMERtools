@@ -22,6 +22,9 @@ public class Config
         "\n# Note that the number is the ASCII value of the keyboard character, for example 101 => the 'E' key. If a schematic does not have an InputKeyCode, it will be treated as a 0.")]
     public List<int> IoToysKeycodes { get; set; } = new() { 0, 101 };
 
+    [Description("Set this to false to disable IO toys on root IO components. Some schematics have issues where the root component is in a different location than the components making up the overall shape.")]
+    public bool IoToysNoRoot { get; set; } = false;
+
     [Description("If enabled, IOs using InteractableToys will spawn a visible primitive to represent the toy.")]
     public bool IoToysDebug { get; set; } = false;
 
