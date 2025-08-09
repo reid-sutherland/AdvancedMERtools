@@ -51,6 +51,8 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     public bool IsAlive { get; set; } = true;
 
+    private bool _startShrinking = false;
+
     protected static Dictionary<ExplosionType, ItemType> ExplosionDic { get; } = new Dictionary<ExplosionType, ItemType>
     {
         { ExplosionType.Grenade, ItemType.GrenadeHE },
@@ -131,9 +133,9 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     protected void Update()
     {
-        if (Health <= 0 && this.Base.DeadType.HasFlag(DeadType.DynamicDisappearing) && !AnimationEnded)
+        if (_startShrinking && !AnimationEnded)
         {
-            this.transform.localScale = Vector3.Lerp(this.transform.localScale, Vector3.zero, Time.deltaTime);
+            this.transform.localScale = Vector3.Lerp(this.transform.localScale, Vector3.zero, Time.deltaTime * 5f);
             if (this.transform.localScale.magnitude <= 0.1f)
             {
                 Destroy();
@@ -264,7 +266,12 @@ public class HealthObject : AMERTInteractable, IDestructible
                             this.gameObject.AddComponent<Rigidbody>();
                         }
                     },
-                    { DeadType.DynamicDisappearing, () => MakeNonStatic(gameObject) },
+                    { DeadType.DynamicDisappearing, () =>
+                        {
+                            MakeNonStatic(gameObject);
+                            _startShrinking = true;
+                        }
+                    },
                     { DeadType.Explode, () => ExplodeModule.Execute(Base.ExplodeModules, args) },
                     {
                         DeadType.ResetHP, () =>
@@ -454,3 +461,4 @@ public class FHealthObject : HealthObject
         }
     }
 }
+
