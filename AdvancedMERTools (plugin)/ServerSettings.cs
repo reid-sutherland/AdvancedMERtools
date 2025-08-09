@@ -15,7 +15,7 @@ public static class ServerSettings
 
     public static void RegisterSettings()
     {
-        // I'm tired of dealing with this bs so just always make an AMERT header + default IO keybind (E)
+        // I'm tired of dealing with this bs so just always make an AMERT header
         ServerSpecificSettingsSync.DefinedSettings ??= new ServerSpecificSettingBase[0];
         List<ServerSpecificSettingBase> original = ServerSpecificSettingsSync.DefinedSettings.ToList();
         if (original.FindIndex(x => x is SSGroupHeader && x.Label.Equals(Header.Label)) == -1)

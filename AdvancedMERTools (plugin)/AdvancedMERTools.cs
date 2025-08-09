@@ -26,7 +26,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override string Author => "DeadServer Team";
 
-    public override Version Version => new(1, 0, 2);
+    public override Version Version => new(1, 0, 3);
 
     public override Version RequiredApiVersion => new(1, 0, 2, 0);
 
@@ -41,8 +41,6 @@ public class AdvancedMERTools : Plugin<Config>
     private Harmony Harmony { get; set; } = new("AMERT");
 
     public static string AudioDir => Singleton.Config.AudioFolderPath;
-
-    public SSKeybindSetting InteractbleObjectKeybindSetting { get; } = new SSKeybindSetting(null, $"AMERT - Interactable Object - {KeyCode.E}", KeyCode.E);
 
     // Tracked collections
 
