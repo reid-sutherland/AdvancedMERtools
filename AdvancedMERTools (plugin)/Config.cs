@@ -16,7 +16,7 @@ public class Config
 
     [Description("When enabled, InteractableObjects that use the keycodes in the list below will be created as InteractableToys." +
         "\n# This means that a player will simply need to press their base-game Interact button to interact with them, and SS keybinds will not be needed.")]
-    public bool EnableIoToys { get; set; } = true;
+    public bool EnableIoToys { get; set; } = false;
 
     [Description("With IOToys enabled, IO schematics that use an InputKeyCode value from this list will be spawned as InteractableToys instead." +
         "\n# Note that the number is the ASCII value of the keyboard character, for example 101 => the 'E' key. If a schematic does not have an InputKeyCode, it will be treated as a 0.")]

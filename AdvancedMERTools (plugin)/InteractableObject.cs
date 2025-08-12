@@ -89,7 +89,7 @@ public class InteractableObject : AMERTInteractable
     protected virtual void Register()
     {
         AdvancedMERTools.Singleton.InteractableObjects.Add(this);
-        if (Configs.IoToysKeycodes.Contains(Base.InputKeyCode))
+        if (Configs.EnableIoToys && Configs.IoToysKeycodes.Contains(Base.InputKeyCode))
         {
             if (TryGetComponent<AdminToys.PrimitiveObjectToy>(out var component))
             {
