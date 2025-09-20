@@ -26,7 +26,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override string Author => "DeadServer Team";
 
-    public override Version Version => new(1, 0, 4);
+    public override Version Version => new(1, 0, 5);
 
     public override Version RequiredApiVersion => new(1, 0, 2, 0);
 
