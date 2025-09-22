@@ -1,4 +1,6 @@
 ﻿using AdminToys;
+using AdvancedMERTools.Events.Arguments;
+using AdvancedMERTools.Events.Handlers;
 using LabApi.Events;
 using LabApi.Events.Arguments.Interfaces;
 using LabApi.Features.Wrappers;
@@ -196,25 +198,12 @@ public class InteractableObject : AMERTInteractable
             }
         }
 
-        PlayerIOInteracted.InvokeEvent(new PlayerIOInteractedEventArgs(player));
-    }
-
-    public class PlayerIOInteractedEventArgs : EventArgs, IPlayerEvent
-    {
-        public Player Player { get; }
-
-        public PlayerIOInteractedEventArgs(Player player)
+        IODTO clone = new IODTO
         {
-            Player = player;
-        }
-    }
-
-    // From external code, register a handler to this event to trigger when a player interacts with the object
-    public event LabEventHandler<PlayerIOInteractedEventArgs> PlayerIOInteracted;
-
-    public void OnPlayerIOInteracted(PlayerIOInteractedEventArgs ev)
-    {
-        PlayerIOInteracted.InvokeEvent(ev);
+            ObjectId = Base.ObjectId,
+            InputKeyCode = Base.InputKeyCode,
+        };
+        InteractableObjectEventHandlers.OnPlayerIOInteracted(new InteractableObjectInteractedEventArgs(player, clone));
     }
 }
 
