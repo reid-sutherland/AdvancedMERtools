@@ -10,6 +10,8 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using AdvancedMERTools.Events.Arguments;
+using AdvancedMERTools.Events.Handlers;
 
 namespace AdvancedMERTools;
 
@@ -231,17 +233,26 @@ public class HealthObject : AMERTInteractable, IDestructible
 
     public virtual void CheckDead(Player player, float damage)
     {
+        HODTO clone = new()
+        {
+            Health = this.Base.Health,
+            ArmorEfficient = this.Base.ArmorEfficient,
+            DeadType = this.Base.DeadType,
+            ObjectId = this.Base.ObjectId,
+        };
+
+        HealthObjectTakingDamageEventArgs damagingEventArgs = new HealthObjectTakingDamageEventArgs(clone, player);
+        HealthObjectEventHandlers.OnHealthObjectTakingDamage(damagingEventArgs);
+
+        if (!damagingEventArgs.IsAllowed)
+        {
+            return;
+        }
+
         Health -= damage;
         Hitmarker.SendHitmarkerDirectly(player.ReferenceHub, damage / 10f);
         if (Health <= 0)
         {
-            HODTO clone = new()
-            {
-                Health = this.Base.Health,
-                ArmorEfficient = this.Base.ArmorEfficient,
-                DeadType = this.Base.DeadType,
-                ObjectId = this.Base.ObjectId,
-            };
             IsAlive = false;
             ModuleGeneralArguments args = new()
             {
@@ -252,7 +263,7 @@ public class HealthObject : AMERTInteractable, IDestructible
                 Transform = transform,
                 TargetCalculated = false,
             };
-            AMERTEvents.OnHealthObjectDead(new HealthObjectDeadEventArgs(clone, player));
+            HealthObjectEventHandlers.OnHealthObjectDied(new HealthObjectDiedEventArgs(clone, player));
 
             MEC.Timing.CallDelayed(Base.DeadActionDelay, () =>
             {
