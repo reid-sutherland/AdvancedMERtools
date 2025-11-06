@@ -28,7 +28,7 @@ public class AdvancedMERTools : Plugin<Config>
 
     public override Version Version => new(1, 0, 5);
 
-    public override Version RequiredApiVersion => new(1, 0, 2, 0);
+    public override Version RequiredApiVersion => new(1, 1, 4);
 
     // Plugin objects
 
