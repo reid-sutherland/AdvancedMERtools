@@ -143,7 +143,7 @@ public class InteractableObject : AMERTInteractable
         {
             return;
         }
-        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {gameObject.name} ({OSchematic.Name}) -- toy id: {toyId}");
+        Log.Debug($"Player: {player.Nickname} interacted with InteractableObject: {gameObject.name} ({OSchematic.Name}) {(Configs.EnableIoToys ? "-- toy id: " + toyId : "")}");
 
         ModuleGeneralArguments args = new()
         {
@@ -203,7 +203,7 @@ public class InteractableObject : AMERTInteractable
             ObjectId = Base.ObjectId,
             InputKeyCode = Base.InputKeyCode,
         };
-        InteractableObjectEventHandlers.OnPlayerIOInteracted(new InteractableObjectInteractedEventArgs(player, clone));
+        InteractableObjectEventHandlers.OnPlayerIOInteracted(new InteractableObjectInteractedEventArgs(player, clone, gameObject.name));
     }
 }
 
