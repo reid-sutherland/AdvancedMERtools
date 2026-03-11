@@ -751,7 +751,7 @@ public class MessageModule : RandomExecutionModule
 
             if (MessageType == MessageTypeE.Cassie)
             {
-                Cassie.Message(content);
+                Announcer.Message(content, playBackground: true);
             }
             else
             {
@@ -787,7 +787,7 @@ public class FMessageModule : FRandomExecutionModule
             MessageTypeE type = MessageType.GetValue(args, MessageTypeE.BroadCast);
             if (type == MessageTypeE.Cassie)
             {
-                Cassie.Message(content);
+                Announcer.Message(content, playBackground: true);
             }
             else
             {
