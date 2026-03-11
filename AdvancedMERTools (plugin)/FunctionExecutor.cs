@@ -217,6 +217,7 @@ public class ActionsFunctioner : Function
 
     protected async Task<FunctionReturn> ExecuteActions(FunctionArgument args, FunctionResult result = FunctionResult.Default)
     {
+        await Task.Run(() => { });  // this method needs to be async so this addresses build errors
         bool ifActed = false;
         for (int i = 0; i < Actions.Count; i++)
         {

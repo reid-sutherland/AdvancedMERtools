@@ -737,13 +737,13 @@ public class MessageModule : RandomExecutionModule
                 {
                     content = content.Replace(v, args.Interpolations[v](args.InterpolationsList));
                 }
-                catch (Exception _) { }
+                catch (Exception) { }
             }
             try
             {
                 content = ServerConsole.Singleton.NameFormatter.ProcessExpression(content);
             }
-            catch (Exception e) { }
+            catch (Exception) { }
             if (!args.TargetCalculated)
             {
                 args.Targets = GetTargets(SendType, args);
