@@ -33,7 +33,6 @@
 
 	<ItemGroup>
 		<Reference Include="ProjectMER" HintPath="$(LABAPI_PLUGINS)\ProjectMER.dll" Private="false" />
-		
 		<Reference Include="AudioPlayerApi" HintPath="$(LABAPI_DEPENDENCIES)\AudioPlayerApi.dll" Private="false" />
 		<Reference Include="Newtonsoft.Json" HintPath="$(LABAPI_DEPENDENCIES)\Newtonsoft.Json.dll" Private="false" />
 	</ItemGroup>
